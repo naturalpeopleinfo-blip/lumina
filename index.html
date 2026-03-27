@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina Boundary Pro</title>
+  <meta
+    name="description"
+    content="映像制作会社向けの完全ローカル動作セーフゾーン確認SPAツール Lumina Boundary Pro"
+  >
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="workspace-shell panel">
+      <input id="fileInput" type="file" accept="video/*">
+
+      <div class="workspace-main">
+        <aside class="sidebar-column sidebar-left">
+          <section class="sidebar-brand">
+            <p class="product-kicker">Lumina Boundary Pro</p>
+            <div class="viewer-heading">
+              <p class="eyebrow">投稿時のテロップ表示ミスを無くす</p>
+              <h2 id="modeLabel">縦動画専用セーフゾーンチェッカー</h2>
+            </div>
+          </section>
+
+          <section class="control-card status-card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">手順 1</p>
+                <h3>素材を読み込む</h3>
+              </div>
+            </div>
+            <p class="support-note">まず動画を読み込みます。</p>
+
+            <div class="nameplate-card">
+              <span>クリップ名</span>
+              <strong id="metaName">未読み込み</strong>
+            </div>
+
+            <div class="meta-chip-grid">
+              <article class="meta-chip">
+                <span>サイズ</span>
+                <strong id="metaSize">-- MB</strong>
+              </article>
+              <article class="meta-chip">
+                <span>長さ</span>
+                <strong id="metaDuration">00:00</strong>
+              </article>
+              <article class="meta-chip">
+                <span>解像度</span>
+                <strong id="metaResolution">-- × --</strong>
+              </article>
+            </div>
+
+            <div class="source-action-row">
+              <label for="fileInput" class="action-button action-button-primary">素材を読み込む</label>
+              <button id="historyToggle" class="action-button action-button-ghost" type="button">履歴</button>
+            </div>
+          </section>
+
+          <section class="control-card setup-card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow">手順 2</p>
+                <h3>表示設定</h3>
+              </div>
+            </div>
+            <p id="modeDescription" class="mode-note">1つ以上選ぶと、セーフゾーンの枠が表示されます。</p>
+            <div id="modeButtons" class="platform-dock" aria-label="プラットフォーム選択"></div>
+
+            <div class="setting-block">
+              <span class="mini-label">再生速度</span>
+              <div id="speedButtons" class="speed-dock" aria-label="再生速度選択"></div>
+            </div>
+          </section>
+        </aside>
+
+        <section class="preview-column">
+          <div id="toastRoot" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+          <div id="dropZone" class="viewer-stage">
+            <div id="stageFrame" class="stage-surface-wrap">
+              <div id="stageSurface" class="stage-surface" data-platform="none">
+                <video id="previewVideo" playsinline preload="auto"></video>
+
+                <div id="placeholder" class="empty-state">
+                  <div class="empty-state-card">
+                    <span class="empty-kicker">Lumina Boundary Pro</span>
+                    <strong>動画を読み込む</strong>
+                    <ul class="empty-state-list" aria-hidden="true">
+                      <li>左の「素材を読み込む」から始めます。</li>
+                      <li>SNSを選ぶと、中央にセーフゾーンが表示されます。</li>
+                    </ul>
+                    <label for="fileInput" class="action-button action-button-primary empty-state-action">素材を読み込む</label>
+                  </div>
+                </div>
+
+                <div id="boundaryOverlay" class="boundary-overlay" aria-hidden="true">
+                  <div class="danger-zone danger-top"></div>
+                  <div class="danger-zone danger-right"></div>
+                  <div class="danger-zone danger-bottom"></div>
+                  <div class="safe-frame"></div>
+
+                  <div class="dummy-ui dummy-ui-top">
+                    <span class="ghost-pill ghost-wide"></span>
+                    <span class="ghost-pill ghost-short"></span>
+                    <span class="ghost-dot"></span>
+                  </div>
+
+                  <div class="dummy-ui dummy-ui-right">
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-pill ghost-tall"></span>
+                    <span class="ghost-pill ghost-tiny"></span>
+                  </div>
+
+                  <div class="dummy-ui dummy-ui-bottom">
+                    <span class="ghost-pill ghost-headline"></span>
+                    <span class="ghost-pill ghost-medium"></span>
+                    <span class="ghost-pill ghost-short"></span>
+                    <span class="ghost-block"></span>
+                  </div>
+                </div>
+
+                <div id="flagPins" class="flag-pin-layer" aria-label="チェックピン"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="viewerDock" class="viewer-dock">
+            <div class="dock-primary">
+              <button id="jumpBack" class="dock-button" type="button">-3秒</button>
+              <button id="frameBack" class="dock-button dock-button-secondary" type="button">-1秒</button>
+              <button id="playToggle" class="dock-button dock-button-play" type="button">
+                <span class="transport-icon" aria-hidden="true"></span>
+                <span id="playToggleLabel">再生</span>
+              </button>
+              <button id="frameForward" class="dock-button dock-button-secondary" type="button">+1秒</button>
+              <button id="jumpForward" class="dock-button" type="button">+3秒</button>
+            </div>
+
+            <div class="dock-timeline">
+              <span id="currentTime">00:00</span>
+              <div class="timeline-shell">
+                <div id="flagMarkers" class="flag-markers" aria-label="チェックマーカー"></div>
+                <input id="timeline" class="timeline-range" type="range" min="0" max="1000" value="0" step="0.01">
+              </div>
+              <span id="totalTime">00:00</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="sidebar-column sidebar-right">
+          <div class="sidebar-guide-wrap">
+            <button id="helpToggle" class="viewer-utility-button guide-button" type="button" aria-haspopup="dialog" aria-controls="infoModal">
+              使い方ガイド
+            </button>
+          </div>
+
+          <section class="control-card flags-card">
+            <div class="flags-header-row">
+              <div class="flags-title-chip">手順 3　気になる場所を記録</div>
+              <span id="flagsCount" class="card-pill">0件</span>
+            </div>
+
+            <div class="flags-hint-card">
+              <p id="flagsHint">プレビュー画面内をクリックすると、タイムスタンプが記録されます。</p>
+            </div>
+
+            <div class="flags-info-header">
+              <span id="currentFlagTime" class="timestamp-pill">00:00</span>
+            </div>
+
+            <div id="reviewModeButtons" class="review-mode-dock" aria-label="記録モード切り替え" hidden>
+              <button class="segment-button is-active" type="button" data-review-mode="point">点記録</button>
+              <button class="segment-button" type="button" data-review-mode="range">区間記録</button>
+            </div>
+
+            <div id="pendingRangeCard" class="pending-range-card" hidden>
+              <div class="pending-range-copy">
+                <span class="mini-label">区間開始</span>
+                <strong id="pendingRangeLabel">00:00 / 右 / ALL</strong>
+              </div>
+              <button id="pendingRangeCancel" class="action-button action-button-ghost" type="button">取り消す</button>
+            </div>
+
+            <div class="zone-legend">
+              <span class="zone-pill" data-zone="top">上</span>
+              <span class="zone-pill" data-zone="right">右</span>
+              <span class="zone-pill" data-zone="left">左</span>
+              <span class="zone-pill" data-zone="bottom">下</span>
+              <span class="zone-pill" data-zone="center">中央</span>
+            </div>
+
+            <div class="review-utility-stack">
+              <button id="autoStopToggle" class="segment-button review-toggle-button" type="button" aria-pressed="false">自動停止 OFF</button>
+              <div class="review-utility-row">
+                <button id="exportScreenshotButton" class="action-button action-button-ghost" type="button">PNGで保存</button>
+                <button id="copyShareTextButton" class="action-button action-button-ghost" type="button">共有文をコピー</button>
+              </div>
+            </div>
+
+            <div class="flags-thread">
+              <div id="flagsEmpty" class="flags-empty">
+                <span class="flags-empty-label">表示例</span>
+                <article class="flag-item flag-item-sample" aria-hidden="true">
+                  <span class="flag-time-button">00:00</span>
+                  <div class="flag-meta">
+                    <span class="flag-zone-badge" data-zone="right">右</span>
+                    <span class="flag-platform-badge">TikTok + Reels</span>
+                    <span class="flag-comment-badge">メモ</span>
+                  </div>
+                  <span class="flag-delete">削除</span>
+                </article>
+              </div>
+              <div id="flagsList" class="flags-list" aria-live="polite"></div>
+            </div>
+
+            <div id="commentEditor" class="comment-editor">
+              <div class="comment-editor-header">
+                <div>
+                  <p class="eyebrow">共有メモ</p>
+                  <h4 id="commentEditorTitle">記録を選ぶと、共有メモを追加できます</h4>
+                </div>
+                <span id="commentTargetTime" class="timestamp-pill">--:--</span>
+              </div>
+
+              <input
+                id="flagCommentInput"
+                class="comment-input"
+                type="text"
+                maxlength="160"
+                placeholder="必要な時だけ、直し方を短くメモします。"
+              >
+
+              <div class="comment-actions">
+                <button id="saveCommentButton" class="action-button action-button-primary" type="button">保存</button>
+                <button id="clearCommentButton" class="action-button action-button-ghost" type="button">消す</button>
+              </div>
+            </div>
+
+            <div class="flags-toolbar">
+              <span class="flags-toolbar-copy">一覧や下のバーから戻れます。</span>
+              <button id="clearFlagsButton" class="action-button action-button-ghost" type="button">すべて削除</button>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div id="infoModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal="true"></div>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">使い方</p>
+          <h3 id="infoTitle">使い方ガイド</h3>
+        </div>
+        <button id="infoClose" class="action-button action-button-ghost" type="button">閉じる</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="guide-steps">
+          <article class="guide-step">
+            <span class="guide-step-number">1</span>
+            <div>
+              <strong>素材を読み込む</strong>
+              <p>左の「素材を読み込む」から動画を開きます。読み込むと、すぐ最初の画面が見えます。</p>
+            </div>
+          </article>
+          <article class="guide-step">
+            <span class="guide-step-number">2</span>
+            <div>
+              <strong>表示設定を選ぶ</strong>
+              <p>見たいSNSを選ぶと、中央にセーフゾーンの枠が表示されます。</p>
+            </div>
+          </article>
+          <article class="guide-step">
+            <span class="guide-step-number">3</span>
+            <div>
+              <strong>プレビュー画面内をクリックする</strong>
+              <p>プレビュー画面内の気になる場所をクリックすると、その時刻と位置が右に記録されます。</p>
+            </div>
+          </article>
+          <article class="guide-step">
+            <span class="guide-step-number">4</span>
+            <div>
+              <strong>必要なら共有する</strong>
+              <p>PNGで保存は画像を書き出します。共有文をコピーは、時刻とメモを文章でコピーします。</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="shortcut-list">
+          <div class="shortcut-row"><kbd>Space</kbd><span>再生 / 停止</span></div>
+          <div class="shortcut-row"><kbd>&larr;</kbd><kbd>&rarr;</kbd><span>1秒移動</span></div>
+          <div class="shortcut-row"><kbd>Shift</kbd><kbd>&larr;</kbd><kbd>&rarr;</kbd><span>3秒移動</span></div>
+          <div class="shortcut-row"><kbd>,</kbd><kbd>.</kbd><span>1フレーム移動</span></div>
+          <div class="shortcut-row"><kbd>クリック</kbd><span>プレビュー上の気になる位置を記録</span></div>
+          <div class="shortcut-row"><kbd>Esc</kbd><span>ガイドを閉じる</span></div>
+        </div>
+
+        <div class="modal-note-list">
+          <p>記録した内容は、一覧、タイムライン、履歴、自動停止に連動します。</p>
+          <p>共有メモは必要な時だけで大丈夫です。空のままでも使えます。</p>
+          <p>どの秒数で、どこが危ないかを、すばやく確認するためのツールです。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="historyModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-history="true"></div>
+    <section class="modal-panel modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">履歴</p>
+          <h3 id="historyTitle">過去のチェック記録</h3>
+        </div>
+        <button id="historyClose" class="action-button action-button-ghost" type="button">閉じる</button>
+      </div>
+
+      <div class="modal-body history-modal-body">
+        <p class="history-guide">同じ素材を開いている時は、履歴の時刻からそのまま戻れます。</p>
+        <div id="historyEmpty" class="history-empty">まだ履歴はありません。</div>
+        <div id="historyList" class="history-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </div>
+
+  <div id="confirmModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-confirm="cancel"></div>
+    <section class="modal-panel modal-panel-compact" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="modal-header modal-header-compact">
+        <div>
+          <p class="eyebrow">素材の切り替え</p>
+          <h3 id="confirmTitle">別の素材へ切り替えますか？</h3>
+        </div>
+      </div>
+
+      <div class="modal-body confirm-modal-body">
+        <p id="confirmMessage" class="confirm-copy">現在のチェック記録は履歴に残ります。</p>
+        <div class="confirm-actions">
+          <button id="confirmCancel" class="action-button action-button-ghost" type="button">キャンセル</button>
+          <button id="confirmAccept" class="action-button action-button-primary" type="button">切り替える</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
