@@ -2017,13 +2017,13 @@
 
     ctx.fillStyle = meta.dangerStrong;
     ctx.fillRect(0, 0, width, top);
+    ctx.fillRect(0, 0, left, height);
     ctx.fillRect(width - rightWidth, 0, rightWidth, height);
     ctx.fillRect(0, height - bottomHeight, width, bottomHeight);
 
     ctx.strokeStyle = meta.accentStrong;
     ctx.lineWidth = Math.max(4, Math.round(width * 0.0038));
-    drawRoundedRectPath(ctx, safeLeft, safeTop, safeRight - safeLeft, safeBottom - safeTop, Math.max(26, Math.round(width * 0.028)));
-    ctx.stroke();
+    ctx.strokeRect(safeLeft, safeTop, safeRight - safeLeft, safeBottom - safeTop);
 
     ctx.restore();
   }
