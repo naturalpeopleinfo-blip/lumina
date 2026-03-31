@@ -53,10 +53,31 @@ window.addEventListener("resize", setupLandingHeroObserver);
 setupLandingHeroObserver();
 
 landingCtaLinks.forEach(function (link) {
-  link.addEventListener("click", function () {
+  link.addEventListener("click", function (event) {
+    if (
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
+
+    if (link.target && link.target !== "_self") {
+      return;
+    }
+
+    event.preventDefault();
+
     if (typeof window.luminaTrack !== "function") return;
     window.luminaTrack("landing_cta_click", {
       cta_source: link.getAttribute("data-cta-source") || "unknown"
     });
+
+    window.setTimeout(function () {
+      window.location.href = link.href;
+    }, 180);
   });
 });
