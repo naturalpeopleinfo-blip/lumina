@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lumina Zone</title>
+  <script>document.documentElement.classList.add('has-js');</script>
   <meta
     name="description"
     content="テロップ事故を、投稿前に防ぐ。TikTok・Instagram・YouTubeの表示UIに重ならないかを確認できる、縦動画専用セーフゾーンチェッカー。"
@@ -22,7 +23,7 @@
       </a>
 
       <nav class="landing-nav" aria-label="ページ内ナビゲーション">
-        <a href="./app.html" class="landing-nav-cta">チェックを始める</a>
+        <a href="./app.html" class="landing-nav-cta" id="landingHeaderCta">チェックを始める</a>
       </nav>
     </header>
 
@@ -39,7 +40,7 @@
           </p>
 
           <div class="landing-actions">
-            <a href="./app.html" class="landing-button landing-button-primary">チェックを始める</a>
+            <a href="./app.html" class="landing-button landing-button-primary landing-hero-cta" id="landingHeroCta">チェックを始める</a>
           </div>
 
           <div class="landing-hero-platforms" aria-label="対応SNS">
@@ -233,5 +234,6 @@
       <span>© Lumina Zone</span>
     </footer>
   </div>
+  <script src="landing.js" defer></script>
 </body>
 </html>
