@@ -3,358 +3,235 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumina Boundary Pro</title>
+  <title>Lumina Zone</title>
   <meta
     name="description"
-    content="映像制作会社向けの完全ローカル動作セーフゾーン確認SPAツール Lumina Boundary Pro"
+    content="テロップ事故を、投稿前に防ぐ。TikTok・Instagram・YouTubeの表示UIに重ならないかを確認できる、縦動画専用セーフゾーンチェッカー。"
   >
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="app-shell">
-    <main class="workspace-shell panel">
-      <input id="fileInput" type="file" accept="video/*">
+<body class="landing-page">
+  <div class="landing-shell">
+    <header class="landing-header">
+      <a href="./index.html" class="landing-brand" aria-label="Lumina Zone ホーム">
+        <img src="lumina-zone-mark.svg" alt="" class="landing-brand-mark" width="40" height="40">
+        <span class="landing-brand-copy">
+          <strong>Lumina Zone</strong>
+          <span>縦動画セーフゾーンチェッカー</span>
+        </span>
+      </a>
 
-      <div class="workspace-main">
-        <aside class="sidebar-column sidebar-left">
-          <section class="sidebar-brand">
-            <p class="product-kicker">Lumina Boundary Pro</p>
-            <div class="viewer-heading">
-              <p class="eyebrow">投稿時のテロップ表示ミスを無くす</p>
-              <h2 id="modeLabel">縦動画専用セーフゾーンチェッカー</h2>
+      <nav class="landing-nav" aria-label="ページ内ナビゲーション">
+        <a href="./app.html" class="landing-nav-cta">チェックを始める</a>
+      </nav>
+    </header>
+
+    <main class="landing-main">
+      <section class="landing-hero">
+        <div class="landing-hero-copy">
+          <h1>
+            <span class="landing-hero-gradient landing-hero-line">テロップ事故を</span>
+            <span class="landing-hero-gradient landing-hero-line">投稿前に防ぐ</span>
+          </h1>
+          <p class="landing-lead">
+            Lumina Zone は、SNSの表示UIを想定して、
+            投稿前の最終ファイルを確認できるツールです。
+          </p>
+
+          <div class="landing-actions">
+            <a href="./app.html" class="landing-button landing-button-primary">チェックを始める</a>
+          </div>
+
+          <div class="landing-hero-platforms" aria-label="対応SNS">
+            <span class="landing-platform-label">対応SNS</span>
+            <div class="landing-platforms">
+              <span class="landing-platform-icon platform-tiktok" title="TikTok" aria-label="TikTok">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path class="tiktok-shadow tiktok-cyan" d="M13.8 3.8c.4 1.6 1.4 2.8 2.9 3.6 1 .5 1.8.7 2.4.7v2.5c-.8 0-1.9-.2-3.2-.8-.6-.3-1.3-.7-1.9-1.3v7c0 3.1-2.4 5.5-5.5 5.5s-5.4-2.4-5.4-5.5 2.4-5.5 5.4-5.5c.4 0 .8 0 1.2.1v2.6a4 4 0 0 0-1.2-.2c-1.6 0-2.8 1.2-2.8 2.9 0 1.6 1.2 2.8 2.8 2.8 1.6 0 2.9-1.2 2.9-2.8V3.8h2.4Z"/>
+                  <path class="tiktok-shadow tiktok-red" d="M14.9 3c.4 1.5 1.5 2.8 3 3.6 1 .5 1.9.7 2.5.7v2.7c-.8 0-2-.2-3.4-.9-.7-.3-1.4-.8-2-1.4v7.2c0 3.1-2.5 5.6-5.6 5.6S3.8 18 3.8 14.9s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.1-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3s1.3 2.9 2.9 2.9 2.9-1.3 2.9-2.9V3h2.6Z"/>
+                  <path class="tiktok-main" d="M14.4 3.3c.4 1.6 1.5 2.9 3 3.7 1 .5 1.9.7 2.4.7v2.6c-.8 0-2-.2-3.3-.9-.7-.3-1.4-.8-2-1.4v7.1c0 3.1-2.5 5.6-5.6 5.6S3.5 18.2 3.5 15.1s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.2-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3S7.5 18 9.1 18s2.9-1.3 2.9-2.9V3.3h2.4Z"/>
+                </svg>
+              </span>
+              <span class="landing-platform-icon platform-instagram" title="Instagram" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7.2 3h9.6A4.2 4.2 0 0 1 21 7.2v9.6a4.2 4.2 0 0 1-4.2 4.2H7.2A4.2 4.2 0 0 1 3 16.8V7.2A4.2 4.2 0 0 1 7.2 3Zm0 2.2a2 2 0 0 0-2 2v9.6a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V7.2a2 2 0 0 0-2-2H7.2Zm4.8 2.3A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2.2A2.3 2.3 0 1 0 14.3 12 2.3 2.3 0 0 0 12 9.7Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"/>
+                </svg>
+              </span>
+              <span class="landing-platform-icon platform-youtube" title="YouTube" aria-label="YouTube">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20.4 7.2c-.2-.9-.9-1.6-1.8-1.8C17 5 12 5 12 5s-5 0-6.6.4c-.9.2-1.6.9-1.8 1.8C3.2 8.8 3.2 12 3.2 12s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8 1.6.4 6.6.4 6.6.4s5 0 6.6-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8ZM10.2 15.4V8.6L15.9 12l-5.7 3.4Z"/>
+                </svg>
+              </span>
             </div>
-          </section>
+          </div>
+        </div>
 
-          <section class="control-card status-card">
-            <div class="card-header">
-              <div>
-                <p class="eyebrow">手順 1</p>
-                <h3>素材を読み込む</h3>
-              </div>
-            </div>
-            <p class="support-note">まず動画を読み込みます。</p>
+        <figure class="landing-hero-device">
+          <img
+            src="./assets/mac-hero.png"
+            alt="Lumina Zone を表示したノートPCのイメージ"
+            class="landing-hero-device-image"
+          >
+        </figure>
+      </section>
 
-            <div class="nameplate-card">
-              <span>クリップ名</span>
-              <strong id="metaName">未読み込み</strong>
-            </div>
+      <section class="landing-section landing-section-centered landing-timing-section">
+        <div class="landing-section-head landing-section-head-centered">
+          <p class="landing-section-kicker">Timing</p>
+          <h2>公開前の見落としをゼロにする、最後の保険</h2>
+        </div>
 
-            <div class="meta-chip-grid">
-              <article class="meta-chip">
-                <span>サイズ</span>
-                <strong id="metaSize">-- MB</strong>
-              </article>
-              <article class="meta-chip">
-                <span>長さ</span>
-                <strong id="metaDuration">00:00</strong>
-              </article>
-              <article class="meta-chip">
-                <span>解像度</span>
-                <strong id="metaResolution">-- × --</strong>
-              </article>
-            </div>
+        <div class="landing-timing-copy">
+          <p>
+            Lumina Zone は、編集が終わった最終ファイルを投稿前に確認するためのツールです。
+            SNSでは、テロップや重要な要素がUIに隠れていても、投稿するまで気づけないことがあります。
+          </p>
+          <p>
+            公開後は動画の修正ができないため、最後の確認漏れはそのまま事故になります。
+          </p>
+          <p class="landing-timing-closing">
+            投稿前の最後に、見落としを残さないために使ってください。
+          </p>
+        </div>
+      </section>
 
-            <div class="source-action-row">
-              <label for="fileInput" class="action-button action-button-primary">素材を読み込む</label>
-              <button id="historyToggle" class="action-button action-button-ghost" type="button">履歴</button>
-            </div>
-          </section>
+      <section id="about" class="landing-section landing-section-centered">
+        <div class="landing-section-head landing-section-head-centered">
+          <p class="landing-section-kicker">About</p>
+          <h2>セーフゾーンとは</h2>
+          <p class="landing-section-intro">
+            文字や見せたい要素を、SNSの表示UIに重ねず安全に見せられる範囲のことです。
+          </p>
+        </div>
 
-          <section class="control-card setup-card">
-            <div class="card-header">
-              <div>
-                <p class="eyebrow">手順 2</p>
-                <h3>表示設定</h3>
-              </div>
-            </div>
-            <p id="modeDescription" class="mode-note">1つ以上選ぶと、セーフゾーンの枠が表示されます。</p>
-            <div id="modeButtons" class="platform-dock" aria-label="プラットフォーム選択"></div>
-
-            <div class="setting-block">
-              <span class="mini-label">再生速度</span>
-              <div id="speedButtons" class="speed-dock" aria-label="再生速度選択"></div>
-            </div>
-          </section>
-        </aside>
-
-        <section class="preview-column">
-          <div id="toastRoot" class="toast-root" aria-live="polite" aria-atomic="true"></div>
-
-          <div id="dropZone" class="viewer-stage">
-            <div id="stageFrame" class="stage-surface-wrap">
-              <div id="stageSurface" class="stage-surface" data-platform="none">
-                <video id="previewVideo" playsinline preload="auto"></video>
-
-                <div id="placeholder" class="empty-state">
-                  <div class="empty-state-card">
-                    <span class="empty-kicker">Lumina Boundary Pro</span>
-                    <strong>動画を読み込む</strong>
-                    <ul class="empty-state-list" aria-hidden="true">
-                      <li>左の「素材を読み込む」から始めます。</li>
-                      <li>SNSを選ぶと、中央にセーフゾーンが表示されます。</li>
-                    </ul>
-                    <label for="fileInput" class="action-button action-button-primary empty-state-action">素材を読み込む</label>
-                  </div>
-                </div>
-
-                <div id="boundaryOverlay" class="boundary-overlay" aria-hidden="true">
-                  <div class="danger-zone danger-top"></div>
-                  <div class="danger-zone danger-left"></div>
-                  <div class="danger-zone danger-right"></div>
-                  <div class="danger-zone danger-bottom"></div>
-                  <div class="safe-frame"></div>
-
-                  <div class="dummy-ui dummy-ui-top">
-                    <span class="ghost-pill ghost-wide"></span>
-                    <span class="ghost-pill ghost-short"></span>
-                    <span class="ghost-dot"></span>
-                  </div>
-
-                  <div class="dummy-ui dummy-ui-right">
-                    <span class="ghost-ring"></span>
-                    <span class="ghost-ring"></span>
-                    <span class="ghost-ring"></span>
-                    <span class="ghost-ring"></span>
-                    <span class="ghost-pill ghost-tall"></span>
-                    <span class="ghost-pill ghost-tiny"></span>
-                  </div>
-
-                  <div class="dummy-ui dummy-ui-bottom">
-                    <span class="ghost-pill ghost-headline"></span>
-                    <span class="ghost-pill ghost-medium"></span>
-                    <span class="ghost-pill ghost-short"></span>
-                    <span class="ghost-block"></span>
-                  </div>
-                </div>
-
-                <div id="flagPins" class="flag-pin-layer" aria-label="チェックピン"></div>
+        <div class="landing-about-stack">
+          <div class="landing-diagram" aria-hidden="true">
+            <div class="landing-diagram-single">
+              <div class="landing-diagram-phone">
+                <div class="landing-diagram-danger landing-diagram-danger-top"></div>
+                <div class="landing-diagram-danger landing-diagram-danger-right"></div>
+                <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
+                <div class="landing-diagram-safe"></div>
               </div>
             </div>
           </div>
 
-          <div id="viewerDock" class="viewer-dock">
-            <div class="dock-primary">
-              <button id="jumpBack" class="dock-button" type="button">-3秒</button>
-              <button id="frameBack" class="dock-button dock-button-secondary" type="button">-1秒</button>
-              <button id="playToggle" class="dock-button dock-button-play" type="button">
-                <span class="transport-icon" aria-hidden="true"></span>
-                <span id="playToggleLabel">再生</span>
-              </button>
-              <button id="frameForward" class="dock-button dock-button-secondary" type="button">+1秒</button>
-              <button id="jumpForward" class="dock-button" type="button">+3秒</button>
-            </div>
-
-            <div class="dock-timeline">
-              <span id="currentTime">00:00</span>
-              <div class="timeline-shell">
-                <div id="flagMarkers" class="flag-markers" aria-label="チェックマーカー"></div>
-                <input id="timeline" class="timeline-range" type="range" min="0" max="1000" value="0" step="0.01">
-              </div>
-              <span id="totalTime">00:00</span>
-            </div>
+          <div class="landing-about-copy">
+            <p>
+              投稿後にテロップや字幕がボタンや説明欄に隠れるミスを防ぎ、
+              見せたい情報を最後まできちんと届けやすくします。
+            </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <aside class="sidebar-column sidebar-right">
-          <div class="sidebar-guide-wrap">
-            <button id="helpToggle" class="viewer-utility-button guide-button" type="button" aria-haspopup="dialog" aria-controls="infoModal">
-              使い方ガイド
-            </button>
+      <section id="report" class="landing-section landing-section-centered">
+        <div class="landing-section-head landing-section-head-centered">
+          <p class="landing-section-kicker">Report</p>
+          <h2>確認も修正依頼も、これひとつで。</h2>
+          <p class="landing-section-intro">
+            気になる場所にはメモも残せます。チェック結果はPDFにまとめて、そのまま確認先へ渡せます。
+          </p>
+        </div>
+
+        <div class="landing-report-stack">
+          <div class="landing-report-copy">
+            <p>
+              確認位置、修正メモ、対象SNSを、ひとつのレポートに整理できます。
+            </p>
+            <p>
+              投稿前の確認から、修正依頼の共有まで、ひとつの流れで完結します。
+            </p>
           </div>
 
-          <section class="control-card flags-card">
-            <div class="flags-header-row">
-              <div class="flags-title-chip">手順 3　気になる場所を記録</div>
-              <span id="flagsCount" class="card-pill">0件</span>
-            </div>
+          <div class="landing-report-signals" aria-label="レポートでできること">
+            <span class="landing-report-signal">確認位置を記録</span>
+            <span class="landing-report-signal">修正メモを残せる</span>
+            <span class="landing-report-signal">PDFでそのまま共有</span>
+          </div>
 
-            <div class="flags-hint-card">
-              <p id="flagsHint">プレビュー画面内をクリックすると、タイムスタンプが記録されます。</p>
-            </div>
-
-            <div class="flags-info-header">
-              <span id="currentFlagTime" class="timestamp-pill">00:00</span>
-            </div>
-
-            <div id="reviewModeButtons" class="review-mode-dock" aria-label="記録モード切り替え" hidden>
-              <button class="segment-button is-active" type="button" data-review-mode="point">点記録</button>
-              <button class="segment-button" type="button" data-review-mode="range">区間記録</button>
-            </div>
-
-            <div id="pendingRangeCard" class="pending-range-card" hidden>
-              <div class="pending-range-copy">
-                <span class="mini-label">区間開始</span>
-                <strong id="pendingRangeLabel">00:00 / 右 / ALL</strong>
+          <div class="landing-report-visual landing-card" aria-hidden="true">
+            <div class="landing-report-sheet">
+              <div class="landing-report-head">
+                <span class="landing-report-brand">Lumina Zone</span>
+                <strong>セーフゾーン確認レポート</strong>
+                <span>出力日: 2026-03-30</span>
               </div>
-              <button id="pendingRangeCancel" class="action-button action-button-ghost" type="button">取り消す</button>
-            </div>
 
-            <div class="zone-legend">
-              <span class="zone-pill" data-zone="top">上</span>
-              <span class="zone-pill" data-zone="right">右</span>
-              <span class="zone-pill" data-zone="left">左</span>
-              <span class="zone-pill" data-zone="bottom">下</span>
-              <span class="zone-pill" data-zone="center">中央</span>
-            </div>
-
-            <div class="review-utility-stack">
-              <button id="autoStopToggle" class="segment-button review-toggle-button" type="button" aria-pressed="false">自動停止 OFF</button>
-              <div class="review-utility-row">
-                <button id="exportScreenshotButton" class="action-button action-button-ghost" type="button">PNGで保存</button>
-                <button id="copyShareTextButton" class="action-button action-button-ghost" type="button">共有文をコピー</button>
-              </div>
-            </div>
-
-            <div class="flags-thread">
-              <div id="flagsEmpty" class="flags-empty">
-                <span class="flags-empty-label">表示例</span>
-                <article class="flag-item flag-item-sample" aria-hidden="true">
-                  <span class="flag-time-button">00:00</span>
-                  <div class="flag-meta">
-                    <span class="flag-zone-badge" data-zone="right">右</span>
-                    <span class="flag-platform-badge">TikTok + Reels</span>
-                    <span class="flag-comment-badge">メモ</span>
-                  </div>
-                  <span class="flag-delete">削除</span>
-                </article>
-              </div>
-              <div id="flagsList" class="flags-list" aria-live="polite"></div>
-            </div>
-
-            <div id="commentEditor" class="comment-editor">
-              <div class="comment-editor-header">
-                <div>
-                  <p class="eyebrow">共有メモ</p>
-                  <h4 id="commentEditorTitle">記録を選ぶと、共有メモを追加できます</h4>
+              <div class="landing-report-body">
+                <div class="landing-report-thumb">
+                  <div class="landing-report-thumb-safe"></div>
+                  <div class="landing-report-thumb-danger is-top"></div>
+                  <div class="landing-report-thumb-danger is-right"></div>
+                  <div class="landing-report-thumb-danger is-bottom"></div>
+                  <div class="landing-report-thumb-pin is-a"></div>
+                  <div class="landing-report-thumb-pin is-b"></div>
                 </div>
-                <span id="commentTargetTime" class="timestamp-pill">--:--</span>
+
+                <div class="landing-report-meta">
+                  <div><span>タイム</span><strong>00:58</strong></div>
+                  <div><span>解像度</span><strong>1080 × 1920</strong></div>
+                  <div><span>表示設定</span><strong>Reels</strong></div>
+                  <div><span>チェック件数</span><strong>3件</strong></div>
+                </div>
               </div>
 
-              <input
-                id="flagCommentInput"
-                class="comment-input"
-                type="text"
-                maxlength="160"
-                placeholder="必要な時だけ、直し方を短くメモします。"
-              >
-
-              <div class="comment-actions">
-                <button id="saveCommentButton" class="action-button action-button-primary" type="button">保存</button>
-                <button id="clearCommentButton" class="action-button action-button-ghost" type="button">消す</button>
+              <div class="landing-report-table">
+                <div class="landing-report-row is-head"><span>タイム</span><span>確認位置</span><span>対象SNS</span><span>メモ</span></div>
+                <div class="landing-report-row"><span>00:04</span><span>下</span><span>Reels</span><span>テロップを少し上へ</span></div>
+                <div class="landing-report-row"><span>00:15</span><span>右</span><span>Reels</span><span>余白を少し広げる</span></div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div class="flags-toolbar">
-              <span class="flags-toolbar-copy">一覧や下のバーから戻れます。</span>
-              <button id="clearFlagsButton" class="action-button action-button-ghost" type="button">すべて削除</button>
-            </div>
-          </section>
-        </aside>
-      </div>
+      <section id="steps" class="landing-section landing-section-centered">
+        <div class="landing-section-head landing-section-head-centered">
+          <p class="landing-section-kicker">Steps</p>
+          <h2>使い方はシンプルです</h2>
+          <p class="landing-section-intro">
+            読み込み、表示設定、記録の3ステップで、公開前の確認が終わります。
+          </p>
+        </div>
+
+        <div class="landing-steps-grid">
+          <article class="landing-step-card landing-card">
+            <span class="landing-step-chip">STEP 1</span>
+            <h3>動画を読み込む</h3>
+            <p>確認したい動画を開きます。</p>
+            <p class="landing-step-note">動画はアップロードされません。ローカルのまま確認できます。</p>
+          </article>
+          <article class="landing-step-card landing-card">
+            <span class="landing-step-chip">STEP 2</span>
+            <h3>確認したいSNSを選ぶ</h3>
+            <p>1つでも、複数でも選べます。</p>
+          </article>
+          <article class="landing-step-card landing-card">
+            <span class="landing-step-chip">STEP 3</span>
+            <h3>気になる場所を記録する</h3>
+            <p>プレビュー画面内をクリックすると、その時刻と位置を記録できます。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="landing-section landing-section-centered">
+        <div class="landing-cta landing-card">
+          <div class="landing-cta-copy">
+            <p class="landing-section-kicker">Start</p>
+            <h2>まずは1本、確認してみる</h2>
+            <p>ログイン機能は今後追加予定です。まずはそのまま使えます。</p>
+          </div>
+          <div class="landing-actions landing-cta-actions">
+            <a href="./app.html" class="landing-button landing-button-primary">チェックを始める</a>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <footer class="landing-footer">
+      <span>© Lumina Zone</span>
+    </footer>
   </div>
-
-  <div id="infoModal" class="modal" hidden>
-    <div class="modal-backdrop" data-close-modal="true"></div>
-    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
-      <div class="modal-header">
-        <div>
-          <p class="eyebrow">使い方</p>
-          <h3 id="infoTitle">使い方ガイド</h3>
-        </div>
-        <button id="infoClose" class="action-button action-button-ghost" type="button">閉じる</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="guide-steps">
-          <article class="guide-step">
-            <span class="guide-step-number">1</span>
-            <div>
-              <strong>素材を読み込む</strong>
-              <p>左の「素材を読み込む」から動画を開きます。読み込むと、すぐ最初の画面が見えます。</p>
-            </div>
-          </article>
-          <article class="guide-step">
-            <span class="guide-step-number">2</span>
-            <div>
-              <strong>表示設定を選ぶ</strong>
-              <p>見たいSNSを選ぶと、中央にセーフゾーンの枠が表示されます。</p>
-            </div>
-          </article>
-          <article class="guide-step">
-            <span class="guide-step-number">3</span>
-            <div>
-              <strong>プレビュー画面内をクリックする</strong>
-              <p>プレビュー画面内の気になる場所をクリックすると、その時刻と位置が右に記録されます。</p>
-            </div>
-          </article>
-          <article class="guide-step">
-            <span class="guide-step-number">4</span>
-            <div>
-              <strong>必要なら共有する</strong>
-              <p>PNGで保存は画像を書き出します。共有文をコピーは、時刻とメモを文章でコピーします。</p>
-            </div>
-          </article>
-        </div>
-
-        <div class="shortcut-list">
-          <div class="shortcut-row"><kbd>Space</kbd><span>再生 / 停止</span></div>
-          <div class="shortcut-row"><kbd>&larr;</kbd><kbd>&rarr;</kbd><span>1秒移動</span></div>
-          <div class="shortcut-row"><kbd>Shift</kbd><kbd>&larr;</kbd><kbd>&rarr;</kbd><span>3秒移動</span></div>
-          <div class="shortcut-row"><kbd>,</kbd><kbd>.</kbd><span>1フレーム移動</span></div>
-          <div class="shortcut-row"><kbd>クリック</kbd><span>プレビュー上の気になる位置を記録</span></div>
-          <div class="shortcut-row"><kbd>Esc</kbd><span>ガイドを閉じる</span></div>
-        </div>
-
-        <div class="modal-note-list">
-          <p>記録した内容は、一覧、タイムライン、履歴、自動停止に連動します。</p>
-          <p>共有メモは必要な時だけで大丈夫です。空のままでも使えます。</p>
-          <p>どの秒数で、どこが危ないかを、すばやく確認するためのツールです。</p>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <div id="historyModal" class="modal" hidden>
-    <div class="modal-backdrop" data-close-history="true"></div>
-    <section class="modal-panel modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
-      <div class="modal-header">
-        <div>
-          <p class="eyebrow">履歴</p>
-          <h3 id="historyTitle">過去のチェック記録</h3>
-        </div>
-        <button id="historyClose" class="action-button action-button-ghost" type="button">閉じる</button>
-      </div>
-
-      <div class="modal-body history-modal-body">
-        <p class="history-guide">同じ素材を開いている時は、履歴の時刻からそのまま戻れます。</p>
-        <div id="historyEmpty" class="history-empty">まだ履歴はありません。</div>
-        <div id="historyList" class="history-list" aria-live="polite"></div>
-      </div>
-    </section>
-  </div>
-
-  <div id="confirmModal" class="modal" hidden>
-    <div class="modal-backdrop" data-close-confirm="cancel"></div>
-    <section class="modal-panel modal-panel-compact" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-      <div class="modal-header modal-header-compact">
-        <div>
-          <p class="eyebrow">素材の切り替え</p>
-          <h3 id="confirmTitle">別の素材へ切り替えますか？</h3>
-        </div>
-      </div>
-
-      <div class="modal-body confirm-modal-body">
-        <p id="confirmMessage" class="confirm-copy">現在のチェック記録は履歴に残ります。</p>
-        <div class="confirm-actions">
-          <button id="confirmCancel" class="action-button action-button-ghost" type="button">キャンセル</button>
-          <button id="confirmAccept" class="action-button action-button-primary" type="button">切り替える</button>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <script src="config.js"></script>
-  <script src="app.js"></script>
 </body>
 </html>

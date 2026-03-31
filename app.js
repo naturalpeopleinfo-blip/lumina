@@ -10,7 +10,6 @@
   var HISTORY_LIMIT = 30;
   var FIRST_FRAME_TIME = 0.04;
   var ACTIVE_FLAG_TOLERANCE = 0.45;
-  var MIN_RANGE_DURATION = 0.2;
   var PLATFORM_ORDER = ["tiktok", "reels", "shorts"];
   var DEFAULT_PLATFORM_SETTINGS = {
     tiktok: { right: "15%", bottom: "20%", top: "5%" },
@@ -37,10 +36,38 @@
     success: "保存完了",
     warning: "ご確認",
     error: "エラー",
-    info: "Lumina Boundary Pro"
+    info: "Lumina Zone"
   };
-  var EMPTY_MODE_LABEL = "縦動画専用セーフゾーンチェッカー";
+  var EMPTY_MODE_LABEL = "縦動画セーフゾーンチェッカー";
   var EMPTY_MODE_DESCRIPTION = "1つ以上選ぶと、セーフゾーンの枠が表示されます。";
+  var HINT_NEEDS_RECORDS = "記録すると使えます。";
+  var HINT_NEEDS_HISTORY = "履歴がたまると使えます。";
+  var ONBOARDING_STEPS = [
+    {
+      selector: "#guideStepSource",
+      label: "使い方ガイド 1 / 4",
+      title: "まず動画を読み込みます",
+      body: "まず素材を読み込みます。読み込んだ後は左から別素材も開けます。"
+    },
+    {
+      selector: "#guideStepModes",
+      label: "使い方ガイド 2 / 4",
+      title: "表示するSNSを選びます",
+      body: "確認したいSNSを選びます。1つでも、複数でも選べます。"
+    },
+    {
+      selector: "#stageSurface",
+      label: "使い方ガイド 3 / 4",
+      title: "プレビュー画面内をクリックします",
+      body: "プレビュー画面内の気になる場所をクリックすると、その時刻と位置が右に記録されます。"
+    },
+    {
+      selector: "#guideStepShare",
+      label: "使い方ガイド 4 / 4",
+      title: "必要ならPDF化して共有します",
+      body: "チェック内容をPDF化すると、確認レポートとしてそのまま共有できます。"
+    }
+  ];
 
   var DEFAULT_PLATFORM_META = {
     all: {
@@ -104,19 +131,19 @@
     mediaKey: "",
     flags: [],
     selectedFlagId: "",
-    reviewMode: "point",
-    pendingRange: null,
     autoStopEnabled: false,
     autoStopTargetTime: null,
     isScrubbing: false,
     stageRatio: DEFAULT_RATIO,
-    isInfoOpen: false,
     isHistoryOpen: false,
     isConfirmOpen: false,
+    isOnboardingOpen: false,
     confirmIntent: "",
     pendingFile: null,
     pendingInitialFrame: false,
-    isPreviewSeeking: false
+    onboardingStep: 0,
+    isPreviewSeeking: false,
+    pdfNeedsAttention: false
   };
 
   var platforms = null;
@@ -134,7 +161,6 @@
     renderModeButtons();
     renderSpeedButtons();
     clearPlatformSelection();
-    applyReviewMode(state.reviewMode);
     syncPlaybackRate();
     clearMediaStatus();
     renderFlags();
@@ -169,16 +195,11 @@
     els.metaSize = document.getElementById("metaSize");
     els.metaDuration = document.getElementById("metaDuration");
     els.metaResolution = document.getElementById("metaResolution");
+    els.sourceLoadButton = document.getElementById("sourceLoadButton");
+    els.exportCurrentPdfButton = document.getElementById("exportCurrentPdfButton");
     els.flagsCount = document.getElementById("flagsCount");
-    els.currentFlagTime = document.getElementById("currentFlagTime");
     els.flagsHint = document.getElementById("flagsHint");
-    els.reviewModeButtons = document.getElementById("reviewModeButtons");
-    els.pendingRangeCard = document.getElementById("pendingRangeCard");
-    els.pendingRangeLabel = document.getElementById("pendingRangeLabel");
-    els.pendingRangeCancel = document.getElementById("pendingRangeCancel");
     els.autoStopToggle = document.getElementById("autoStopToggle");
-    els.exportScreenshotButton = document.getElementById("exportScreenshotButton");
-    els.copyShareTextButton = document.getElementById("copyShareTextButton");
     els.commentEditorTitle = document.getElementById("commentEditorTitle");
     els.commentTargetTime = document.getElementById("commentTargetTime");
     els.flagCommentInput = document.getElementById("flagCommentInput");
@@ -189,11 +210,11 @@
     els.clearFlagsButton = document.getElementById("clearFlagsButton");
     els.commentEditor = document.getElementById("commentEditor");
     els.helpToggle = document.getElementById("helpToggle");
-    els.infoModal = document.getElementById("infoModal");
-    els.infoClose = document.getElementById("infoClose");
     els.historyToggle = document.getElementById("historyToggle");
     els.historyModal = document.getElementById("historyModal");
     els.historyClose = document.getElementById("historyClose");
+    els.historyCurrentPdfButton = document.getElementById("historyCurrentPdfButton");
+    els.historyTodayPdfButton = document.getElementById("historyTodayPdfButton");
     els.historyEmpty = document.getElementById("historyEmpty");
     els.historyList = document.getElementById("historyList");
     els.confirmModal = document.getElementById("confirmModal");
@@ -202,6 +223,14 @@
     els.confirmCancel = document.getElementById("confirmCancel");
     els.confirmAccept = document.getElementById("confirmAccept");
     els.toastRoot = document.getElementById("toastRoot");
+    els.onboardingOverlay = document.getElementById("onboardingOverlay");
+    els.onboardingSpotlight = document.getElementById("onboardingSpotlight");
+    els.onboardingCard = document.getElementById("onboardingCard");
+    els.onboardingStepLabel = document.getElementById("onboardingStepLabel");
+    els.onboardingTitle = document.getElementById("onboardingTitle");
+    els.onboardingBody = document.getElementById("onboardingBody");
+    els.onboardingSkip = document.getElementById("onboardingSkip");
+    els.onboardingNext = document.getElementById("onboardingNext");
   }
 
   function bindEvents() {
@@ -233,11 +262,10 @@
     els.flagMarkers.addEventListener("click", onFlagMarkerClick);
     els.flagsList.addEventListener("click", onFlagsListClick);
     els.clearFlagsButton.addEventListener("click", clearAllFlags);
-    els.reviewModeButtons.addEventListener("click", onReviewModeClick);
-    els.pendingRangeCancel.addEventListener("click", cancelPendingRange);
     els.autoStopToggle.addEventListener("click", toggleAutoStop);
-    els.exportScreenshotButton.addEventListener("click", exportScreenshot);
-    els.copyShareTextButton.addEventListener("click", copyShareText);
+    if (els.exportCurrentPdfButton) {
+      els.exportCurrentPdfButton.addEventListener("click", exportCurrentPdf);
+    }
     els.saveCommentButton.addEventListener("click", saveSelectedFlagComment);
     els.clearCommentButton.addEventListener("click", clearSelectedFlagComment);
     els.flagCommentInput.addEventListener("keydown", onFlagCommentInputKeydown);
@@ -250,16 +278,20 @@
     els.video.addEventListener("ended", updateTransportState);
     els.video.addEventListener("error", onVideoError);
 
-    els.helpToggle.addEventListener("click", openInfoModal);
-    els.infoClose.addEventListener("click", closeInfoModal);
-    els.infoModal.addEventListener("click", onInfoModalClick);
+    els.helpToggle.addEventListener("click", function () {
+      openOnboarding(0);
+    });
     els.historyToggle.addEventListener("click", openHistoryModal);
     els.historyClose.addEventListener("click", closeHistoryModal);
+    els.historyCurrentPdfButton.addEventListener("click", exportCurrentPdf);
+    els.historyTodayPdfButton.addEventListener("click", exportTodayHistoryPdf);
     els.historyModal.addEventListener("click", onHistoryModalClick);
     els.historyList.addEventListener("click", onHistoryListClick);
     els.confirmCancel.addEventListener("click", closeConfirmModal);
     els.confirmAccept.addEventListener("click", confirmPendingAction);
     els.confirmModal.addEventListener("click", onConfirmModalClick);
+    els.onboardingSkip.addEventListener("click", closeOnboarding);
+    els.onboardingNext.addEventListener("click", advanceOnboarding);
 
     document.addEventListener("keydown", onKeydown);
     window.addEventListener("resize", requestStageFit);
@@ -412,40 +444,8 @@
     return Array.isArray(state.activePlatforms) && state.activePlatforms.length > 0;
   }
 
-  function onReviewModeClick(event) {
-    var button = event.target.closest("[data-review-mode]");
-
-    if (!button) {
-      return;
-    }
-
-    applyReviewMode(button.getAttribute("data-review-mode"));
-  }
-
-  function applyReviewMode(mode) {
-    var nextMode = "point";
-
-    if (state.reviewMode === nextMode) {
-      updateReviewModeUI();
-      return;
-    }
-
-    if (state.pendingRange) {
-      cancelPendingRange(false);
-    }
-
-    state.reviewMode = nextMode;
-    updateReviewModeUI();
-  }
-
-  function updateReviewModeUI() {
-    updateActiveButtons(els.reviewModeButtons, "[data-review-mode]", state.reviewMode, "data-review-mode");
-    updateFlagsHint();
-    renderPendingRange();
-  }
-
   function updateFlagsHint() {
-    els.flagsHint.textContent = "プレビュー画面内をクリックすると、タイムスタンプが記録されます。";
+    els.flagsHint.textContent = "プレビュー画面内をクリックすると、右に記録されます。";
   }
 
   function toggleAutoStop() {
@@ -465,16 +465,15 @@
 
   function updateAutoStopButton() {
     var enabled = state.autoStopEnabled;
+    var isReady = hasMediaLoaded() && !!state.flags.length;
 
     els.autoStopToggle.textContent = enabled ? "自動停止 ON" : "自動停止 OFF";
     els.autoStopToggle.classList.toggle("is-active", enabled);
+    els.autoStopToggle.classList.toggle("is-ready", isReady && !enabled);
     els.autoStopToggle.setAttribute("aria-pressed", enabled ? "true" : "false");
-    els.autoStopToggle.disabled = !hasMediaLoaded() || !state.flags.length;
-    els.exportScreenshotButton.disabled = !hasMediaLoaded() || !hasActiveSelection();
-    els.copyShareTextButton.disabled = !state.flags.length;
-    els.autoStopToggle.title = state.flags.length ? "次の記録位置で自動停止します。" : "記録ができると使えます。";
-    els.exportScreenshotButton.title = hasActiveSelection() ? "今の画面をPNGで保存します。" : "表示設定を選ぶと使えます。";
-    els.copyShareTextButton.title = state.flags.length ? "時刻とメモを文章でコピーします。" : "記録ができると使えます。";
+    els.autoStopToggle.disabled = !isReady;
+    els.autoStopToggle.title = state.flags.length ? "次の記録位置で自動停止します。" : HINT_NEEDS_RECORDS;
+    updatePdfButtons();
   }
 
   function applyPlatform(platformSelection) {
@@ -617,11 +616,11 @@
     state.mediaKey = buildMediaKey(file);
     state.flags = readFlagsFromStorage(state.mediaKey);
     state.selectedFlagId = "";
-    state.pendingRange = null;
     state.autoStopTargetTime = null;
     state.pendingFile = null;
     state.pendingInitialFrame = true;
     state.isPreviewSeeking = false;
+    state.pdfNeedsAttention = state.flags.length > 0;
     state.objectUrl = URL.createObjectURL(file);
 
     els.video.src = state.objectUrl;
@@ -634,6 +633,7 @@
     els.metaSize.title = formatBytes(file.size);
     els.metaDuration.textContent = "--:--";
     els.metaResolution.textContent = "-- × --";
+    updateSourceLoadButton();
 
     clearPlatformSelection();
     closeConfirmModal();
@@ -641,7 +641,6 @@
     syncTimeline();
     renderFlags();
     renderCommentEditor();
-    updateReviewModeUI();
     updateAutoStopButton();
     requestStageFit();
     showToast(file.name + " を読み込みました。", "success");
@@ -702,7 +701,6 @@
     setControlsEnabled(false);
     updateTransportState();
     renderFlags();
-    renderPendingRange();
     renderCommentEditor();
     updateAutoStopButton();
     requestStageFit();
@@ -721,7 +719,7 @@
     els.timeline.value = 0;
     els.timeline.max = 1000;
     els.timeline.style.setProperty("--range-progress", "0%");
-    els.currentFlagTime.textContent = "00:00";
+    updateSourceLoadButton();
   }
 
   function resetReviewState() {
@@ -730,10 +728,18 @@
     state.mediaKey = "";
     state.flags = [];
     state.selectedFlagId = "";
-    state.pendingRange = null;
     state.autoStopTargetTime = null;
     state.pendingInitialFrame = false;
     state.isPreviewSeeking = false;
+    state.pdfNeedsAttention = false;
+  }
+
+  function updateSourceLoadButton() {
+    if (!els.sourceLoadButton) {
+      return;
+    }
+
+    els.sourceLoadButton.textContent = state.fileName ? "別素材を読み込む" : "素材を読み込む";
   }
 
   function setControlsEnabled(enabled) {
@@ -745,9 +751,31 @@
     els.timeline.disabled = !enabled;
     els.clearFlagsButton.disabled = !enabled || !state.flags.length;
     els.autoStopToggle.disabled = !enabled || !state.flags.length;
-    els.exportScreenshotButton.disabled = !enabled || !hasActiveSelection();
-    els.copyShareTextButton.disabled = !state.flags.length;
-    els.clearFlagsButton.title = state.flags.length ? "今のチェック記録をすべて削除します。" : "記録ができると使えます。";
+    els.clearFlagsButton.title = state.flags.length ? "今のチェック記録をすべて削除します。" : HINT_NEEDS_RECORDS;
+    updatePdfButtons();
+  }
+
+  function updatePdfButtons() {
+    var hasCurrentPdf = hasMediaLoaded() && state.flags.length > 0;
+    var hasTodayPdf = getTodayHistoryEntries().length > 0;
+    var shouldSuggestCurrentPdf = hasCurrentPdf && state.pdfNeedsAttention;
+
+    if (els.exportCurrentPdfButton) {
+      els.exportCurrentPdfButton.disabled = !hasCurrentPdf;
+      els.exportCurrentPdfButton.title = hasCurrentPdf ? "今のチェック内容をPDFレポートで開きます。" : HINT_NEEDS_RECORDS;
+      els.exportCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf);
+    }
+
+    if (els.historyCurrentPdfButton) {
+      els.historyCurrentPdfButton.disabled = !hasCurrentPdf;
+      els.historyCurrentPdfButton.title = hasCurrentPdf ? "今のチェック内容をPDFレポートで開きます。" : HINT_NEEDS_RECORDS;
+      els.historyCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf);
+    }
+
+    if (els.historyTodayPdfButton) {
+      els.historyTodayPdfButton.disabled = !hasTodayPdf;
+      els.historyTodayPdfButton.title = hasTodayPdf ? "今日の履歴をまとめてPDF用に開きます。" : HINT_NEEDS_HISTORY;
+    }
   }
 
   function togglePlayback() {
@@ -811,7 +839,6 @@
 
     els.currentTime.textContent = formatDuration(currentTime);
     els.totalTime.textContent = formatDuration(duration);
-    els.currentFlagTime.textContent = formatDuration(currentTime);
     els.timeline.max = duration || 1000;
 
     if (!state.isScrubbing) {
@@ -893,9 +920,6 @@
   function collectStopTimes() {
     var times = state.flags.reduce(function (result, flag) {
       result.push(getFlagStartTime(flag));
-      if (isRangeFlag(flag)) {
-        result.push(getFlagEndTime(flag));
-      }
       return result;
     }, []).sort(function (left, right) {
       return left - right;
@@ -994,9 +1018,17 @@
   function onKeydown(event) {
     var activeTag = document.activeElement && document.activeElement.tagName;
 
-    if (state.isInfoOpen && event.key === "Escape") {
+    if (state.isOnboardingOpen && event.key === "Escape") {
       event.preventDefault();
-      closeInfoModal();
+      closeOnboarding();
+      return;
+    }
+
+    if (state.isOnboardingOpen) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        advanceOnboarding();
+      }
       return;
     }
 
@@ -1012,7 +1044,7 @@
       return;
     }
 
-    if (state.isInfoOpen || state.isHistoryOpen || state.isConfirmOpen) {
+    if (state.isHistoryOpen || state.isConfirmOpen) {
       return;
     }
 
@@ -1054,20 +1086,114 @@
     }
   }
 
-  function openInfoModal() {
-    els.infoModal.hidden = false;
-    state.isInfoOpen = true;
+  function openOnboarding(stepIndex) {
+    state.onboardingStep = clamp(stepIndex || 0, 0, ONBOARDING_STEPS.length - 1);
+    state.isOnboardingOpen = true;
+    els.onboardingOverlay.hidden = false;
+    els.onboardingOverlay.classList.remove("is-ready");
+    renderOnboardingStep(true);
   }
 
-  function closeInfoModal() {
-    els.infoModal.hidden = true;
-    state.isInfoOpen = false;
+  function closeOnboarding() {
+    els.onboardingOverlay.hidden = true;
+    els.onboardingOverlay.classList.remove("is-ready");
+    state.isOnboardingOpen = false;
   }
 
-  function onInfoModalClick(event) {
-    if (event.target && event.target.getAttribute("data-close-modal") === "true") {
-      closeInfoModal();
+  function advanceOnboarding() {
+    if (state.onboardingStep >= ONBOARDING_STEPS.length - 1) {
+      closeOnboarding();
+      return;
     }
+
+    state.onboardingStep += 1;
+    renderOnboardingStep();
+  }
+
+  function renderOnboardingStep(shouldFadeIn) {
+    var step = ONBOARDING_STEPS[state.onboardingStep];
+    var target = step ? document.querySelector(step.selector) : null;
+    var targetRect = null;
+
+    if (!step || !target) {
+      closeOnboarding();
+      return;
+    }
+
+    els.onboardingStepLabel.textContent = step.label;
+    els.onboardingTitle.textContent = step.title;
+    els.onboardingBody.textContent = step.body;
+    els.onboardingNext.textContent = state.onboardingStep === ONBOARDING_STEPS.length - 1 ? "使ってみる" : "次へ";
+
+    targetRect = getOnboardingTargetRect(target);
+    positionOnboardingSpotlight(target, targetRect);
+    positionOnboardingCard(targetRect);
+
+    if (shouldFadeIn) {
+      window.requestAnimationFrame(function () {
+        if (state.isOnboardingOpen) {
+          els.onboardingOverlay.classList.add("is-ready");
+        }
+      });
+      return;
+    }
+
+    els.onboardingOverlay.classList.add("is-ready");
+  }
+
+  function getOnboardingTargetRect(target) {
+    var rect = target.getBoundingClientRect();
+    var padding = target.id === "stageSurface" ? 12 : 10;
+    var left = Math.max(12, rect.left - padding);
+    var top = Math.max(12, rect.top - padding);
+    var maxWidth = Math.max(120, window.innerWidth - left - 12);
+    var maxHeight = Math.max(120, window.innerHeight - top - 12);
+
+    return {
+      top: top,
+      left: left,
+      width: Math.min(maxWidth, rect.width + padding * 2),
+      height: Math.min(maxHeight, rect.height + padding * 2)
+    };
+  }
+
+  function positionOnboardingSpotlight(target, rect) {
+    var targetStyle = window.getComputedStyle(target);
+
+    els.onboardingSpotlight.style.top = rect.top + "px";
+    els.onboardingSpotlight.style.left = rect.left + "px";
+    els.onboardingSpotlight.style.width = rect.width + "px";
+    els.onboardingSpotlight.style.height = rect.height + "px";
+    els.onboardingSpotlight.style.borderRadius = targetStyle.borderRadius || "24px";
+  }
+
+  function positionOnboardingCard(targetRect) {
+    var cardRect = null;
+    var padding = 16;
+    var gap = 18;
+    var x = 0;
+    var y = 0;
+
+    els.onboardingCard.style.top = padding + "px";
+    els.onboardingCard.style.left = padding + "px";
+    cardRect = els.onboardingCard.getBoundingClientRect();
+
+    if (targetRect.left + targetRect.width + gap + cardRect.width <= window.innerWidth - padding) {
+      x = targetRect.left + targetRect.width + gap;
+      y = clamp(targetRect.top, padding, window.innerHeight - cardRect.height - padding);
+    } else if (targetRect.left - gap - cardRect.width >= padding) {
+      x = targetRect.left - cardRect.width - gap;
+      y = clamp(targetRect.top, padding, window.innerHeight - cardRect.height - padding);
+    } else if (targetRect.top + targetRect.height + gap + cardRect.height <= window.innerHeight - padding) {
+      x = clamp(targetRect.left, padding, window.innerWidth - cardRect.width - padding);
+      y = targetRect.top + targetRect.height + gap;
+    } else {
+      x = clamp(targetRect.left, padding, window.innerWidth - cardRect.width - padding);
+      y = Math.max(padding, targetRect.top - cardRect.height - gap);
+    }
+
+    els.onboardingCard.style.left = Math.round(x) + "px";
+    els.onboardingCard.style.top = Math.round(y) + "px";
   }
 
   function openHistoryModal() {
@@ -1137,106 +1263,13 @@
 
     state.flags.push(flag);
     state.selectedFlagId = flag.id;
+    state.pdfNeedsAttention = true;
     sortFlags();
     persistFlags();
     renderFlags();
     renderCommentEditor();
     syncTimeline();
     showToast(formatDuration(flag.time) + " / " + FLAG_LABELS[flag.zone] + " を記録しました。", "success");
-  }
-
-  function handleRangeRecord(xRatio, yRatio) {
-    var pointRecord = createPointRecord(xRatio, yRatio);
-    var nextRange = null;
-
-    if (!state.pendingRange) {
-      state.pendingRange = {
-        id: createFlagId(),
-        kind: "range",
-        startTime: pointRecord.time,
-        endTime: pointRecord.time,
-        zone: pointRecord.zone,
-        x: pointRecord.x,
-        y: pointRecord.y,
-        platform: pointRecord.platform,
-        createdAt: pointRecord.createdAt
-      };
-      renderPendingRange();
-      showToast(formatDuration(pointRecord.time) + " / " + FLAG_LABELS[pointRecord.zone] + " から区間を開始しました。", "success");
-      return;
-    }
-
-    nextRange = completePendingRange(pointRecord.time);
-    if (!nextRange) {
-      return;
-    }
-
-    state.flags.push(nextRange);
-    state.pendingRange = null;
-    sortFlags();
-    persistFlags();
-    renderFlags();
-    syncTimeline();
-    renderPendingRange();
-    showToast(formatDuration(nextRange.startTime) + " - " + formatDuration(nextRange.endTime) + " / " + FLAG_LABELS[nextRange.zone] + " を保存しました。", "success");
-  }
-
-  function cancelPendingRange(showMessage) {
-    if (!state.pendingRange) {
-      return;
-    }
-
-    state.pendingRange = null;
-    renderPendingRange();
-
-    if (showMessage !== false) {
-      showToast("進行中の区間記録を取り消しました。", "info");
-    }
-  }
-
-  function renderPendingRange() {
-    if (!state.pendingRange) {
-      els.pendingRangeCard.hidden = true;
-      els.pendingRangeLabel.textContent = "00:00 / 右 / ALL";
-      updateFlagsHint();
-      return;
-    }
-
-    els.pendingRangeCard.hidden = false;
-    els.pendingRangeLabel.textContent =
-      formatDuration(state.pendingRange.startTime) + " / " +
-      FLAG_LABELS[state.pendingRange.zone] + " / " +
-      getPlatformMeta(state.pendingRange.platform).label;
-    updateFlagsHint();
-  }
-
-  function completePendingRange(endTime) {
-    var startTime = 0;
-    var resolvedEnd = 0;
-
-    if (!state.pendingRange) {
-      return null;
-    }
-
-    startTime = Math.min(state.pendingRange.startTime, endTime);
-    resolvedEnd = Math.max(state.pendingRange.startTime, endTime);
-
-    if (resolvedEnd - startTime < MIN_RANGE_DURATION) {
-      showToast("区間は0.2秒以上離して終了してください。", "warning");
-      return null;
-    }
-
-    return {
-      id: state.pendingRange.id,
-      kind: "range",
-      startTime: roundToHundredths(startTime),
-      endTime: roundToHundredths(resolvedEnd),
-      zone: state.pendingRange.zone,
-      x: state.pendingRange.x,
-      y: state.pendingRange.y,
-      platform: state.pendingRange.platform,
-      createdAt: state.pendingRange.createdAt
-    };
   }
 
   function createPointRecord(xRatio, yRatio) {
@@ -1251,10 +1284,6 @@
       comment: "",
       createdAt: Date.now()
     };
-  }
-
-  function buildFlagFromPointer(xRatio, yRatio) {
-    return createPointRecord(xRatio, yRatio);
   }
 
   function detectZone(xRatio, yRatio) {
@@ -1291,24 +1320,12 @@
     return violations.length ? violations[0].zone : "center";
   }
 
-  function isRangeFlag(flag) {
-    return !!flag && flag.kind === "range";
-  }
-
   function getFlagStartTime(flag) {
-    return isRangeFlag(flag) ? flag.startTime : flag.time;
-  }
-
-  function getFlagEndTime(flag) {
-    return isRangeFlag(flag) ? flag.endTime : flag.time;
+    return flag ? flag.time : 0;
   }
 
   function getFlagTitle(flag) {
-    if (isRangeFlag(flag)) {
-      return formatDuration(flag.startTime) + " - " + formatDuration(flag.endTime);
-    }
-
-    return formatDuration(flag.time);
+    return formatDuration(getFlagStartTime(flag));
   }
 
   function sortFlags() {
@@ -1354,9 +1371,10 @@
     var flag = state.selectedFlagId ? findFlagById(state.selectedFlagId) : null;
 
     els.commentEditor.classList.toggle("is-disabled", !flag);
+    els.commentEditor.classList.toggle("has-selection", !!flag);
 
     if (!flag) {
-      els.commentEditorTitle.textContent = "記録を選ぶと、共有メモを追加できます。";
+      els.commentEditorTitle.textContent = "記録を選ぶと、共有メモを残せます。";
       els.commentTargetTime.textContent = "--:--";
       els.flagCommentInput.value = "";
       els.flagCommentInput.disabled = true;
@@ -1471,6 +1489,9 @@
     if (state.selectedFlagId === flagId) {
       state.selectedFlagId = "";
     }
+    if (!state.flags.length) {
+      state.pdfNeedsAttention = false;
+    }
     state.autoStopTargetTime = null;
     persistFlags();
     renderFlags();
@@ -1495,12 +1516,11 @@
   function performClearAllFlags() {
     state.flags = [];
     state.selectedFlagId = "";
-    state.pendingRange = null;
     state.autoStopTargetTime = null;
+    state.pdfNeedsAttention = false;
     persistFlags();
     renderFlags();
     syncTimeline();
-    renderPendingRange();
     renderCommentEditor();
     showToast("チェック記録をすべてクリアしました。", "info");
   }
@@ -1509,6 +1529,7 @@
     var activeFlagId = getFocusedFlagId(els.video.currentTime || 0);
 
     els.flagsCount.textContent = state.flags.length + "件";
+    els.flagsCount.classList.toggle("is-empty", !state.flags.length);
     els.flagsEmpty.hidden = state.flags.length > 0;
     els.clearFlagsButton.disabled = !hasMediaLoaded() || !state.flags.length;
     els.clearFlagsButton.title = state.flags.length ? "今のチェック記録をすべて削除します。" : "記録ができると使えます。";
@@ -1529,12 +1550,11 @@
 
       return (
         '<article class="flag-item' + (isActive ? " is-active" : "") + '" data-flag-id="' + escapeHtml(flag.id) + '">' +
-          '<button class="flag-time-button' + (isRangeFlag(flag) ? " is-range" : "") + '" type="button" data-flag-jump="' + escapeHtml(flag.id) + '" data-time="' + getFlagStartTime(flag) + '">' +
+          '<button class="flag-time-button" type="button" data-flag-jump="' + escapeHtml(flag.id) + '" data-time="' + getFlagStartTime(flag) + '">' +
             escapeHtml(timeLabel) +
           "</button>" +
           '<div class="flag-meta">' +
             ((flag.comment || "").length ? '<span class="flag-comment-badge">メモ</span>' : "") +
-            (isRangeFlag(flag) ? '<span class="flag-kind-badge">区間</span>' : "") +
             '<span class="flag-zone-badge" data-zone="' + escapeHtml(flag.zone) + '">' + escapeHtml(FLAG_LABELS[flag.zone]) + "</span>" +
             '<span class="flag-platform-badge">' + escapeHtml(platform.label) + "</span>" +
           "</div>" +
@@ -1559,16 +1579,15 @@
 
     els.flagMarkers.innerHTML = state.flags.map(function (flag) {
       var position = clamp((getFlagStartTime(flag) / duration) * 100, 0, 100);
-      var width = clamp(((getFlagEndTime(flag) - getFlagStartTime(flag)) / duration) * 100, 0.6, 100);
       var isActive = flag.id === activeFlagId;
       var title = getFlagTitle(flag) + " / " + FLAG_LABELS[flag.zone];
 
       return (
-        '<button class="flag-marker' + (isRangeFlag(flag) ? " flag-marker-range" : " flag-marker-point") + (isActive ? " is-active" : "") + '" type="button"' +
+        '<button class="flag-marker' + (isActive ? " is-active" : "") + '" type="button"' +
         ' data-flag-id="' + escapeHtml(flag.id) + '"' +
         ' data-zone="' + escapeHtml(flag.zone) + '"' +
         ' data-marker-time="' + getFlagStartTime(flag) + '"' +
-        ' style="left:' + position + "%;" + (isRangeFlag(flag) ? "width:" + width + "%;" : "") + '"' +
+        ' style="left:' + position + '%;"' +
         ' title="' + escapeHtml(title) + '">' +
         "</button>"
       );
@@ -1586,7 +1605,7 @@
       var title = getFlagTitle(flag) + " / " + FLAG_LABELS[flag.zone];
 
       return (
-        '<button class="flag-pin' + (isRangeFlag(flag) ? " is-range" : "") + (isActive ? " is-active" : "") + '" type="button"' +
+        '<button class="flag-pin' + (isActive ? " is-active" : "") + '" type="button"' +
         ' data-flag-pin="' + escapeHtml(flag.id) + '"' +
         ' data-flag-id="' + escapeHtml(flag.id) + '"' +
         ' data-zone="' + escapeHtml(flag.zone) + '"' +
@@ -1623,12 +1642,6 @@
 
     state.flags.forEach(function (flag) {
       var delta = 0;
-
-      if (isRangeFlag(flag) && currentTime >= flag.startTime && currentTime <= flag.endTime) {
-        activeFlag = flag;
-        closestDelta = 0;
-        return;
-      }
 
       delta = Math.abs(getFlagStartTime(flag) - currentTime);
 
@@ -1690,7 +1703,7 @@
     return {
       id: flag.id,
       kind: "point",
-      time: clamp(parseFloat(flag.kind === "range" ? flag.startTime : flag.time) || 0, 0, Number.MAX_SAFE_INTEGER),
+      time: clamp(parseFloat(flag.time) || 0, 0, Number.MAX_SAFE_INTEGER),
       zone: flag.zone,
       x: clamp(parseFloat(flag.x) || 0, 0, 1),
       y: clamp(parseFloat(flag.y) || 0, 0, 1),
@@ -1789,6 +1802,7 @@
 
     if (!entries.length) {
       els.historyList.innerHTML = "";
+      updatePdfButtons();
       return;
     }
 
@@ -1822,6 +1836,7 @@
         "</article>"
       );
     }).join("");
+    updatePdfButtons();
   }
 
   function readHistoryEntries() {
@@ -1864,114 +1879,144 @@
     showToast("同じ素材を開いている時だけ、履歴の時刻から戻れます。", "warning");
   }
 
-  function copyShareText() {
-    if (!state.flags.length) {
-      showToast("共有する記録がありません。", "warning");
-      return;
-    }
-
-    copyTextToClipboard(buildShareText()).then(function () {
-      showToast("共有文をコピーしました。", "success");
-    }).catch(function () {
-      showToast("コピーできませんでした。ブラウザの権限をご確認ください。", "warning");
-    });
-  }
-
-  function buildShareText() {
-    var lines = [
-      "Lumina Boundary Pro 共有メモ",
-      "素材: " + (state.fileName || "未命名素材"),
-      "記録数: " + state.flags.length + "件",
-      ""
-    ];
-
-    state.flags.forEach(function (flag, index) {
-      lines.push(
-        (index + 1) + ". " +
-        getFlagTitle(flag) + " / " +
-        FLAG_LABELS[flag.zone] + " / " +
-        getPlatformMeta(flag.platform).label
-      );
-
-      if ((flag.comment || "").trim()) {
-        lines.push("   メモ: " + flag.comment.trim());
-      }
-
-      lines.push("");
-    });
-
-    return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
-  }
-
-  function copyTextToClipboard(text) {
-    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-      return navigator.clipboard.writeText(text).catch(function () {
-        return fallbackCopyText(text);
-      });
-    }
-
-    return fallbackCopyText(text);
-  }
-
-  function fallbackCopyText(text) {
-    return new Promise(function (resolve, reject) {
-      var textarea = document.createElement("textarea");
-      var copied = false;
-
-      textarea.value = text;
-      textarea.setAttribute("readonly", "readonly");
-      textarea.style.position = "fixed";
-      textarea.style.top = "-9999px";
-      textarea.style.left = "-9999px";
-      textarea.style.opacity = "0";
-
-      document.body.appendChild(textarea);
-      textarea.focus();
-      textarea.select();
-      textarea.setSelectionRange(0, textarea.value.length);
-
-      try {
-        copied = document.execCommand("copy");
-      } catch (error) {
-        copied = false;
-      }
-
-      document.body.removeChild(textarea);
-
-      if (copied) {
-        resolve();
-        return;
-      }
-
-      reject(new Error("copy-failed"));
-    });
-  }
-
-  function exportScreenshot() {
-    var width = 0;
-    var height = 0;
-    var canvas = null;
-    var ctx = null;
-    var selectedFlag = state.selectedFlagId ? findFlagById(state.selectedFlagId) : null;
-    var exportFlags = [];
-    var fileName = "";
+  function exportCurrentPdf() {
+    var reportEntry = null;
+    var report = null;
 
     if (!hasMediaLoaded()) {
       showToast("先に動画を読み込んでください。", "warning");
       return;
     }
 
-    if (!hasActiveSelection()) {
-      showToast("表示設定を1つ以上選んでください。", "warning");
+    if (!state.flags.length) {
+      showToast("PDFにまとめる記録がありません。", "warning");
       return;
+    }
+
+    reportEntry = buildCurrentReportEntry();
+    report = {
+      documentTitle: buildReportFileName(reportEntry.fileName, false),
+      exportDateText: formatReportDateTime(Date.now()),
+      reportTitle: "セーフゾーン確認レポート",
+      summary:
+        '<section class="report-summary">' +
+          '<div class="report-summary-item"><span>出力日</span><strong>' + escapeHtml(formatReportDateLabel(Date.now())) + "</strong></div>" +
+          '<div class="report-summary-item"><span>形式</span><strong>ビジュアル付き</strong></div>' +
+          '<div class="report-summary-item"><span>用途</span><strong>共有・提出向け</strong></div>' +
+        "</section>",
+      sections: [reportEntry]
+    };
+
+    if (openReportWindow(report)) {
+      state.pdfNeedsAttention = false;
+      updatePdfButtons();
+      showToast("PDFレポートを開きました。", "success");
+    }
+  }
+
+  function exportTodayHistoryPdf() {
+    var entries = getTodayHistoryEntries();
+    var report = null;
+    var totalFlags = 0;
+
+    if (!entries.length) {
+      showToast("今日の履歴がありません。", "warning");
+      return;
+    }
+
+    entries.forEach(function (entry) {
+      totalFlags += entry.flags.length;
+    });
+
+    report = {
+      documentTitle: buildReportFileName("", true),
+      exportDateText: formatReportDateTime(Date.now()),
+      reportTitle: "今日の確認レポート",
+      summary:
+        '<section class="report-summary">' +
+          '<div class="report-summary-item"><span>出力日</span><strong>' + escapeHtml(formatReportDateLabel(Date.now())) + "</strong></div>" +
+          '<div class="report-summary-item"><span>素材数</span><strong>' + entries.length + "件</strong></div>" +
+          '<div class="report-summary-item"><span>チェック数</span><strong>' + totalFlags + "件</strong></div>" +
+        "</section>",
+      sections: entries
+    };
+
+    if (openReportWindow(report)) {
+      showToast("今日の履歴レポートを開きました。", "success");
+    }
+  }
+
+  function buildCurrentReportEntry() {
+    var platformKey = buildReportPlatformKey(state.flags, state.activePlatform);
+
+    return {
+      fileName: state.fileName || "未命名素材",
+      durationText: els.metaDuration.textContent || "00:00",
+      resolutionText: els.metaResolution.textContent || "-- × --",
+      settingsLabel: buildReportSettingsLabel(state.flags, platformKey),
+      flags: sortFlagsForReport(state.flags),
+      previewImageDataUrl: createReportPreviewImageDataUrl(platformKey, state.flags),
+      previewCaption: "確認時の表示イメージ"
+    };
+  }
+
+  function buildReportSettingsLabel(flags, fallbackPlatformKey) {
+    var labels = [];
+
+    if (fallbackPlatformKey) {
+      return getPlatformMeta(fallbackPlatformKey).label;
+    }
+
+    flags.forEach(function (flag) {
+      var label = getPlatformMeta(flag.platform).label;
+
+      if (labels.indexOf(label) === -1) {
+        labels.push(label);
+      }
+    });
+
+    return labels.length ? labels.join(" / ") : "未選択";
+  }
+
+  function buildReportPlatformKey(flags, fallbackPlatformKey) {
+    var platformKeys = [];
+
+    if (fallbackPlatformKey) {
+      return normalizePlatformKey(fallbackPlatformKey);
+    }
+
+    (flags || []).forEach(function (flag) {
+      getPlatformKeys(flag.platform).forEach(function (key) {
+        if (platformKeys.indexOf(key) === -1) {
+          platformKeys.push(key);
+        }
+      });
+    });
+
+    return normalizePlatformKey(platformKeys.length ? platformKeys : "all");
+  }
+
+  function sortFlagsForReport(flags) {
+    return (flags || []).slice().sort(function (left, right) {
+      return getFlagStartTime(left) - getFlagStartTime(right);
+    });
+  }
+
+  function createReportPreviewImageDataUrl(platformKey, flags) {
+    var width = 0;
+    var height = 0;
+    var canvas = null;
+    var ctx = null;
+
+    if (!hasMediaLoaded()) {
+      return "";
     }
 
     width = els.video.videoWidth || Math.round(els.stageSurface.clientWidth);
     height = els.video.videoHeight || Math.round(els.stageSurface.clientHeight);
 
     if (!width || !height) {
-      showToast("スクリーンショットの書き出しに必要な映像情報が不足しています。", "warning");
-      return;
+      return "";
     }
 
     canvas = document.createElement("canvas");
@@ -1980,53 +2025,269 @@
     ctx = canvas.getContext("2d");
 
     ctx.drawImage(els.video, 0, 0, width, height);
-    drawExportOverlay(ctx, width, height);
+    drawExportOverlay(ctx, width, height, platformKey);
+    drawExportFlags(ctx, sortFlagsForReport(flags), width, height, state.selectedFlagId || "");
 
-    exportFlags = selectedFlag ? [selectedFlag] : state.flags;
-    drawExportFlags(ctx, exportFlags, width, height, selectedFlag ? selectedFlag.id : "");
+    return canvas.toDataURL("image/png");
+  }
 
-    if (selectedFlag) {
-      drawExportAnnotation(ctx, selectedFlag, width, height);
+  function getTodayHistoryEntries() {
+    var today = new Date();
+
+    return readHistoryEntries().filter(function (entry) {
+      return isSameLocalDay(entry.lastOpened, today);
+    }).map(function (entry) {
+      return {
+        fileName: entry.fileName,
+        durationText: entry.durationText,
+        resolutionText: entry.resolutionText,
+        settingsLabel: buildReportSettingsLabel(entry.flags, ""),
+        lastOpened: entry.lastOpened,
+        flags: sortFlagsForReport(entry.flags)
+      };
+    });
+  }
+
+  function isSameLocalDay(timestamp, date) {
+    var target = new Date(timestamp);
+    var current = date instanceof Date ? date : new Date(date);
+
+    return (
+      target.getFullYear() === current.getFullYear() &&
+      target.getMonth() === current.getMonth() &&
+      target.getDate() === current.getDate()
+    );
+  }
+
+  function openReportWindow(report) {
+    var reportWindow = window.open("", "_blank", "width=1080,height=900");
+
+    if (!reportWindow) {
+      showToast("レポート画面を開けませんでした。ポップアップ設定をご確認ください。", "warning");
+      return false;
     }
 
-    fileName = buildScreenshotFileName();
-    canvas.toBlob(function (blob) {
-      if (!blob) {
-        showToast("PNG の書き出しに失敗しました。", "error");
-        return;
-      }
-
-      downloadBlob(fileName, blob);
-      showToast(fileName + " をPNGで保存しました。", "success");
-    }, "image/png");
+    reportWindow.document.open();
+    reportWindow.document.write(buildReportDocumentHtml(report));
+    reportWindow.document.close();
+    return true;
   }
 
-  function drawExportOverlay(ctx, width, height) {
-    var meta = getPlatformMeta(state.activePlatform);
-    var metrics = getPlatformSettings(state.activePlatform);
+  function buildReportDocumentHtml(report) {
+    var summaryHtml = report.summary || "";
+    var sectionsHtml = report.sections.map(function (entry, index) {
+      return buildReportSectionHtml(entry, index, report.sections.length);
+    }).join("");
+
+    return [
+      "<!DOCTYPE html>",
+      '<html lang="ja">',
+      "<head>",
+      '<meta charset="UTF-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+      "<title>" + escapeHtml(report.documentTitle) + "</title>",
+      "<style>" + buildReportStyles() + "</style>",
+      "</head>",
+      '<body class="report-body">',
+      '<div class="report-shell">',
+      '<div class="report-actions" data-print-hide="true">',
+      '<button id="reportPrint" type="button">PDFで保存</button>',
+      '<button id="reportClose" type="button">閉じる</button>',
+      "</div>",
+      '<header class="report-header">',
+      '<p class="report-brand">Lumina Zone</p>',
+      "<h1>" + escapeHtml(report.reportTitle) + "</h1>",
+      '<p class="report-date">出力日: ' + escapeHtml(report.exportDateText) + "</p>",
+      "</header>",
+      summaryHtml,
+      '<main class="report-main">',
+      sectionsHtml,
+      "</main>",
+      '<footer class="report-footer">このレポートは Lumina Zone で作成されました。</footer>',
+      "</div>",
+      '<script>(function(){var printButton=document.getElementById("reportPrint");var closeButton=document.getElementById("reportClose");if(printButton){printButton.addEventListener("click",function(){window.print();});}if(closeButton){closeButton.addEventListener("click",function(){window.close();});}}());<\/script>',
+      "</body>",
+      "</html>"
+    ].join("");
+  }
+
+  function buildReportSectionHtml(entry, index, totalSections) {
+    var metaItems = [
+      { label: "タイム", value: entry.durationText || "00:00" },
+      { label: "解像度", value: entry.resolutionText || "-- × --" },
+      { label: "表示設定", value: entry.settingsLabel || "未選択" },
+      { label: "チェック件数", value: entry.flags.length + "件" }
+    ];
+    var metaHtml = metaItems.map(function (item) {
+      return (
+        '<article class="report-meta-item">' +
+          "<span>" + escapeHtml(item.label) + "</span>" +
+          "<strong>" + escapeHtml(item.value) + "</strong>" +
+        "</article>"
+      );
+    }).join("");
+    var rowsHtml = entry.flags.map(function (flag) {
+      return (
+        "<tr>" +
+          "<td>" + escapeHtml(getFlagTitle(flag)) + "</td>" +
+          "<td>" + escapeHtml(FLAG_LABELS[flag.zone]) + "</td>" +
+          "<td>" + escapeHtml(getPlatformMeta(flag.platform).label) + "</td>" +
+          "<td>" + escapeHtml((flag.comment || "").trim() || "—") + "</td>" +
+        "</tr>"
+      );
+    }).join("");
+    var sectionClassName = totalSections > 1 && index > 0 ? "report-section report-section-break" : "report-section";
+    var previewHtml = entry.previewImageDataUrl
+      ? (
+        '<div class="report-preview-shell">' +
+          '<div class="report-preview-media">' +
+            '<img class="report-preview-image" src="' + escapeHtml(entry.previewImageDataUrl) + '" alt="' + escapeHtml(entry.fileName + " の確認イメージ") + '">' +
+          "</div>" +
+          '<p class="report-preview-caption">' + escapeHtml(entry.previewCaption || "確認イメージ") + "</p>" +
+        "</div>"
+      )
+      : "";
+    var infoColumnHtml =
+      '<div class="report-info-column">' +
+        '<div class="report-section-copy">' +
+          '<p class="report-section-kicker">素材 ' + (index + 1) + "</p>" +
+          '<h2 title="' + escapeHtml(entry.fileName) + '">' + escapeHtml(entry.fileName) + "</h2>" +
+        "</div>" +
+        '<div class="report-meta-grid">' + metaHtml + "</div>" +
+      "</div>";
+    var overviewHtml = entry.previewImageDataUrl
+      ? (
+        '<div class="report-overview">' +
+          previewHtml +
+          infoColumnHtml +
+        "</div>"
+      )
+      : infoColumnHtml;
+
+    return (
+      '<section class="' + sectionClassName + '">' +
+        overviewHtml +
+        '<div class="report-table-shell">' +
+          '<table class="report-table">' +
+            "<thead><tr><th>タイム</th><th>確認位置</th><th>対象SNS</th><th>メモ</th></tr></thead>" +
+            "<tbody>" + rowsHtml + "</tbody>" +
+          "</table>" +
+        "</div>" +
+      "</section>"
+    );
+  }
+
+  function buildReportStyles() {
+    return [
+      '@page { size: A4; margin: 16mm; }',
+      'body { margin: 0; font-family: "SF Pro Display", "Hiragino Sans", "Yu Gothic", sans-serif; background: #f3f7fc; color: #111827; }',
+      '.report-body { padding: 24px; }',
+      '.report-shell { max-width: 960px; margin: 0 auto; }',
+      '.report-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 18px; }',
+      '.report-actions button { appearance: none; border: 0; border-radius: 999px; padding: 11px 18px; font: inherit; font-weight: 600; cursor: pointer; color: #ffffff; background: linear-gradient(135deg, #9bc7ff, #4b7cff); box-shadow: 0 14px 30px rgba(75, 124, 255, 0.2); }',
+      '.report-actions button:last-child { background: #ffffff; color: #0f172a; border: 1px solid rgba(15, 23, 42, 0.12); box-shadow: none; }',
+      '.report-header { padding: 28px 30px; border-radius: 28px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08); }',
+      '.report-brand { margin: 0 0 8px; color: #2563eb; font-size: 0.86rem; font-weight: 700; letter-spacing: 0.02em; }',
+      '.report-header h1 { margin: 0; font-size: 1.9rem; line-height: 1.12; font-weight: 700; }',
+      '.report-date { margin: 12px 0 0; color: #475569; font-size: 0.95rem; }',
+      '.report-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }',
+      '.report-summary-item, .report-meta-item { padding: 14px 16px; border-radius: 18px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); }',
+      '.report-summary-item span, .report-meta-item span { display: block; color: #64748b; font-size: 0.82rem; margin-bottom: 6px; }',
+      '.report-summary-item strong, .report-meta-item strong { font-size: 1rem; font-weight: 700; color: #0f172a; }',
+      '.report-main { display: grid; gap: 18px; margin-top: 18px; }',
+      '.report-section { border-radius: 26px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08); padding: 24px; }',
+      '.report-section-break { break-before: page; page-break-before: always; }',
+      '.report-section-kicker { margin: 0 0 8px; color: #2563eb; font-size: 0.82rem; font-weight: 700; }',
+      '.report-section-copy h2 { margin: 0; font-size: 1.35rem; line-height: 1.2; font-weight: 700; word-break: break-word; }',
+      '.report-overview { display: grid; grid-template-columns: minmax(192px, 228px) minmax(0, 1fr); gap: 20px; align-items: start; margin-bottom: 18px; }',
+      '.report-info-column { display: grid; gap: 14px; align-content: start; }',
+      '.report-preview-shell { padding: 12px; border-radius: 24px; background: linear-gradient(180deg, #edf4ff, #f8fbff); border: 1px solid rgba(37, 99, 235, 0.1); }',
+      '.report-preview-media { display: grid; place-items: center; }',
+      '.report-preview-image { display: block; width: min(100%, 186px); height: auto; border-radius: 22px; box-shadow: 0 18px 32px rgba(15, 23, 42, 0.13); }',
+      '.report-preview-caption { margin: 8px 0 0; color: #94a3b8; font-size: 0.74rem; letter-spacing: 0.01em; text-align: center; }',
+      '.report-meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }',
+      '.report-table-shell { overflow: hidden; border-radius: 18px; border: 1px solid rgba(15, 23, 42, 0.08); }',
+      '.report-table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }',
+      '.report-table thead { background: #eef4ff; }',
+      '.report-table th, .report-table td { text-align: left; padding: 12px 14px; vertical-align: top; border-bottom: 1px solid rgba(15, 23, 42, 0.08); }',
+      '.report-table th { color: #1e3a8a; font-size: 0.84rem; font-weight: 700; letter-spacing: 0.01em; }',
+      '.report-table td { color: #1f2937; line-height: 1.55; }',
+      '.report-table tbody tr:last-child td { border-bottom: 0; }',
+      '.report-footer { margin-top: 16px; color: #64748b; font-size: 0.82rem; text-align: right; }',
+      '@media print { body { background: #ffffff; } .report-body { padding: 0; } .report-actions { display: none !important; } .report-header, .report-section, .report-summary-item, .report-meta-item { box-shadow: none; } }',
+      '@media (max-width: 720px) { .report-summary, .report-meta-grid { grid-template-columns: 1fr 1fr; } .report-overview { grid-template-columns: 1fr; } .report-section { padding: 18px; } .report-header { padding: 22px; } .report-preview-shell { padding: 14px; } .report-preview-image { width: min(100%, 176px); } }'
+    ].join("");
+  }
+
+  function buildReportFileName(fileName, isHistoryReport) {
+    var dateText = formatReportDateLabel(Date.now());
+    var safeBaseName = sanitizeFileNamePart((fileName || "report").replace(/\.[^/.]+$/, ""));
+
+    if (isHistoryReport) {
+      return "lumina-zone-report-" + dateText;
+    }
+
+    return "lumina-zone-" + safeBaseName + "-" + dateText;
+  }
+
+  function sanitizeFileNamePart(value) {
+    return String(value || "report")
+      .trim()
+      .replace(/[\\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "") || "report";
+  }
+
+  function formatReportDateLabel(timestamp) {
+    var date = new Date(timestamp);
+
+    return [
+      date.getFullYear(),
+      pad(date.getMonth() + 1),
+      pad(date.getDate())
+    ].join("-");
+  }
+
+  function formatReportDateTime(timestamp) {
+    var date = new Date(timestamp);
+
+    return (
+      date.getFullYear() + "年" +
+      pad(date.getMonth() + 1) + "月" +
+      pad(date.getDate()) + "日 " +
+      pad(date.getHours()) + ":" +
+      pad(date.getMinutes())
+    );
+  }
+
+  function drawExportOverlay(ctx, width, height, platformSelection) {
+    var platformKey = normalizePlatformKey(platformSelection || state.activePlatform || "all");
+    var meta = getPlatformMeta(platformKey);
+    var metrics = getPlatformSettings(platformKey);
     var top = height * (percentToNumber(metrics.top) / 100);
     var rightWidth = width * (percentToNumber(metrics.right) / 100);
-    var bottomHeight = height * (percentToNumber(metrics.bottom) / 100);
-    var left = width * (FRAME_LEFT_PADDING / 100);
-    var safeTop = top;
-    var safeLeft = left;
-    var safeRight = width - rightWidth;
-    var safeBottom = height - bottomHeight;
+	    var bottomHeight = height * (percentToNumber(metrics.bottom) / 100);
+	    var left = width * (FRAME_LEFT_PADDING / 100);
+	    var safeTop = top;
+	    var safeLeft = left;
+	    var safeRight = width - rightWidth;
+	    var safeBottom = height - bottomHeight;
 
-    ctx.save();
+	    ctx.save();
 
-    ctx.fillStyle = meta.dangerStrong;
-    ctx.fillRect(0, 0, width, top);
-    ctx.fillRect(0, 0, left, height);
-    ctx.fillRect(width - rightWidth, 0, rightWidth, height);
-    ctx.fillRect(0, height - bottomHeight, width, bottomHeight);
+	    ctx.fillStyle = meta.dangerStrong;
+	    ctx.fillRect(0, 0, width, top);
+	    ctx.fillRect(0, 0, left, height);
+	    ctx.fillRect(width - rightWidth, 0, rightWidth, height);
+	    ctx.fillRect(0, height - bottomHeight, width, bottomHeight);
 
-    ctx.strokeStyle = meta.accentStrong;
-    ctx.lineWidth = Math.max(4, Math.round(width * 0.0038));
-    ctx.strokeRect(safeLeft, safeTop, safeRight - safeLeft, safeBottom - safeTop);
+	    ctx.strokeStyle = meta.accentStrong;
+	    ctx.lineWidth = Math.max(4, Math.round(width * 0.0038));
+	    ctx.strokeRect(safeLeft, safeTop, safeRight - safeLeft, safeBottom - safeTop);
 
-    ctx.restore();
-  }
+	    ctx.restore();
+	  }
 
   function drawExportFlags(ctx, flags, width, height, activeFlagId) {
     var zoneColors = {
@@ -2047,8 +2308,8 @@
       var isActive = activeFlagId && flag.id === activeFlagId;
 
       ctx.save();
-      ctx.shadowColor = isActive ? "rgba(125, 192, 255, 0.34)" : "rgba(0, 0, 0, 0.18)";
-      ctx.shadowBlur = isActive ? bodyRadius + 14 : bodyRadius + 8;
+      ctx.shadowColor = isActive ? "rgba(87, 158, 255, 0.34)" : "rgba(0, 0, 0, 0.18)";
+      ctx.shadowBlur = isActive ? bodyRadius + 15 : bodyRadius + 9;
       ctx.shadowOffsetY = Math.max(8, Math.round(bodyRadius * 0.5));
 
       ctx.fillStyle = "rgba(248, 250, 255, 0.96)";
@@ -2058,6 +2319,14 @@
 
       ctx.restore();
       ctx.save();
+      ctx.strokeStyle = isActive ? zoneColor : "rgba(37, 99, 235, 0.2)";
+      ctx.globalAlpha = isActive ? 0.62 : 0.34;
+      ctx.lineWidth = Math.max(2, Math.round(bodyRadius * 0.16));
+      ctx.beginPath();
+      ctx.arc(x, bodyCenterY, bodyRadius - 1, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.globalAlpha = 1;
       ctx.fillStyle = "rgba(248, 250, 255, 0.92)";
       ctx.strokeStyle = "rgba(255, 255, 255, 0.94)";
       ctx.lineWidth = 1.5;
@@ -2077,7 +2346,7 @@
 
       ctx.fillStyle = zoneColor;
       ctx.beginPath();
-      ctx.arc(x, bodyCenterY, Math.max(5, Math.round(bodyRadius * 0.36)), 0, Math.PI * 2);
+      ctx.arc(x, bodyCenterY, Math.max(6, Math.round(bodyRadius * 0.42)), 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = "rgba(255, 255, 255, 0.96)";
@@ -2087,99 +2356,6 @@
       ctx.stroke();
       ctx.restore();
     });
-  }
-
-  function drawExportAnnotation(ctx, flag, width, height) {
-    var safeMarginX = Math.round(width * 0.06);
-    var safeMarginY = Math.round(height * 0.05);
-    var cardWidth = Math.min(width - safeMarginX * 2, Math.round(width * 0.72));
-    var title = getFlagTitle(flag) + " / " + FLAG_LABELS[flag.zone] + " / " + getPlatformMeta(flag.platform).label;
-    var lines = wrapCanvasText(ctx, flag.comment || "", cardWidth - 36);
-    var cardHeight = 64 + (lines.length ? lines.length * 24 + 10 : 0);
-
-    ctx.save();
-    ctx.fillStyle = "rgba(255,255,255,0.92)";
-    ctx.strokeStyle = "rgba(255,255,255,0.98)";
-    ctx.lineWidth = 1;
-    drawRoundedRectPath(ctx, safeMarginX, safeMarginY, cardWidth, cardHeight, 22);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(12, 14, 18, 0.94)";
-    ctx.font = Math.max(20, Math.round(width * 0.024)) + 'px "SF Pro Display", sans-serif';
-    ctx.fillText(title, safeMarginX + 18, safeMarginY + 30);
-
-    if (lines.length) {
-      ctx.fillStyle = "rgba(12, 14, 18, 0.72)";
-      ctx.font = Math.max(18, Math.round(width * 0.02)) + 'px "SF Pro Display", sans-serif';
-      lines.forEach(function (line, index) {
-        ctx.fillText(line, safeMarginX + 18, safeMarginY + 60 + (index * 24));
-      });
-    }
-
-    ctx.restore();
-  }
-
-  function wrapCanvasText(ctx, text, maxWidth) {
-    var rawText = String(text || "").trim();
-    var words = /\s/.test(rawText) ? rawText.split(/\s+/) : rawText.split("");
-    var lines = [];
-    var currentLine = "";
-    var separator = /\s/.test(rawText) ? " " : "";
-
-    if (!words[0]) {
-      return lines;
-    }
-
-    words.forEach(function (word) {
-      var testLine = currentLine ? currentLine + separator + word : word;
-
-      if (ctx.measureText(testLine).width > maxWidth && currentLine) {
-        lines.push(currentLine);
-        currentLine = word;
-        return;
-      }
-
-      currentLine = testLine;
-    });
-
-    if (currentLine) {
-      lines.push(currentLine);
-    }
-
-    return lines.slice(0, 3);
-  }
-
-  function drawRoundedRectPath(ctx, x, y, width, height, radius) {
-    var r = Math.min(radius, width / 2, height / 2);
-
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + width, y, x + width, y + height, r);
-    ctx.arcTo(x + width, y + height, x, y + height, r);
-    ctx.arcTo(x, y + height, x, y, r);
-    ctx.arcTo(x, y, x + width, y, r);
-    ctx.closePath();
-  }
-
-  function buildScreenshotFileName() {
-    var baseName = (state.fileName || "lumina-boundary-pro").replace(/\.[^/.]+$/, "");
-    return baseName + "-" + formatDuration(els.video.currentTime || 0).replace(/:/g, "-") + ".png";
-  }
-
-  function downloadBlob(fileName, blob) {
-    var url = URL.createObjectURL(blob);
-    var link = document.createElement("a");
-
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    window.setTimeout(function () {
-      URL.revokeObjectURL(url);
-    }, 0);
   }
 
   function buildMediaKey(file) {
@@ -2237,6 +2413,10 @@
 
     els.stageSurface.style.width = Math.floor(width) + "px";
     els.stageSurface.style.height = Math.floor(height) + "px";
+
+    if (state.isOnboardingOpen) {
+      renderOnboardingStep();
+    }
   }
 
   function looksLikeVideo(file) {
@@ -2259,6 +2439,10 @@
     seconds = Math.floor(totalSeconds % 60);
 
     return pad(minutes) + ":" + pad(seconds);
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
   }
 
   function formatBytes(bytes) {
@@ -2301,10 +2485,6 @@
 
   function percentToNumber(value) {
     return parseFloat(String(value).replace("%", "")) || 0;
-  }
-
-  function clamp(value, min, max) {
-    return Math.min(Math.max(value, min), max);
   }
 
   function pad(value) {

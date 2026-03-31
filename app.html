@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina Zone</title>
+  <meta
+    name="description"
+    content="映像制作会社向けの完全ローカル動作セーフゾーン確認SPAツール Lumina Zone"
+  >
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="workspace-shell panel">
+      <input id="fileInput" type="file" accept="video/*">
+
+      <div class="workspace-main">
+        <aside class="sidebar-column sidebar-left">
+          <section class="sidebar-brand">
+            <p class="product-kicker">Lumina Zone</p>
+            <div class="viewer-heading">
+              <h2 id="modeLabel">縦動画セーフゾーンチェッカー</h2>
+            </div>
+          </section>
+
+          <div class="sidebar-guide-wrap">
+            <button id="helpToggle" class="viewer-utility-button guide-button" type="button" aria-haspopup="dialog" aria-controls="onboardingOverlay">
+              使い方ガイド
+            </button>
+          </div>
+
+          <section id="guideStepSource" class="control-card status-card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow step-label">STEP 1</p>
+                <h3>素材を読み込む</h3>
+              </div>
+            </div>
+
+            <div class="nameplate-card">
+              <span>クリップ名</span>
+              <strong id="metaName">未読み込み</strong>
+            </div>
+
+            <div class="meta-chip-grid">
+              <article class="meta-chip">
+                <span>サイズ</span>
+                <strong id="metaSize">-- MB</strong>
+              </article>
+              <article class="meta-chip">
+                <span>長さ</span>
+                <strong id="metaDuration">00:00</strong>
+              </article>
+              <article class="meta-chip">
+                <span>解像度</span>
+                <strong id="metaResolution">-- × --</strong>
+              </article>
+            </div>
+
+            <div class="source-action-row">
+              <label id="sourceLoadButton" for="fileInput" class="action-button action-button-primary">素材を読み込む</label>
+              <button id="historyToggle" class="action-button action-button-ghost" type="button">履歴</button>
+            </div>
+          </section>
+
+          <section id="guideStepModes" class="control-card setup-card">
+            <div class="card-header">
+              <div>
+                <p class="eyebrow step-label">STEP 2</p>
+                <h3>表示設定</h3>
+              </div>
+            </div>
+            <p id="modeDescription" class="mode-note">1つ以上選ぶと、セーフゾーンの枠が表示されます。</p>
+            <div id="modeButtons" class="platform-dock" aria-label="プラットフォーム選択"></div>
+
+            <div class="setting-block">
+              <span class="mini-label">再生速度</span>
+              <div id="speedButtons" class="speed-dock" aria-label="再生速度選択"></div>
+            </div>
+          </section>
+        </aside>
+
+        <section class="preview-column">
+          <div id="toastRoot" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+          <div id="dropZone" class="viewer-stage">
+            <div id="stageFrame" class="stage-surface-wrap">
+              <div id="stageSurface" class="stage-surface" data-platform="none">
+                <video id="previewVideo" playsinline preload="auto"></video>
+
+                <div id="placeholder" class="empty-state">
+                <div class="empty-state-card">
+                  <span class="empty-kicker">Lumina Zone</span>
+                  <strong>動画を読み込む</strong>
+                  <ul class="empty-state-list" aria-hidden="true">
+                      <li>このボタンから始めます。</li>
+                      <li>読み込んだあとに表示設定を選ぶと、セーフゾーンが表示されます。</li>
+                    </ul>
+                    <label for="fileInput" class="action-button action-button-primary empty-state-action">素材を読み込む</label>
+                  </div>
+                </div>
+
+                <div id="boundaryOverlay" class="boundary-overlay" aria-hidden="true">
+                  <div class="danger-zone danger-top"></div>
+                  <div class="danger-zone danger-left"></div>
+                  <div class="danger-zone danger-right"></div>
+                  <div class="danger-zone danger-bottom"></div>
+                  <div class="safe-frame"></div>
+
+                  <div class="dummy-ui dummy-ui-top">
+                    <span class="ghost-pill ghost-wide"></span>
+                    <span class="ghost-pill ghost-short"></span>
+                    <span class="ghost-dot"></span>
+                  </div>
+
+                  <div class="dummy-ui dummy-ui-right">
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-pill ghost-tall"></span>
+                    <span class="ghost-pill ghost-tiny"></span>
+                  </div>
+
+                  <div class="dummy-ui dummy-ui-bottom">
+                    <span class="ghost-pill ghost-headline"></span>
+                    <span class="ghost-pill ghost-medium"></span>
+                    <span class="ghost-pill ghost-short"></span>
+                    <span class="ghost-block"></span>
+                  </div>
+                </div>
+
+                <div id="flagPins" class="flag-pin-layer" aria-label="チェックピン"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="viewerDock" class="viewer-dock">
+            <div class="dock-primary">
+              <button id="jumpBack" class="dock-button" type="button">-3秒</button>
+              <button id="frameBack" class="dock-button dock-button-secondary" type="button">-1秒</button>
+              <button id="playToggle" class="dock-button dock-button-play" type="button">
+                <span class="transport-icon" aria-hidden="true"></span>
+                <span id="playToggleLabel">再生</span>
+              </button>
+              <button id="frameForward" class="dock-button dock-button-secondary" type="button">+1秒</button>
+              <button id="jumpForward" class="dock-button" type="button">+3秒</button>
+            </div>
+
+            <div class="dock-timeline">
+              <span id="currentTime">00:00</span>
+              <div class="timeline-shell">
+                <div id="flagMarkers" class="flag-markers" aria-label="チェックマーカー"></div>
+                <input id="timeline" class="timeline-range" type="range" min="0" max="1000" value="0" step="0.01">
+              </div>
+              <span id="totalTime">00:00</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="sidebar-column sidebar-right">
+          <section class="control-card flags-card">
+            <div class="flags-header-row">
+              <div class="flags-title-chip"><span class="step-label-inline">STEP 3</span><span>気になる場所を記録</span></div>
+              <span id="flagsCount" class="card-pill">0件</span>
+            </div>
+
+            <div class="flags-hint-card">
+              <p id="flagsHint">プレビュー画面内をクリックすると、右に記録されます。</p>
+            </div>
+
+            <div id="guideStepShare" class="review-utility-stack">
+              <button id="autoStopToggle" class="segment-button review-toggle-button" type="button" aria-pressed="false">自動停止 OFF</button>
+              <button id="exportCurrentPdfButton" class="action-button action-button-ghost review-primary-button" type="button">チェック内容をPDF化</button>
+            </div>
+
+            <div class="flags-thread">
+              <div id="flagsEmpty" class="flags-empty">
+                <span class="flags-empty-label">表示例</span>
+                <article class="flag-item flag-item-sample" aria-hidden="true">
+                  <span class="flag-time-button">00:00</span>
+                  <div class="flag-meta">
+                    <span class="flag-zone-badge" data-zone="right">右</span>
+                    <span class="flag-platform-badge">TikTok + Reels</span>
+                    <span class="flag-comment-badge">メモ</span>
+                  </div>
+                  <span class="flag-delete">削除</span>
+                </article>
+              </div>
+              <div id="flagsList" class="flags-list" aria-live="polite"></div>
+            </div>
+
+            <div id="commentEditor" class="comment-editor">
+              <div class="comment-editor-header">
+                <div>
+                  <p class="eyebrow">共有メモ</p>
+                  <h4 id="commentEditorTitle">記録を選ぶと、共有メモを残せます</h4>
+                </div>
+                <span id="commentTargetTime" class="timestamp-pill">--:--</span>
+              </div>
+
+              <input
+                id="flagCommentInput"
+                class="comment-input"
+                type="text"
+                maxlength="160"
+                placeholder="必要な時だけ、共有メモを短く残します。"
+              >
+
+              <div class="comment-actions">
+                <button id="saveCommentButton" class="action-button action-button-primary" type="button">保存</button>
+                <button id="clearCommentButton" class="action-button action-button-ghost" type="button">消す</button>
+              </div>
+            </div>
+
+            <div class="flags-toolbar">
+              <span class="flags-toolbar-copy">一覧や下のバーから、その位置に戻れます。</span>
+              <button id="clearFlagsButton" class="action-button action-button-ghost" type="button">すべて削除</button>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div id="onboardingOverlay" class="onboarding" hidden>
+    <div class="onboarding-backdrop"></div>
+    <div id="onboardingSpotlight" class="onboarding-spotlight" aria-hidden="true"></div>
+    <section id="onboardingCard" class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+      <div class="onboarding-header">
+        <div>
+          <p id="onboardingStepLabel" class="eyebrow">使い方ガイド 1 / 4</p>
+          <h3 id="onboardingTitle">まず動画を読み込みます</h3>
+        </div>
+        <button id="onboardingSkip" class="action-button action-button-ghost" type="button">スキップ</button>
+      </div>
+
+      <p id="onboardingBody" class="onboarding-copy">まず素材を読み込みます。読み込んだ後は左から別素材も開けます。</p>
+
+      <div class="onboarding-actions">
+        <button id="onboardingNext" class="action-button action-button-primary" type="button">次へ</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="historyModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-history="true"></div>
+    <section class="modal-panel modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">履歴</p>
+          <h3 id="historyTitle">過去のチェック記録</h3>
+        </div>
+        <button id="historyClose" class="action-button action-button-ghost" type="button">閉じる</button>
+      </div>
+
+      <div class="modal-body history-modal-body">
+        <p class="history-guide">同じ素材を開いている時は、履歴のタイムからそのまま戻れます。</p>
+        <div class="history-report-row">
+          <button id="historyCurrentPdfButton" class="action-button action-button-primary" type="button">チェック内容をPDF化</button>
+          <button id="historyTodayPdfButton" class="action-button action-button-ghost" type="button">今日の履歴をPDF化</button>
+        </div>
+        <div id="historyEmpty" class="history-empty">まだ履歴はありません。</div>
+        <div id="historyList" class="history-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </div>
+
+  <div id="confirmModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-confirm="cancel"></div>
+    <section class="modal-panel modal-panel-compact" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="modal-header modal-header-compact">
+        <div>
+          <p class="eyebrow">素材の切り替え</p>
+          <h3 id="confirmTitle">別の素材へ切り替えますか？</h3>
+        </div>
+      </div>
+
+      <div class="modal-body confirm-modal-body">
+        <p id="confirmMessage" class="confirm-copy">現在のチェック記録は履歴に残ります。</p>
+        <div class="confirm-actions">
+          <button id="confirmCancel" class="action-button action-button-ghost" type="button">キャンセル</button>
+          <button id="confirmAccept" class="action-button action-button-primary" type="button">切り替える</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
