@@ -143,12 +143,21 @@
     pendingInitialFrame: false,
     onboardingStep: 0,
     isPreviewSeeking: false,
-    pdfNeedsAttention: false
+    pdfNeedsAttention: false,
+    lastTrackedMediaKey: ""
   };
 
   var platforms = null;
   var platformMeta = null;
   var els = {};
+
+  function track(eventName, properties) {
+    if (typeof window.luminaTrack !== "function") {
+      return;
+    }
+
+    window.luminaTrack(eventName, properties || {});
+  }
 
   function init() {
     var configSource = typeof AppConfig !== "undefined" && AppConfig ? AppConfig : {};
@@ -168,6 +177,7 @@
     updateAutoStopButton();
     setControlsEnabled(false);
     requestStageFit();
+    track("app_open");
   }
 
   function cacheElements() {
@@ -279,6 +289,7 @@
     els.video.addEventListener("error", onVideoError);
 
     els.helpToggle.addEventListener("click", function () {
+      track("guide_open");
       openOnboarding(0);
     });
     els.historyToggle.addEventListener("click", openHistoryModal);
@@ -513,6 +524,10 @@
     updatePlatformButtons();
     updateFlagsHint();
     updateAutoStopButton();
+    track("platform_select", {
+      platform: platformKey,
+      platform_count: platformKeys.length
+    });
   }
 
   function clearPlatformSelection() {
@@ -621,6 +636,7 @@
     state.pendingInitialFrame = true;
     state.isPreviewSeeking = false;
     state.pdfNeedsAttention = state.flags.length > 0;
+    state.lastTrackedMediaKey = "";
     state.objectUrl = URL.createObjectURL(file);
 
     els.video.src = state.objectUrl;
@@ -659,6 +675,13 @@
 
     els.metaDuration.textContent = formatDuration(duration);
     els.totalTime.textContent = formatDuration(duration);
+    if (state.mediaKey && state.mediaKey !== state.lastTrackedMediaKey) {
+      state.lastTrackedMediaKey = state.mediaKey;
+      track("video_load_success", {
+        duration_seconds: Math.round(duration || 0),
+        resolution: width > 0 && height > 0 ? width + "x" + height : "unknown"
+      });
+    }
     persistHistorySnapshot();
     setControlsEnabled(true);
     updateTransportState();
@@ -1200,6 +1223,7 @@
     renderHistoryList();
     els.historyModal.hidden = false;
     state.isHistoryOpen = true;
+    track("history_open");
   }
 
   function closeHistoryModal() {
@@ -1269,6 +1293,11 @@
     renderFlags();
     renderCommentEditor();
     syncTimeline();
+    track("marker_add", {
+      zone: flag.zone,
+      platform: flag.platform,
+      marker_count: state.flags.length
+    });
     showToast(formatDuration(flag.time) + " / " + FLAG_LABELS[flag.zone] + " を記録しました。", "success");
   }
 
@@ -1413,6 +1442,12 @@
     persistFlags();
     renderFlags();
     renderCommentEditor();
+    track("memo_save", {
+      has_comment: !!nextComment.length,
+      comment_length: nextComment.length,
+      zone: flag.zone,
+      platform: flag.platform
+    });
     showToast(nextComment ? "メモを保存しました。" : "メモを空にしました。", "success");
   }
 
@@ -1910,6 +1945,10 @@
     if (openReportWindow(report)) {
       state.pdfNeedsAttention = false;
       updatePdfButtons();
+      track("pdf_export", {
+        report_type: "current",
+        marker_count: state.flags.length
+      });
       showToast("PDFレポートを開きました。", "success");
     }
   }
@@ -1942,6 +1981,11 @@
     };
 
     if (openReportWindow(report)) {
+      track("pdf_export", {
+        report_type: "today",
+        item_count: entries.length,
+        marker_count: totalFlags
+      });
       showToast("今日の履歴レポートを開きました。", "success");
     }
   }

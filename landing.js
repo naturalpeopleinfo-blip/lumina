@@ -1,6 +1,7 @@
 const landingMobileQuery = window.matchMedia("(max-width: 760px)");
 const landingHeaderCta = document.querySelector("#landingHeaderCta");
 const landingHeroCta = document.querySelector("#landingHeroCta");
+const landingCtaLinks = document.querySelectorAll("[data-cta-source]");
 
 let landingHeroObserver = null;
 
@@ -50,3 +51,12 @@ window.addEventListener("pageshow", setupLandingHeroObserver);
 window.addEventListener("resize", setupLandingHeroObserver);
 
 setupLandingHeroObserver();
+
+landingCtaLinks.forEach(function (link) {
+  link.addEventListener("click", function () {
+    if (typeof window.luminaTrack !== "function") return;
+    window.luminaTrack("landing_cta_click", {
+      cta_source: link.getAttribute("data-cta-source") || "unknown"
+    });
+  });
+});
