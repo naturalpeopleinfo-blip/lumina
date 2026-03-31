@@ -101,26 +101,37 @@
           <p class="landing-section-kicker">About</p>
           <h2>セーフゾーンとは</h2>
           <p class="landing-section-intro">
-            文字や見せたい要素を、SNSの表示UIに重ねず安全に見せられる範囲のことです。
+            一見問題なく見えても、安全エリアの外は安心ではありません。
           </p>
         </div>
 
         <div class="landing-about-stack">
-          <div class="landing-diagram" aria-hidden="true">
-            <div class="landing-diagram-single">
-              <div class="landing-diagram-phone">
+          <div class="landing-about-compare" aria-label="セーフゾーンのビフォーアフター">
+            <figure class="landing-about-card">
+              <figcaption class="landing-about-label">Before</figcaption>
+              <div class="landing-diagram-phone landing-diagram-phone-before" aria-hidden="true"></div>
+              <p class="landing-about-card-copy">
+                一見問題なく見えても、この時点では危険エリアが見えていません。
+              </p>
+            </figure>
+
+            <figure class="landing-about-card">
+              <figcaption class="landing-about-label">After</figcaption>
+              <div class="landing-diagram-phone landing-diagram-phone-after" aria-hidden="true">
                 <div class="landing-diagram-danger landing-diagram-danger-top"></div>
                 <div class="landing-diagram-danger landing-diagram-danger-right"></div>
                 <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
                 <div class="landing-diagram-safe"></div>
               </div>
-            </div>
+              <p class="landing-about-card-copy">
+                赤いゾーンに触れる要素は、SNSのUIや端末の表示差で見えにくくなる可能性があります。
+              </p>
+            </figure>
           </div>
 
           <div class="landing-about-copy">
             <p>
-              投稿後にテロップや字幕がボタンや説明欄に隠れるミスを防ぎ、
-              見せたい情報を最後まできちんと届けやすくします。
+              Lumina Zone は、その危険エリアを投稿前に確認するためのツールです。
             </p>
           </div>
         </div>

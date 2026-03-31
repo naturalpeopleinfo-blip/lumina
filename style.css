@@ -29,6 +29,7 @@
   --mode-danger-strong: var(--danger-base);
   --mode-danger-soft: var(--danger-soft);
   --mode-ghost: rgba(255, 246, 227, 0.28);
+  --landing-about-before-image: url("./assets/about-before.png");
   --landing-demo-image: url("./assets/hero-example.png");
   --landing-report-image: url("./assets/report-example.png");
 }
@@ -452,6 +453,26 @@ body.landing-page::before {
     0 30px 48px rgba(0, 0, 0, 0.32);
 }
 
+.landing-diagram-phone-before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%),
+    linear-gradient(180deg, rgba(4, 6, 12, 0.02), rgba(6, 8, 14, 0.18) 68%, rgba(7, 9, 14, 0.34) 100%),
+    var(--landing-about-before-image);
+  background-size: auto, auto, cover;
+  background-position: center, center, center;
+  background-repeat: no-repeat;
+}
+
+.landing-diagram-phone-after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%),
+    linear-gradient(180deg, rgba(4, 6, 12, 0.02), rgba(6, 8, 14, 0.26) 68%, rgba(7, 9, 14, 0.42) 100%),
+    var(--landing-demo-image);
+  background-size: auto, auto, cover;
+  background-position: center, center, center;
+  background-repeat: no-repeat;
+}
+
 .landing-diagram-phone::before,
 .landing-report-thumb::before {
   content: "";
@@ -592,6 +613,48 @@ body.landing-page::before {
 .landing-report-stack {
   width: min(100%, 980px);
   justify-items: center;
+}
+
+.landing-about-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  width: min(100%, 980px);
+  align-items: start;
+}
+
+.landing-about-card {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  margin: 0;
+}
+
+.landing-about-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(79, 170, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.016)),
+    rgba(18, 18, 24, 0.46);
+  color: rgba(245, 249, 255, 0.9);
+  font-size: 0.78rem;
+  font-weight: 560;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-about-card-copy {
+  margin: 0;
+  max-width: 22rem;
+  color: rgba(228, 235, 244, 0.74);
+  font-size: 0.96rem;
+  line-height: 1.72;
+  text-align: center;
+  text-wrap: balance;
 }
 
 .landing-diagram,
@@ -3346,6 +3409,10 @@ body.landing-page::before {
   .landing-steps-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .landing-about-compare {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
@@ -3450,6 +3517,10 @@ body.landing-page::before {
     grid-template-columns: 1fr;
   }
 
+  .landing-about-compare {
+    gap: 20px;
+  }
+
   .landing-hero-copy {
     max-width: 42rem;
     justify-items: center;
@@ -3489,6 +3560,11 @@ body.landing-page::before {
 
   .landing-diagram {
     min-height: 320px;
+  }
+
+  .landing-about-card-copy {
+    max-width: 24rem;
+    font-size: 0.92rem;
   }
 }
 
