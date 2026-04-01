@@ -682,18 +682,209 @@ body.landing-page::before {
 }
 
 .landing-timing-section {
-  gap: 20px;
+  gap: 28px;
 }
 
-.landing-timing-copy {
+.landing-timing-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(109, 171, 255, 0.28);
+  background:
+    linear-gradient(180deg, rgba(121, 184, 255, 0.22), rgba(121, 184, 255, 0.06)),
+    rgba(255, 255, 255, 0.02);
+  color: rgba(248, 251, 255, 0.94);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.landing-timing-compare {
+  position: relative;
+  width: min(100%, 1040px);
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.042), rgba(255, 255, 255, 0.014)),
+    rgba(18, 18, 24, 0.7);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+}
+
+.landing-timing-compare::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 52%;
+  background:
+    radial-gradient(circle at top left, rgba(121, 184, 255, 0.18), transparent 36%),
+    linear-gradient(180deg, rgba(121, 184, 255, 0.06), rgba(121, 184, 255, 0));
+  pointer-events: none;
+}
+
+.landing-timing-table {
+  position: relative;
+  z-index: 1;
   display: grid;
-  gap: 14px;
-  max-width: 780px;
+  grid-template-columns: 160px repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.landing-timing-closing {
-  color: rgba(244, 248, 255, 0.92) !important;
+.landing-timing-corner,
+.landing-timing-colhead,
+.landing-timing-rowhead,
+.landing-timing-cell {
+  background: rgba(15, 17, 23, 0.96);
+}
+
+.landing-timing-colhead,
+.landing-timing-rowhead,
+.landing-timing-cell {
+  padding: 18px 18px 20px;
+}
+
+.landing-timing-colhead {
+  color: rgba(248, 251, 255, 0.96);
+  font-size: 0.92rem;
+  font-weight: 620;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.landing-timing-colhead.is-risk {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+    radial-gradient(circle at top right, rgba(201, 48, 48, 0.08), transparent 42%),
+    rgba(15, 17, 23, 0.96);
+}
+
+.landing-timing-colhead.is-safe {
+  background:
+    linear-gradient(180deg, rgba(121, 184, 255, 0.18), rgba(255, 255, 255, 0.024)),
+    radial-gradient(circle at top left, rgba(121, 184, 255, 0.18), transparent 42%),
+    rgba(15, 17, 23, 0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 34px rgba(31, 91, 174, 0.12);
+}
+
+.landing-timing-rowhead {
+  display: flex;
+  align-items: center;
+  color: rgba(202, 219, 239, 0.82);
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-timing-cell {
+  display: grid;
+  gap: 10px;
+  align-content: center;
+  min-height: 118px;
+  color: rgba(239, 244, 250, 0.92);
+  font-size: 1.02rem;
   font-weight: 520;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.landing-timing-cell span {
+  color: rgba(208, 219, 234, 0.62);
+  font-size: 0.9rem;
+  font-weight: 420;
+  line-height: 1.58;
+}
+
+.landing-timing-cell.is-risk {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.01)),
+    radial-gradient(circle at top right, rgba(201, 48, 48, 0.08), transparent 44%),
+    rgba(15, 17, 23, 0.96);
+}
+
+.landing-timing-cell.is-safe {
+  background:
+    linear-gradient(180deg, rgba(121, 184, 255, 0.16), rgba(255, 255, 255, 0.022)),
+    radial-gradient(circle at top left, rgba(121, 184, 255, 0.16), transparent 44%),
+    rgba(15, 17, 23, 0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 28px rgba(31, 91, 174, 0.1);
+  color: rgba(247, 251, 255, 0.98);
+}
+
+.landing-timing-cell.is-safe span {
+  color: rgba(220, 233, 249, 0.82);
+}
+
+.landing-trust-section {
+  gap: 0;
+  margin-top: -16px;
+  margin-bottom: -14px;
+}
+
+.landing-trust-card {
+  width: min(100%, 980px);
+  padding: 14px 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+    radial-gradient(circle at top left, rgba(121, 184, 255, 0.08), transparent 38%),
+    rgba(18, 18, 24, 0.62);
+}
+
+.landing-trust-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-trust-list li {
+  position: relative;
+  margin: 0;
+  padding-left: 30px;
+  color: rgba(236, 242, 250, 0.8);
+  font-size: 0.94rem;
+  line-height: 1.62;
+  text-align: left;
+  text-wrap: balance;
+}
+
+.landing-trust-list li::before {
+  content: "";
+  position: absolute;
+  top: 0.28rem;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(109, 171, 255, 0.28);
+  background:
+    linear-gradient(180deg, rgba(121, 184, 255, 0.22), rgba(121, 184, 255, 0.06)),
+    rgba(255, 255, 255, 0.02);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.14);
+}
+
+.landing-trust-list li::after {
+  content: "";
+  position: absolute;
+  top: 0.56rem;
+  left: 5px;
+  width: 7px;
+  height: 4px;
+  border-left: 2px solid rgba(244, 248, 255, 0.98);
+  border-bottom: 2px solid rgba(244, 248, 255, 0.98);
+  transform: rotate(-45deg);
 }
 
 .landing-report-signals {
@@ -741,12 +932,15 @@ body.landing-page::before {
 .landing-steps-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
+  align-items: stretch;
 }
 
 .landing-step-card {
   display: grid;
+  grid-template-rows: auto auto auto 1fr;
   gap: 14px;
-  min-height: 204px;
+  min-height: 224px;
+  height: 100%;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.038), rgba(255, 255, 255, 0.012)),
     rgba(18, 18, 24, 0.62);
@@ -758,6 +952,7 @@ body.landing-page::before {
   font-size: 1.18rem;
   font-weight: 520;
   letter-spacing: -0.01em;
+  line-height: 1.18;
 }
 
 .landing-report-visual {
@@ -3413,6 +3608,11 @@ body.landing-page::before {
   .landing-about-compare {
     grid-template-columns: 1fr;
   }
+
+  .landing-trust-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -3519,6 +3719,23 @@ body.landing-page::before {
 
   .landing-about-compare {
     gap: 20px;
+  }
+
+  .landing-timing-table {
+    min-width: 640px;
+  }
+
+  .landing-timing-compare {
+    overflow-x: auto;
+    padding-bottom: 12px;
+  }
+
+  .landing-timing-compare::before {
+    inset: 0 0 0 58%;
+  }
+
+  .landing-timing-table {
+    grid-template-columns: 124px repeat(2, minmax(220px, 1fr));
   }
 
   .landing-hero-copy {

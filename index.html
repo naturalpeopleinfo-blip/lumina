@@ -76,32 +76,12 @@
         </figure>
       </section>
 
-      <section class="landing-section landing-section-centered landing-timing-section">
-        <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Timing</p>
-          <h2>公開前の見落としをゼロにする、最後の保険</h2>
-        </div>
-
-        <div class="landing-timing-copy">
-          <p>
-            Lumina Zone は、編集が終わった最終ファイルを投稿前に確認するためのツールです。
-            SNSでは、テロップや重要な要素がUIに隠れていても、投稿するまで気づけないことがあります。
-          </p>
-          <p>
-            公開後は動画の修正ができないため、最後の確認漏れはそのまま事故になります。
-          </p>
-          <p class="landing-timing-closing">
-            投稿前の最後に、見落としを残さないために使ってください。
-          </p>
-        </div>
-      </section>
-
       <section id="about" class="landing-section landing-section-centered">
         <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">About</p>
-          <h2>セーフゾーンとは</h2>
+          <p class="landing-section-kicker">Safe Zone</p>
+          <h2>一見問題なく見えても、安心ではありません</h2>
           <p class="landing-section-intro">
-            一見問題なく見えても、安全エリアの外は安心ではありません。
+            安全エリアの外にある要素は、SNSのUIや端末の表示差で見えにくくなることがあります。
           </p>
         </div>
 
@@ -135,6 +115,46 @@
             </p>
           </div>
         </div>
+      </section>
+
+      <section class="landing-section landing-section-centered landing-timing-section">
+        <div class="landing-section-head landing-section-head-centered">
+          <p class="landing-section-kicker">Timing</p>
+          <h2>公開前の見落としをゼロにする、最後の保険</h2>
+          <p class="landing-section-intro">
+            編集が終わった最終ファイルを、投稿前に確認するためのツールです。
+          </p>
+        </div>
+
+        <div class="landing-timing-compare landing-card" aria-label="投稿前に確認する場合としない場合の違い">
+          <div class="landing-timing-table">
+            <div class="landing-timing-corner" aria-hidden="true"></div>
+            <div class="landing-timing-colhead landing-timing-colhead-risk is-risk">使わない場合</div>
+            <div class="landing-timing-colhead landing-timing-colhead-safe is-safe">Lumina Zone を使う場合</div>
+
+            <div class="landing-timing-rowhead landing-timing-rowhead-edit">編集完了</div>
+            <div class="landing-timing-cell landing-timing-cell-edit-risk">最終ファイルを受け取る</div>
+            <div class="landing-timing-cell landing-timing-cell-edit-safe is-safe">最終ファイルを受け取る</div>
+
+            <div class="landing-timing-rowhead landing-timing-rowhead-before">投稿前</div>
+            <div class="landing-timing-cell landing-timing-cell-before-risk is-risk">そのまま投稿する</div>
+            <div class="landing-timing-cell landing-timing-cell-before-safe is-safe">各SNSのUIとの重なりを確認する</div>
+
+            <div class="landing-timing-rowhead landing-timing-rowhead-after">投稿後</div>
+            <div class="landing-timing-cell landing-timing-cell-after-risk is-risk">
+              テロップや重要な情報がUIに隠れていることに気づく
+              <span>動画は修正できない</span>
+            </div>
+            <div class="landing-timing-cell landing-timing-cell-after-safe is-safe">
+              問題を直してから投稿する
+              <span>安心して公開できる</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="landing-timing-closing">
+          投稿前に止められるかどうかで、公開後の結果が変わります。
+        </p>
       </section>
 
       <section id="report" class="landing-section landing-section-centered">
@@ -224,6 +244,16 @@
             <h3>気になる場所を記録する</h3>
             <p>プレビュー画面内をクリックすると、その時刻と位置を記録できます。</p>
           </article>
+        </div>
+      </section>
+
+      <section class="landing-section landing-section-centered landing-trust-section" aria-label="安心して使える理由">
+        <div class="landing-trust-card landing-card">
+          <ul class="landing-trust-list">
+            <li>動画はブラウザ内で処理されます</li>
+            <li>動画ファイルや内容は収集しません</li>
+            <li>改善のために利用状況のみを計測します</li>
+          </ul>
         </div>
       </section>
 
