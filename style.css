@@ -4333,7 +4333,7 @@ body.landing-page::before {
   }
 
   .landing-highlights-section {
-    margin-top: -10px;
+    margin-top: -2px;
   }
 
   .landing-section-head {
@@ -4342,14 +4342,14 @@ body.landing-page::before {
 
   .landing-section-head h2,
   .landing-cta h2 {
-    font-size: clamp(1.95rem, 9vw, 2.7rem);
-    line-height: 1.06;
+    font-size: clamp(1.82rem, 8.2vw, 2.48rem);
+    line-height: 1.08;
   }
 
   .landing-section-intro {
     max-width: 30rem;
-    font-size: 0.93rem;
-    line-height: 1.62;
+    font-size: 0.9rem;
+    line-height: 1.58;
   }
 
   .landing-about-compare {
@@ -4406,8 +4406,8 @@ body.landing-page::before {
   .landing-highlight-card,
   .landing-compare-card {
     min-height: auto;
-    padding: 18px;
-    border-radius: 22px;
+    padding: 16px;
+    border-radius: 20px;
   }
 
   .landing-step-card {
@@ -4415,47 +4415,56 @@ body.landing-page::before {
   }
 
   .landing-highlight-card {
-    gap: 8px;
+    gap: 6px;
   }
 
   .landing-highlight-card .landing-section-kicker {
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
+    font-size: 0.67rem;
+    letter-spacing: 0.11em;
   }
 
   .landing-highlight-card h3,
   .landing-compare-title {
-    font-size: 1rem;
-    line-height: 1.28;
+    font-size: 0.96rem;
+    line-height: 1.26;
   }
 
   .landing-highlight-card p:last-child,
   .landing-compare-list li {
-    font-size: 0.89rem;
-    line-height: 1.52;
+    font-size: 0.85rem;
+    line-height: 1.48;
   }
 
   .landing-compare-grid {
-    gap: 12px;
+    gap: 10px;
   }
 
   .landing-compare-card {
-    gap: 12px;
+    gap: 10px;
   }
 
   .landing-compare-badge {
     min-height: 24px;
-    padding: 0 10px;
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
+    padding: 0 9px;
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
   }
 
   .landing-compare-list {
-    gap: 9px;
+    gap: 8px;
   }
 
   .landing-compare-list li {
-    padding-left: 18px;
+    padding-left: 16px;
+  }
+
+  .landing-compare-heading {
+    max-width: 21rem;
+    gap: 1px;
+  }
+
+  .landing-compare-section .landing-section-intro {
+    max-width: 22rem;
   }
 
   .landing-cta-actions {
@@ -4472,11 +4481,11 @@ body.landing-page::before {
   }
 
   .landing-timing-mobile {
-    gap: 10px;
+    gap: 8px;
   }
 
   .landing-timing-mobile-stage {
-    gap: 10px;
+    gap: 8px;
     padding: 0;
     border: 0;
     background: transparent;
@@ -4486,8 +4495,8 @@ body.landing-page::before {
 
   .landing-timing-mobile-step {
     padding-left: 2px;
-    font-size: 0.74rem;
-    letter-spacing: 0.14em;
+    font-size: 0.71rem;
+    letter-spacing: 0.12em;
   }
 
   .landing-timing-mobile-stage:not(:last-child)::after {
@@ -4511,35 +4520,60 @@ body.landing-page::before {
   }
 
   .landing-timing-mobile-shared {
-    padding: 14px 16px;
-    font-size: 0.96rem;
-    line-height: 1.4;
+    padding: 13px 15px;
+    font-size: 0.92rem;
+    line-height: 1.38;
   }
 
   .landing-timing-mobile-option {
-    gap: 6px;
-    padding: 14px 16px;
+    gap: 5px;
+    padding: 13px 15px;
   }
 
   .landing-timing-mobile-label {
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
+    font-size: 0.64rem;
+    letter-spacing: 0.09em;
   }
 
   .landing-timing-mobile-option strong {
-    font-size: 0.95rem;
-    line-height: 1.42;
+    font-size: 0.91rem;
+    line-height: 1.38;
   }
 
   .landing-timing-mobile-option small {
-    font-size: 0.82rem;
-    line-height: 1.42;
+    font-size: 0.78rem;
+    line-height: 1.36;
   }
 
   .landing-timing-closing {
     max-width: 28rem;
-    font-size: 0.9rem;
-    line-height: 1.58;
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .landing-report-heading {
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  #report .landing-section-head {
+    gap: 7px;
+  }
+
+  #report .landing-section-head h2 {
+    max-width: 18rem;
+    text-wrap: balance;
+  }
+
+  .landing-report-signals {
+    gap: 8px;
+  }
+
+  .landing-report-signal {
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
   }
 }
 
