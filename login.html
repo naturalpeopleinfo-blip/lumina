@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina Zone | Googleログイン</title>
+  <meta
+    name="description"
+    content="Googleログインで、保存機能と利用管理をこのアカウントにひも付けます。"
+  >
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page" data-auth-source="login">
+  <div class="login-shell">
+    <header class="login-header">
+      <a href="./index.html" class="landing-brand" aria-label="Lumina Zone ホーム">
+        <img src="lumina-zone-mark.svg" alt="" class="landing-brand-mark" width="40" height="40">
+        <span class="landing-brand-copy">
+          <strong>Lumina Zone</strong>
+          <span>縦動画セーフゾーンチェッカー</span>
+        </span>
+      </a>
+    </header>
+
+    <main class="login-main">
+      <section class="login-panel panel" aria-label="Googleログインページ">
+        <div class="login-copy">
+          <p class="eyebrow login-eyebrow">Google Login</p>
+          <h1>Googleログインで、<br><span class="login-gradient">はじめる。</span></h1>
+
+          <section id="authPanel" class="auth-panel auth-panel-login" aria-label="Googleログイン">
+            <p class="eyebrow auth-eyebrow">Googleでログイン</p>
+
+            <div id="authLoadingState" class="auth-state auth-state-loading">
+              <p class="auth-copy">ログイン状態を確認しています。</p>
+            </div>
+
+            <div id="authLoggedOutState" class="auth-state" hidden>
+              <button id="googleSignInButton" class="google-signin-button" type="button">
+                <span class="google-signin-button-mark" aria-hidden="true">
+                  <svg viewBox="0 0 18 18" width="18" height="18" focusable="false" aria-hidden="true">
+                    <path fill="#4285F4" d="M17.64 9.2045c0-.6382-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2087 1.125-.8427 2.0782-1.7968 2.7155v2.2573h2.9091c1.7023-1.5673 2.6841-3.8773 2.6841-6.6137z"></path>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.4673-.8059 5.9568-2.1818l-2.9091-2.2573c-.8059.54-1.8368.8591-3.0477.8591-2.3441 0-4.3282-1.5845-5.0364-3.7105H.9568v2.3305C2.4382 15.9832 5.4818 18 9 18z"></path>
+                    <path fill="#FBBC05" d="M3.9636 10.7095C3.7832 10.1691 3.6818 9.5918 3.6818 9s.1014-1.1691.2818-1.7095V4.96H.9568C.3477 6.1736 0 7.5477 0 9s.3477 2.8264.9568 4.04l3.0068-2.3305z"></path>
+                    <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.3459l2.5813-2.5814C13.4636.8918 11.4264 0 9 0 5.4818 0 2.4382 2.0168.9568 4.96l3.0068 2.3305C4.6718 5.1641 6.6559 3.5795 9 3.5795z"></path>
+                  </svg>
+                </span>
+                <span class="google-signin-button-label">Googleでログイン</span>
+              </button>
+            </div>
+
+            <div id="authLoggedInState" class="auth-state" hidden>
+              <div class="auth-user">
+                <div id="authAvatar" class="auth-avatar" aria-hidden="true">L</div>
+                <div class="auth-user-copy">
+                  <strong id="authUserName">ログイン済み</strong>
+                  <span id="authUserEmail">--</span>
+                </div>
+              </div>
+              <p class="auth-copy auth-copy-subtle">このアカウントに保存機能と利用管理をひも付けます。</p>
+              <div class="auth-action-stack">
+                <a href="./app.html" class="action-button action-button-primary auth-return-button">アプリに戻る</a>
+                <button id="authSignOutButton" class="action-button action-button-ghost auth-signout-button" type="button">ログアウト</button>
+              </div>
+            </div>
+
+            <p class="login-trust-line">動画ファイルは保存されません。</p>
+          </section>
+        </div>
+
+        <aside class="login-visual" aria-label="ログインページの補助ビジュアル">
+          <div class="login-visual-card">
+            <div class="login-mini-compare">
+              <figure class="login-mini-card">
+                <figcaption class="landing-about-label">Before</figcaption>
+                <div class="landing-diagram-phone landing-diagram-phone-before login-phone-mini" aria-hidden="true"></div>
+              </figure>
+              <figure class="login-mini-card">
+                <figcaption class="landing-about-label">After</figcaption>
+                <div class="landing-diagram-phone landing-diagram-phone-after login-phone-mini" aria-hidden="true">
+                  <div class="landing-diagram-danger landing-diagram-danger-top"></div>
+                  <div class="landing-diagram-danger landing-diagram-danger-left"></div>
+                  <div class="landing-diagram-danger landing-diagram-danger-right"></div>
+                  <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
+                  <div class="landing-diagram-safe"></div>
+                </div>
+              </figure>
+            </div>
+            <p class="login-visual-caption">投稿前に、危険エリアを見える化。</p>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="analytics.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

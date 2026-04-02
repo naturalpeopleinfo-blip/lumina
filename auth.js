@@ -12,6 +12,18 @@
     user: null
   };
 
+  function getAuthSource() {
+    if (document.body && document.body.dataset && document.body.dataset.authSource) {
+      return document.body.dataset.authSource;
+    }
+
+    if (window.location && /login\.html$/.test(window.location.pathname)) {
+      return "login";
+    }
+
+    return "app";
+  }
+
   function track(eventName, properties) {
     if (typeof window.luminaTrack !== "function") {
       return;
@@ -181,6 +193,7 @@
     var userEmail = document.getElementById("authUserEmail");
     var avatar = document.getElementById("authAvatar");
     var signInButton = document.getElementById("googleSignInButton");
+    var signInButtonLabel = signInButton ? signInButton.querySelector(".google-signin-button-label") : null;
 
     if (!loadingState || !loggedOutState || !loggedInState) {
       return;
@@ -192,7 +205,11 @@
 
     if (signInButton) {
       signInButton.disabled = !state.enabled;
-      signInButton.textContent = state.enabled ? "Googleでログイン" : "Googleログイン準備中";
+      if (signInButtonLabel) {
+        signInButtonLabel.textContent = state.enabled ? "Googleでログイン" : "Googleログイン準備中";
+      } else {
+        signInButton.textContent = state.enabled ? "Googleでログイン" : "Googleログイン準備中";
+      }
     }
 
     if (!state.user) {
@@ -239,7 +256,7 @@
       return Promise.resolve();
     }
 
-    track("auth_google_click", { source: "app" });
+    track("auth_google_click", { source: getAuthSource() });
 
     return supabaseClient.auth.signInWithOAuth({
       provider: "google",
@@ -257,7 +274,7 @@
       return Promise.resolve();
     }
 
-    track("auth_sign_out", { source: "app" });
+    track("auth_sign_out", { source: getAuthSource() });
     return supabaseClient.auth.signOut();
   }
 
@@ -320,7 +337,10 @@
 
     supabaseClient.auth.onAuthStateChange(function (eventName, session) {
       if (eventName === "SIGNED_IN") {
-        track("auth_signed_in", { source: "google" });
+        track("auth_signed_in", {
+          source: "google",
+          surface: getAuthSource()
+        });
       }
 
       setSession(session);
