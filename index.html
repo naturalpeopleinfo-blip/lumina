@@ -119,6 +119,7 @@
               <figcaption class="landing-about-label">After</figcaption>
               <div class="landing-diagram-phone landing-diagram-phone-after" aria-hidden="true">
                 <div class="landing-diagram-danger landing-diagram-danger-top"></div>
+                <div class="landing-diagram-danger landing-diagram-danger-left"></div>
                 <div class="landing-diagram-danger landing-diagram-danger-right"></div>
                 <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
                 <div class="landing-diagram-safe"></div>
@@ -152,15 +153,24 @@
             <div class="landing-timing-colhead landing-timing-colhead-risk is-risk">使わない場合</div>
             <div class="landing-timing-colhead landing-timing-colhead-safe is-safe">Lumina Zone を使う場合</div>
 
-            <div class="landing-timing-rowhead landing-timing-rowhead-edit">編集完了</div>
+            <div class="landing-timing-rowhead landing-timing-rowhead-edit">
+              <span class="landing-timing-rowhead-index">1</span>
+              <span class="landing-timing-rowhead-text">編集完了</span>
+            </div>
             <div class="landing-timing-cell landing-timing-cell-edit-risk">最終ファイルを受け取る</div>
             <div class="landing-timing-cell landing-timing-cell-edit-safe is-safe">最終ファイルを受け取る</div>
 
-            <div class="landing-timing-rowhead landing-timing-rowhead-before">投稿前</div>
+            <div class="landing-timing-rowhead landing-timing-rowhead-before">
+              <span class="landing-timing-rowhead-index">2</span>
+              <span class="landing-timing-rowhead-text">投稿<span class="landing-timing-rowhead-accent is-before">前</span></span>
+            </div>
             <div class="landing-timing-cell landing-timing-cell-before-risk is-risk">そのまま投稿する</div>
             <div class="landing-timing-cell landing-timing-cell-before-safe is-safe">各SNSのUIとの重なりを確認する</div>
 
-            <div class="landing-timing-rowhead landing-timing-rowhead-after">投稿後</div>
+            <div class="landing-timing-rowhead landing-timing-rowhead-after">
+              <span class="landing-timing-rowhead-index">3</span>
+              <span class="landing-timing-rowhead-text">投稿<span class="landing-timing-rowhead-accent is-after">後</span></span>
+            </div>
             <div class="landing-timing-cell landing-timing-cell-after-risk is-risk">
               テロップや重要な情報がUIに隠れていることに気づく
               <span>動画は修正できない</span>
@@ -174,12 +184,18 @@
 
         <div class="landing-timing-mobile" aria-label="投稿前に確認する場合としない場合の違い（モバイル表示）">
           <article class="landing-timing-mobile-stage landing-card">
-            <p class="landing-timing-mobile-step">編集完了</p>
+            <p class="landing-timing-mobile-step">
+              <span class="landing-timing-mobile-step-index">1</span>
+              <span class="landing-timing-mobile-step-text">編集完了</span>
+            </p>
             <div class="landing-timing-mobile-shared">最終ファイルを受け取る</div>
           </article>
 
           <article class="landing-timing-mobile-stage landing-card">
-            <p class="landing-timing-mobile-step">投稿前</p>
+            <p class="landing-timing-mobile-step">
+              <span class="landing-timing-mobile-step-index">2</span>
+              <span class="landing-timing-mobile-step-text">投稿<span class="landing-timing-rowhead-accent is-before">前</span></span>
+            </p>
             <div class="landing-timing-mobile-options">
               <div class="landing-timing-mobile-option is-risk">
                 <span class="landing-timing-mobile-label">使わない場合</span>
@@ -193,7 +209,10 @@
           </article>
 
           <article class="landing-timing-mobile-stage landing-card">
-            <p class="landing-timing-mobile-step">投稿後</p>
+            <p class="landing-timing-mobile-step">
+              <span class="landing-timing-mobile-step-index">3</span>
+              <span class="landing-timing-mobile-step-text">投稿<span class="landing-timing-rowhead-accent is-after">後</span></span>
+            </p>
             <div class="landing-timing-mobile-options">
               <div class="landing-timing-mobile-option is-risk">
                 <span class="landing-timing-mobile-label">使わない場合</span>
@@ -217,7 +236,10 @@
       <section class="landing-section landing-section-centered landing-compare-section" aria-label="よくある確認方法との違い">
         <div class="landing-section-head landing-section-head-centered">
           <p class="landing-section-kicker">Compare</p>
-          <h2>いまの確認方法より、速くて迷いません。</h2>
+          <h2 class="landing-compare-heading">
+            <span class="landing-compare-heading-line">いまの確認方法より、</span>
+            <span class="landing-compare-gradient landing-compare-heading-line">速くて迷いません。</span>
+          </h2>
           <p class="landing-section-intro">
             スマホ実機確認や透過PNG重ねより、投稿前の最終チェックと修正依頼をひとつの流れで進められます。
           </p>
@@ -301,6 +323,7 @@
                 <div class="landing-report-thumb">
                   <div class="landing-report-thumb-safe"></div>
                   <div class="landing-report-thumb-danger is-top"></div>
+                  <div class="landing-report-thumb-danger is-left"></div>
                   <div class="landing-report-thumb-danger is-right"></div>
                   <div class="landing-report-thumb-danger is-bottom"></div>
                   <div class="landing-report-thumb-pin is-a"></div>
