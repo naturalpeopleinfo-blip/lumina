@@ -1948,6 +1948,8 @@ body.landing-page::before {
   --overlay-right: 15%;
   --overlay-bottom: 22%;
   --overlay-left: 6%;
+  --overlay-right-upper: 15%;
+  --overlay-step-y: 44%;
   position: relative;
   width: min(100%, 640px);
   height: auto;
@@ -2174,6 +2176,80 @@ body.landing-page::before {
     0 0 24px rgba(0, 0, 0, 0.1);
 }
 
+.platform-mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 220ms ease, visibility 220ms ease;
+}
+
+.mask-zone,
+.mask-frame {
+  position: absolute;
+}
+
+.mask-zone {
+  background: var(--mode-danger-strong);
+}
+
+.mask-zone-top {
+  top: 0;
+  right: 0;
+  left: 0;
+  height: var(--overlay-top);
+}
+
+.mask-zone-left {
+  top: var(--overlay-top);
+  bottom: var(--overlay-bottom);
+  left: 0;
+  width: var(--overlay-left);
+}
+
+.mask-zone-right-upper {
+  top: var(--overlay-top);
+  right: 0;
+  width: var(--overlay-right-upper);
+  height: calc(var(--overlay-step-y) - var(--overlay-top));
+}
+
+.mask-zone-right-lower {
+  top: var(--overlay-step-y);
+  right: 0;
+  width: var(--overlay-right);
+  bottom: var(--overlay-bottom);
+}
+
+.mask-zone-bottom {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--overlay-bottom);
+}
+
+.mask-frame {
+  border: 2px solid var(--mode-accent-strong);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.14);
+}
+
+.mask-frame-upper {
+  top: var(--overlay-top);
+  left: var(--overlay-left);
+  right: var(--overlay-right-upper);
+  height: calc(var(--overlay-step-y) - var(--overlay-top));
+}
+
+.mask-frame-lower {
+  top: var(--overlay-step-y);
+  left: var(--overlay-left);
+  right: var(--overlay-right);
+  bottom: var(--overlay-bottom);
+}
+
 .dummy-ui {
   position: absolute;
   opacity: 0.96;
@@ -2309,6 +2385,17 @@ body.landing-page::before {
 .stage-surface[data-platform="tiktok"] .dummy-ui-top {
   left: 50%;
   transform: translateX(-50%);
+}
+
+.stage-surface[data-platform="tiktok"] .danger-zone,
+.stage-surface[data-platform="tiktok"] .safe-frame {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.stage-surface[data-platform="tiktok"] .platform-mask-tiktok {
+  opacity: 1;
+  visibility: visible;
 }
 
 .stage-surface[data-platform="tiktok"] .dummy-ui-top .ghost-dot {

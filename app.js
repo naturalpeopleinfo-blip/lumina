@@ -2,7 +2,6 @@
   "use strict";
 
   var SPEED_OPTIONS = [1, 1.5, 2, 3];
-  var FRAME_LEFT_PADDING = 6;
   var DEFAULT_RATIO = 9 / 16;
   var DEFAULT_FRAME_RATE = 30;
   var FLAG_STORAGE_PREFIX = "lumina-boundary-pro::flags::";
@@ -12,9 +11,17 @@
   var ACTIVE_FLAG_TOLERANCE = 0.45;
   var PLATFORM_ORDER = ["tiktok", "reels", "shorts"];
   var DEFAULT_PLATFORM_SETTINGS = {
-    tiktok: { right: "15%", bottom: "20%", top: "5%" },
-    reels: { right: "12%", bottom: "22%", top: "0%" },
-    shorts: { right: "15%", bottom: "20%", top: "10%" }
+    tiktok: {
+      left: "11.111%",
+      top: "12.5%",
+      right: "27.778%",
+      rightUpper: "11.111%",
+      stepY: "43.75%",
+      bottom: "34.375%",
+      mask: "tiktok-step"
+    },
+    reels: { left: "6%", right: "12%", bottom: "22%", top: "0%" },
+    shorts: { left: "6%", right: "15%", bottom: "20%", top: "10%" }
   };
   var COMPOSITE_PLATFORM_META = {
     accent: "#0a84ff",
@@ -310,6 +317,7 @@
   }
 
   function buildPlatformMap(platformMap) {
+    var leftMax = 0;
     var topMax = 0;
     var rightMax = 0;
     var bottomMax = 0;
@@ -317,20 +325,29 @@
 
     Object.keys(platformMap).forEach(function (key) {
       result[key] = {
+        left: platformMap[key].left || "6%",
         top: platformMap[key].top,
         right: platformMap[key].right,
-        bottom: platformMap[key].bottom
+        bottom: platformMap[key].bottom,
+        rightUpper: platformMap[key].rightUpper || platformMap[key].right,
+        stepY: platformMap[key].stepY || platformMap[key].top,
+        mask: platformMap[key].mask || ""
       };
 
+      leftMax = Math.max(leftMax, percentToNumber(platformMap[key].left || "6%"));
       topMax = Math.max(topMax, percentToNumber(platformMap[key].top));
       rightMax = Math.max(rightMax, percentToNumber(platformMap[key].right));
       bottomMax = Math.max(bottomMax, percentToNumber(platformMap[key].bottom));
     });
 
     result.all = {
+      left: leftMax + "%",
       top: topMax + "%",
       right: rightMax + "%",
-      bottom: bottomMax + "%"
+      bottom: bottomMax + "%",
+      rightUpper: rightMax + "%",
+      stepY: topMax + "%",
+      mask: ""
     };
 
     return result;
@@ -515,7 +532,9 @@
     els.stageSurface.style.setProperty("--overlay-top", selected.top);
     els.stageSurface.style.setProperty("--overlay-right", selected.right);
     els.stageSurface.style.setProperty("--overlay-bottom", selected.bottom);
-    els.stageSurface.style.setProperty("--overlay-left", FRAME_LEFT_PADDING + "%");
+    els.stageSurface.style.setProperty("--overlay-left", selected.left);
+    els.stageSurface.style.setProperty("--overlay-right-upper", selected.rightUpper || selected.right);
+    els.stageSurface.style.setProperty("--overlay-step-y", selected.stepY || selected.top);
 
     els.modeLabel.textContent = EMPTY_MODE_LABEL;
     els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
@@ -546,7 +565,9 @@
     els.stageSurface.style.setProperty("--overlay-top", fallbackSettings.top);
     els.stageSurface.style.setProperty("--overlay-right", fallbackSettings.right);
     els.stageSurface.style.setProperty("--overlay-bottom", fallbackSettings.bottom);
-    els.stageSurface.style.setProperty("--overlay-left", FRAME_LEFT_PADDING + "%");
+    els.stageSurface.style.setProperty("--overlay-left", fallbackSettings.left);
+    els.stageSurface.style.setProperty("--overlay-right-upper", fallbackSettings.rightUpper || fallbackSettings.right);
+    els.stageSurface.style.setProperty("--overlay-step-y", fallbackSettings.stepY || fallbackSettings.top);
     els.modeLabel.textContent = EMPTY_MODE_LABEL;
     els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
     setPlatformTheme(fallbackMeta);
@@ -1320,19 +1341,34 @@
     var topBound = percentToNumber(metrics.top);
     var rightBound = 100 - percentToNumber(metrics.right);
     var bottomBound = 100 - percentToNumber(metrics.bottom);
-    var leftBound = FRAME_LEFT_PADDING;
+    var leftBound = percentToNumber(metrics.left || "6%");
+    var upperRightBound = 100 - percentToNumber(metrics.rightUpper || metrics.right);
+    var stepY = percentToNumber(metrics.stepY || metrics.top);
     var x = xRatio * 100;
     var y = yRatio * 100;
     var violations = [];
 
-    if (x >= leftBound && x <= rightBound && y >= topBound && y <= bottomBound) {
+    if (metrics.mask === "tiktok-step") {
+      if (
+        (y >= topBound && y < stepY && x >= leftBound && x <= upperRightBound) ||
+        (y >= stepY && y <= bottomBound && x >= leftBound && x <= rightBound)
+      ) {
+        return "center";
+      }
+    } else if (x >= leftBound && x <= rightBound && y >= topBound && y <= bottomBound) {
       return "center";
     }
 
     if (y < topBound) {
       violations.push({ zone: "top", delta: topBound - y });
     }
-    if (x > rightBound) {
+    if (metrics.mask === "tiktok-step") {
+      if (y < stepY && x > upperRightBound) {
+        violations.push({ zone: "right", delta: x - upperRightBound });
+      } else if (y >= stepY && x > rightBound) {
+        violations.push({ zone: "right", delta: x - rightBound });
+      }
+    } else if (x > rightBound) {
       violations.push({ zone: "right", delta: x - rightBound });
     }
     if (x < leftBound) {
@@ -2309,29 +2345,47 @@
     var platformKey = normalizePlatformKey(platformSelection || state.activePlatform || "all");
     var meta = getPlatformMeta(platformKey);
     var metrics = getPlatformSettings(platformKey);
+    var left = width * (percentToNumber(metrics.left || "6%") / 100);
     var top = height * (percentToNumber(metrics.top) / 100);
     var rightWidth = width * (percentToNumber(metrics.right) / 100);
-	    var bottomHeight = height * (percentToNumber(metrics.bottom) / 100);
-	    var left = width * (FRAME_LEFT_PADDING / 100);
-	    var safeTop = top;
-	    var safeLeft = left;
-	    var safeRight = width - rightWidth;
-	    var safeBottom = height - bottomHeight;
+    var bottomHeight = height * (percentToNumber(metrics.bottom) / 100);
+    var safeTop = top;
+    var safeLeft = left;
+    var safeRight = width - rightWidth;
+    var safeBottom = height - bottomHeight;
+    var lineWidth = Math.max(4, Math.round(width * 0.0038));
 
-	    ctx.save();
+    ctx.save();
+    ctx.fillStyle = meta.dangerStrong;
 
-	    ctx.fillStyle = meta.dangerStrong;
-	    ctx.fillRect(0, 0, width, top);
-	    ctx.fillRect(0, 0, left, height);
-	    ctx.fillRect(width - rightWidth, 0, rightWidth, height);
-	    ctx.fillRect(0, height - bottomHeight, width, bottomHeight);
+    if (metrics.mask === "tiktok-step") {
+      var upperRightWidth = width * (percentToNumber(metrics.rightUpper || metrics.right) / 100);
+      var stepY = height * (percentToNumber(metrics.stepY || metrics.top) / 100);
+      var safeUpperRight = width - upperRightWidth;
 
-	    ctx.strokeStyle = meta.accentStrong;
-	    ctx.lineWidth = Math.max(4, Math.round(width * 0.0038));
-	    ctx.strokeRect(safeLeft, safeTop, safeRight - safeLeft, safeBottom - safeTop);
+      ctx.fillRect(0, 0, width, top);
+      ctx.fillRect(0, top, left, safeBottom - top);
+      ctx.fillRect(safeUpperRight, top, upperRightWidth, stepY - top);
+      ctx.fillRect(safeRight, stepY, width - safeRight, safeBottom - stepY);
+      ctx.fillRect(0, safeBottom, width, height - safeBottom);
 
-	    ctx.restore();
-	  }
+      ctx.strokeStyle = meta.accentStrong;
+      ctx.lineWidth = lineWidth;
+      ctx.strokeRect(safeLeft, safeTop, safeUpperRight - safeLeft, stepY - safeTop);
+      ctx.strokeRect(safeLeft, stepY, safeRight - safeLeft, safeBottom - stepY);
+    } else {
+      ctx.fillRect(0, 0, width, top);
+      ctx.fillRect(0, 0, left, height);
+      ctx.fillRect(width - rightWidth, 0, rightWidth, height);
+      ctx.fillRect(0, height - bottomHeight, width, bottomHeight);
+
+      ctx.strokeStyle = meta.accentStrong;
+      ctx.lineWidth = lineWidth;
+      ctx.strokeRect(safeLeft, safeTop, safeRight - safeLeft, safeBottom - safeTop);
+    }
+
+    ctx.restore();
+  }
 
   function drawExportFlags(ctx, flags, width, height, activeFlagId) {
     var zoneColors = {
@@ -2591,6 +2645,7 @@
 
   function getPlatformSettings(platformSelection) {
     var platformKeys = getPlatformKeys(platformSelection);
+    var leftMax = 0;
     var topMax = 0;
     var rightMax = 0;
     var bottomMax = 0;
@@ -2610,15 +2665,20 @@
         return;
       }
 
+      leftMax = Math.max(leftMax, percentToNumber(current.left || "6%"));
       topMax = Math.max(topMax, percentToNumber(current.top));
       rightMax = Math.max(rightMax, percentToNumber(current.right));
       bottomMax = Math.max(bottomMax, percentToNumber(current.bottom));
     });
 
     return {
+      left: leftMax + "%",
       top: topMax + "%",
       right: rightMax + "%",
-      bottom: bottomMax + "%"
+      bottom: bottomMax + "%",
+      rightUpper: rightMax + "%",
+      stepY: topMax + "%",
+      mask: ""
     };
   }
 
