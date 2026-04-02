@@ -24,6 +24,30 @@
             </div>
           </section>
 
+          <section id="authPanel" class="auth-panel" aria-label="Googleログイン">
+            <p class="eyebrow auth-eyebrow">Googleログイン</p>
+            <div id="authLoadingState" class="auth-state auth-state-loading">
+              <p class="auth-copy">ログイン状態を確認しています。</p>
+            </div>
+
+            <div id="authLoggedOutState" class="auth-state" hidden>
+              <p class="auth-copy">今後の保存機能と有料β管理に向けて、Googleアカウントでログインできます。</p>
+              <button id="googleSignInButton" class="action-button action-button-primary auth-signin-button" type="button">Googleでログイン</button>
+            </div>
+
+            <div id="authLoggedInState" class="auth-state" hidden>
+              <div class="auth-user">
+                <div id="authAvatar" class="auth-avatar" aria-hidden="true">L</div>
+                <div class="auth-user-copy">
+                  <strong id="authUserName">ログイン済み</strong>
+                  <span id="authUserEmail">--</span>
+                </div>
+              </div>
+              <p class="auth-copy auth-copy-subtle">このアカウントで保存機能と有料βをひも付けます。</p>
+              <button id="authSignOutButton" class="action-button action-button-ghost auth-signout-button" type="button">ログアウト</button>
+            </div>
+          </section>
+
           <div class="sidebar-guide-wrap">
             <button id="helpToggle" class="viewer-utility-button guide-button" type="button" aria-haspopup="dialog" aria-controls="onboardingOverlay">
               使い方ガイド
@@ -296,7 +320,9 @@
     </section>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
+  <script src="auth.js"></script>
   <script src="analytics.js"></script>
   <script src="app.js"></script>
 </body>
