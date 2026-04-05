@@ -3,14 +3,21 @@
 
   var config = typeof AppConfig !== "undefined" && AppConfig ? AppConfig : {};
   var authConfig = config.auth || {};
-  var supabaseClient = null;
   var subscribers = [];
+  var clerkLoaded = false;
   var state = {
     ready: false,
     enabled: false,
-    session: null,
     user: null
   };
+
+  function track(eventName, properties) {
+    if (typeof window.luminaTrack !== "function") {
+      return;
+    }
+
+    window.luminaTrack(eventName, properties || {});
+  }
 
   function getAuthSource() {
     if (document.body && document.body.dataset && document.body.dataset.authSource) {
@@ -24,12 +31,82 @@
     return "app";
   }
 
-  function track(eventName, properties) {
-    if (typeof window.luminaTrack !== "function") {
-      return;
+  function getRedirectTo() {
+    if (authConfig.redirectTo) {
+      return authConfig.redirectTo;
     }
 
-    window.luminaTrack(eventName, properties || {});
+    if (!window.location || !window.location.origin) {
+      return "";
+    }
+
+    return window.location.origin + "/app.html";
+  }
+
+  function getUserName(user) {
+    if (!user) {
+      return "";
+    }
+
+    if (user.fullName) {
+      return user.fullName;
+    }
+
+    if (user.firstName || user.lastName) {
+      return [user.firstName || "", user.lastName || ""].join(" ").trim();
+    }
+
+    return getUserEmail(user) || "Lumina User";
+  }
+
+  function getUserEmail(user) {
+    if (!user) {
+      return "";
+    }
+
+    if (user.primaryEmailAddress && user.primaryEmailAddress.emailAddress) {
+      return user.primaryEmailAddress.emailAddress;
+    }
+
+    if (Array.isArray(user.emailAddresses) && user.emailAddresses[0] && user.emailAddresses[0].emailAddress) {
+      return user.emailAddresses[0].emailAddress;
+    }
+
+    return "";
+  }
+
+  function getUserAvatarUrl(user) {
+    if (!user) {
+      return "";
+    }
+
+    return user.imageUrl || "";
+  }
+
+  function getInitials(user) {
+    var name = getUserName(user).trim();
+
+    if (!name) {
+      return "L";
+    }
+
+    return name.slice(0, 1).toUpperCase();
+  }
+
+  function getState() {
+    return {
+      ready: state.ready,
+      enabled: state.enabled,
+      isAuthenticated: !!state.user,
+      user: state.user
+        ? {
+            id: state.user.id,
+            email: getUserEmail(state.user),
+            name: getUserName(state.user),
+            avatarUrl: getUserAvatarUrl(state.user)
+          }
+        : null
+    };
   }
 
   function notify() {
@@ -44,61 +121,6 @@
     });
 
     window.dispatchEvent(new CustomEvent("lumina-auth-change", { detail: snapshot }));
-  }
-
-  function getState() {
-    return {
-      ready: state.ready,
-      enabled: state.enabled,
-      isAuthenticated: !!state.user,
-      user: state.user
-        ? {
-            id: state.user.id,
-            email: state.user.email || "",
-            name: getUserName(state.user),
-            avatarUrl: getUserAvatarUrl(state.user)
-          }
-        : null
-    };
-  }
-
-  function getUserName(user) {
-    if (!user) {
-      return "";
-    }
-
-    var meta = user.user_metadata || {};
-    return meta.full_name || meta.name || user.email || "Lumina User";
-  }
-
-  function getUserAvatarUrl(user) {
-    if (!user) {
-      return "";
-    }
-
-    var meta = user.user_metadata || {};
-    return meta.avatar_url || meta.picture || "";
-  }
-
-  function getInitials(user) {
-    var name = getUserName(user).trim();
-
-    if (!name) {
-      return "L";
-    }
-
-    return name.slice(0, 1).toUpperCase();
-  }
-
-  function setSession(session) {
-    state.session = session || null;
-    state.user = session && session.user ? session.user : null;
-    state.ready = true;
-    renderAuthPanel();
-    cleanupOAuthParams();
-    syncProfile();
-    syncAnalyticsIdentity();
-    notify();
   }
 
   function syncAnalyticsIdentity() {
@@ -119,7 +141,7 @@
 
     try {
       window.posthog.identify(state.user.id, {
-        email: state.user.email || "",
+        email: getUserEmail(state.user),
         name: getUserName(state.user)
       });
     } catch (error) {
@@ -127,62 +149,12 @@
     }
   }
 
-  function syncProfile() {
-    if (!supabaseClient || !state.user) {
-      return Promise.resolve();
-    }
-
-    return supabaseClient
-      .from("profiles")
-      .upsert(
-        {
-          id: state.user.id,
-          email: state.user.email || "",
-          full_name: getUserName(state.user),
-          avatar_url: getUserAvatarUrl(state.user)
-        },
-        {
-          onConflict: "id"
-        }
-      )
-      .then(function (result) {
-        if (result && result.error) {
-          throw result.error;
-        }
-      })
-      .catch(function (error) {
-        console.warn("Failed to sync auth profile", error);
-      });
-  }
-
-  function cleanupOAuthParams() {
-    var url = null;
-
-    if (!window.location || !window.location.search) {
-      return;
-    }
-
-    url = new URL(window.location.href);
-
-    if (
-      !url.searchParams.has("code") &&
-      !url.searchParams.has("state") &&
-      !url.searchParams.has("error") &&
-      !url.searchParams.has("error_code")
-    ) {
-      return;
-    }
-
-    url.searchParams.delete("code");
-    url.searchParams.delete("state");
-    url.searchParams.delete("scope");
-    url.searchParams.delete("authuser");
-    url.searchParams.delete("prompt");
-    url.searchParams.delete("error");
-    url.searchParams.delete("error_code");
-    url.searchParams.delete("error_description");
-
-    window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+  function setUser(user) {
+    state.user = user || null;
+    state.ready = true;
+    renderAuthPanel();
+    syncAnalyticsIdentity();
+    notify();
   }
 
   function renderAuthPanel() {
@@ -213,7 +185,7 @@
     }
 
     if (!state.user) {
-      if (!state.enabled && loadingState) {
+      if (!state.enabled) {
         loadingState.hidden = false;
         loadingState.querySelector(".auth-copy").textContent = "Googleログイン設定を確認中です。";
       }
@@ -225,7 +197,7 @@
     }
 
     if (userEmail) {
-      userEmail.textContent = state.user.email || "";
+      userEmail.textContent = getUserEmail(state.user);
     }
 
     if (avatar) {
@@ -239,43 +211,89 @@
     }
   }
 
-  function getRedirectTo() {
-    if (authConfig.redirectTo) {
-      return authConfig.redirectTo;
+  function loadClerkScript() {
+    if (window.Clerk) {
+      return Promise.resolve(window.Clerk);
     }
 
-    if (!window.location || !window.location.origin) {
-      return "";
+    if (!authConfig.clerkPublishableKey || !authConfig.clerkFrontendApiUrl) {
+      return Promise.resolve(null);
     }
 
-    return window.location.origin + "/app.html";
+    return new Promise(function (resolve, reject) {
+      var existing = document.querySelector("script[data-lumina-clerk]");
+
+      if (existing) {
+        existing.addEventListener("load", function () {
+          resolve(window.Clerk || null);
+        }, { once: true });
+        existing.addEventListener("error", reject, { once: true });
+        return;
+      }
+
+      var script = document.createElement("script");
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      script.dataset.luminaClerk = "true";
+      script.dataset.clerkPublishableKey = authConfig.clerkPublishableKey;
+      script.src = authConfig.clerkFrontendApiUrl.replace(/\/$/, "") + "/npm/@clerk/clerk-js@latest/dist/clerk.browser.js";
+      script.onload = function () {
+        resolve(window.Clerk || null);
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function bindClerkListener() {
+    if (!window.Clerk || typeof window.Clerk.addListener !== "function") {
+      return;
+    }
+
+    window.Clerk.addListener(function (resources) {
+      var nextUser = resources && resources.user ? resources.user : window.Clerk.user;
+      setUser(nextUser || null);
+    });
   }
 
   function signInWithGoogle() {
-    if (!supabaseClient) {
+    if (!window.Clerk) {
       return Promise.resolve();
     }
 
-    track("auth_google_click", { source: getAuthSource() });
+    var signInResource =
+      (window.Clerk.signIn && typeof window.Clerk.signIn.authenticateWithRedirect === "function"
+        ? window.Clerk.signIn
+        : null) ||
+      (window.Clerk.client &&
+      window.Clerk.client.signIn &&
+      typeof window.Clerk.client.signIn.authenticateWithRedirect === "function"
+        ? window.Clerk.client.signIn
+        : null);
 
-    return supabaseClient.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: getRedirectTo(),
-        queryParams: {
-          prompt: "select_account"
-        }
-      }
+    if (!signInResource) {
+      return Promise.resolve();
+    }
+
+    track("auth_google_click", { source: getAuthSource(), provider: "clerk" });
+
+    return signInResource.authenticateWithRedirect({
+      strategy: "oauth_google",
+      redirectUrl: window.location.origin + "/clerk-callback.html",
+      redirectUrlComplete: getRedirectTo()
     });
   }
 
   function signOut() {
-    if (!supabaseClient) {
+    if (!window.Clerk || typeof window.Clerk.signOut !== "function") {
       return Promise.resolve();
     }
 
     track("auth_sign_out", { source: getAuthSource() });
-    return supabaseClient.auth.signOut();
+
+    return window.Clerk.signOut().then(function () {
+      setUser(null);
+    });
   }
 
   function bindDomEvents() {
@@ -285,7 +303,7 @@
     if (signInButton) {
       signInButton.addEventListener("click", function () {
         signInWithGoogle().catch(function (error) {
-          console.error("Failed to start Google sign-in", error);
+          console.error("Failed to start Clerk Google sign-in", error);
         });
       });
     }
@@ -293,18 +311,14 @@
     if (signOutButton) {
       signOutButton.addEventListener("click", function () {
         signOut().catch(function (error) {
-          console.error("Failed to sign out", error);
+          console.error("Failed to sign out from Clerk", error);
         });
       });
     }
   }
 
   function initAuth() {
-    if (
-      !window.supabase ||
-      !authConfig.supabaseUrl ||
-      !authConfig.supabasePublishableKey
-    ) {
+    if (!authConfig.clerkPublishableKey || !authConfig.clerkFrontendApiUrl) {
       state.ready = true;
       state.enabled = false;
       renderAuthPanel();
@@ -312,39 +326,38 @@
       return;
     }
 
-    supabaseClient = window.supabase.createClient(
-      authConfig.supabaseUrl,
-      authConfig.supabasePublishableKey,
-      {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true
+    loadClerkScript()
+      .then(function (clerk) {
+        if (!clerk) {
+          state.ready = true;
+          state.enabled = false;
+          renderAuthPanel();
+          notify();
+          return null;
         }
-      }
-    );
 
-    state.enabled = true;
+        if (!clerkLoaded) {
+          clerkLoaded = true;
+          return clerk.load().then(function () {
+            state.enabled = true;
+            bindClerkListener();
+            setUser(clerk.user || null);
+            return clerk;
+          });
+        }
 
-    supabaseClient.auth.getSession().then(function (result) {
-      setSession(result && result.data ? result.data.session : null);
-    }).catch(function (error) {
-      console.error("Failed to read auth session", error);
-      state.ready = true;
-      renderAuthPanel();
-      notify();
-    });
-
-    supabaseClient.auth.onAuthStateChange(function (eventName, session) {
-      if (eventName === "SIGNED_IN") {
-        track("auth_signed_in", {
-          source: "google",
-          surface: getAuthSource()
-        });
-      }
-
-      setSession(session);
-    });
+        state.enabled = true;
+        bindClerkListener();
+        setUser(clerk.user || null);
+        return clerk;
+      })
+      .catch(function (error) {
+        console.error("Failed to initialize Clerk auth", error);
+        state.ready = true;
+        state.enabled = false;
+        renderAuthPanel();
+        notify();
+      });
   }
 
   function onChange(callback) {

@@ -478,6 +478,63 @@ body.login-page::after {
   text-wrap: balance;
 }
 
+.clerk-callback-page .login-main {
+  justify-items: center;
+}
+
+.clerk-callback-panel {
+  max-width: 620px;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+}
+
+.clerk-callback-card {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 420px);
+  justify-items: center;
+}
+
+.clerk-callback-card h1 {
+  margin: 0;
+}
+
+.clerk-callback-status {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  min-height: 74px;
+}
+
+.clerk-callback-spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid rgba(140, 181, 255, 0.22);
+  border-top-color: rgba(125, 192, 255, 0.94);
+  animation: luminaSpin 900ms linear infinite;
+}
+
+.clerk-callback-error {
+  color: rgba(255, 194, 194, 0.88);
+}
+
+.clerk-callback-back {
+  width: min(100%, 280px);
+  justify-content: center;
+}
+
+@keyframes luminaSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .landing-shell {
   width: min(1180px, calc(100% - 48px));
   margin: 0 auto;

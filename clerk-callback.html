@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina Zone | ログイン処理中</title>
+  <meta name="description" content="Googleログインの処理を完了しています。">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page clerk-callback-page">
+  <div class="login-shell">
+    <main class="login-main">
+      <section class="login-panel panel clerk-callback-panel" aria-label="ログイン処理中">
+        <div class="clerk-callback-card">
+          <p class="eyebrow login-eyebrow">Google Login</p>
+          <h1>ログインを<br><span class="login-gradient">完了しています。</span></h1>
+          <div class="clerk-callback-status" id="clerkCallbackStatus">
+            <div class="clerk-callback-spinner" aria-hidden="true"></div>
+            <p class="auth-copy">Googleログインの結果を確認しています。</p>
+          </div>
+          <p class="login-trust-line">数秒たっても進まない場合は、もう一度ログインをお試しください。</p>
+          <a href="./login.html" class="action-button action-button-ghost clerk-callback-back">ログイン画面に戻る</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="analytics.js"></script>
+  <script src="clerk-callback.js"></script>
+</body>
+</html>

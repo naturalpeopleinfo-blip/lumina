@@ -1,7 +1,7 @@
 const AppConfig = {
   auth: {
-    supabaseUrl: "https://kmwnpiibbxtajdgfaouw.supabase.co",
-    supabasePublishableKey: "sb_publishable_zSqPaLB1pT-nn_XVYi632A_QPVFkTD1",
+    clerkPublishableKey: "pk_test_c3VtbWFyeS1tYXJtb3NldC03OC5jbGVyay5hY2NvdW50cy5kZXYk",
+    clerkFrontendApiUrl: "https://summary-marmoset-78.clerk.accounts.dev",
     redirectTo: "https://luminazone.jp/app.html"
   },
   platforms: {
