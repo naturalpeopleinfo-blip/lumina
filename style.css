@@ -242,6 +242,10 @@ body.login-page::after {
   text-wrap: balance;
 }
 
+.login-trial-highlight {
+  color: #f1cf6b;
+}
+
 .auth-panel {
   display: grid;
   gap: 12px;
