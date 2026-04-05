@@ -5,6 +5,7 @@
   var authConfig = config.auth || {};
   var subscribers = [];
   var clerkLoaded = false;
+  var appRedirectStarted = false;
   var state = {
     ready: false,
     enabled: false,
@@ -153,8 +154,30 @@
     state.user = user || null;
     state.ready = true;
     renderAuthPanel();
+    maybeRequireAppLogin();
     syncAnalyticsIdentity();
     notify();
+  }
+
+  function maybeRequireAppLogin() {
+    if (appRedirectStarted) {
+      return;
+    }
+
+    if (getAuthSource() !== "app") {
+      return;
+    }
+
+    if (!state.ready || !state.enabled || state.user) {
+      return;
+    }
+
+    if (!window.location || window.location.protocol === "file:") {
+      return;
+    }
+
+    appRedirectStarted = true;
+    window.location.replace("./login.html");
   }
 
   function renderAuthPanel() {
@@ -168,6 +191,7 @@
     var signInButtonLabel = signInButton ? signInButton.querySelector(".google-signin-button-label") : null;
 
     if (!loadingState || !loggedOutState || !loggedInState) {
+      renderAppAccountCard();
       return;
     }
 
@@ -189,6 +213,7 @@
         loadingState.hidden = false;
         loadingState.querySelector(".auth-copy").textContent = "Googleログイン設定を確認中です。";
       }
+      renderAppAccountCard();
       return;
     }
 
@@ -208,6 +233,60 @@
       } else {
         avatar.textContent = getInitials(state.user);
       }
+    }
+
+    renderAppAccountCard();
+  }
+
+  function renderAppAccountCard() {
+    var loggedOutState = document.getElementById("appAuthLoggedOut");
+    var loggedInState = document.getElementById("appAuthLoggedIn");
+    var status = document.getElementById("appAuthStatus");
+    var userName = document.getElementById("appAuthUserName");
+    var userEmail = document.getElementById("appAuthUserEmail");
+    var avatar = document.getElementById("appAuthAvatar");
+    var signOutButton = document.getElementById("appSignOutButton");
+
+    if (!loggedOutState || !loggedInState || !status) {
+      return;
+    }
+
+    loggedOutState.hidden = !!state.user;
+    loggedInState.hidden = !state.user;
+
+    if (!state.user) {
+      status.textContent = state.enabled ? "未ログイン" : "確認中";
+      status.classList.add("is-empty");
+      if (signOutButton) {
+        signOutButton.disabled = true;
+      }
+      maybeRequireAppLogin();
+      return;
+    }
+
+    status.textContent = "ログイン中";
+    status.classList.remove("is-empty");
+
+    if (userName) {
+      userName.textContent = getUserName(state.user);
+    }
+
+    if (userEmail) {
+      userEmail.textContent = getUserEmail(state.user);
+    }
+
+    if (avatar) {
+      var avatarUrl = getUserAvatarUrl(state.user);
+
+      if (avatarUrl) {
+        avatar.innerHTML = '<img src="' + avatarUrl + '" alt="">';
+      } else {
+        avatar.textContent = getInitials(state.user);
+      }
+    }
+
+    if (signOutButton) {
+      signOutButton.disabled = false;
     }
   }
 
@@ -299,6 +378,7 @@
   function bindDomEvents() {
     var signInButton = document.getElementById("googleSignInButton");
     var signOutButton = document.getElementById("authSignOutButton");
+    var appSignOutButton = document.getElementById("appSignOutButton");
 
     if (signInButton) {
       signInButton.addEventListener("click", function () {
@@ -310,6 +390,14 @@
 
     if (signOutButton) {
       signOutButton.addEventListener("click", function () {
+        signOut().catch(function (error) {
+          console.error("Failed to sign out from Clerk", error);
+        });
+      });
+    }
+
+    if (appSignOutButton) {
+      appSignOutButton.addEventListener("click", function () {
         signOut().catch(function (error) {
           console.error("Failed to sign out from Clerk", error);
         });

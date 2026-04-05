@@ -15,6 +15,32 @@
     <main class="workspace-shell panel">
       <input id="fileInput" type="file" accept="video/*">
 
+      <header class="workspace-utility-bar" aria-label="アカウント状態">
+        <div class="workspace-utility-brand">
+          <p class="workspace-utility-kicker">Lumina Zone</p>
+          <span class="workspace-utility-divider" aria-hidden="true"></span>
+          <p class="workspace-utility-caption">アカウント</p>
+          <span id="appAuthStatus" class="card-pill is-empty">未ログイン</span>
+        </div>
+
+        <div class="workspace-auth-bar">
+          <div id="appAuthLoggedOut" class="workspace-auth-state">
+            <a href="./login.html" class="action-button action-button-ghost workspace-auth-link">Googleでログイン</a>
+          </div>
+
+          <div id="appAuthLoggedIn" class="workspace-auth-state workspace-auth-state-logged-in" hidden>
+            <div class="auth-user workspace-auth-user">
+              <div id="appAuthAvatar" class="auth-avatar workspace-auth-avatar" aria-hidden="true">L</div>
+              <div class="auth-user-copy workspace-auth-user-copy">
+                <strong id="appAuthUserName">ログイン済み</strong>
+                <span id="appAuthUserEmail">--</span>
+              </div>
+            </div>
+            <button id="appSignOutButton" class="action-button action-button-ghost workspace-auth-link" type="button">ログアウト</button>
+          </div>
+        </div>
+      </header>
+
       <div class="workspace-main">
         <aside class="sidebar-column sidebar-left">
           <section class="sidebar-brand">
@@ -298,6 +324,7 @@
 
   <script src="config.js"></script>
   <script src="analytics.js"></script>
+  <script src="auth.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
