@@ -188,6 +188,7 @@
     setControlsEnabled(false);
     requestStageFit();
     bindAuthPersistence();
+    updateHistoryAwareness();
     track("app_open");
   }
 
@@ -204,6 +205,7 @@
         if (state.isHistoryOpen) {
           renderHistoryList();
         }
+        updateHistoryAwareness();
         return;
       }
 
@@ -252,6 +254,9 @@
     els.commentEditor = document.getElementById("commentEditor");
     els.helpToggle = document.getElementById("helpToggle");
     els.historyToggle = document.getElementById("historyToggle");
+    els.historyInlineHint = document.getElementById("historyInlineHint");
+    els.historySummaryBar = document.getElementById("historySummaryBar");
+    els.historySummaryText = document.getElementById("historySummaryText");
     els.historyModal = document.getElementById("historyModal");
     els.historyClose = document.getElementById("historyClose");
     els.historyCurrentPdfButton = document.getElementById("historyCurrentPdfButton");
@@ -1902,6 +1907,7 @@
     if (!entries.length) {
       els.historyList.innerHTML = "";
       updatePdfButtons();
+      updateHistoryAwareness();
       return;
     }
 
@@ -1936,6 +1942,36 @@
       );
     }).join("");
     updatePdfButtons();
+    updateHistoryAwareness();
+  }
+
+  function updateHistoryAwareness() {
+    var authState = null;
+    var entries = readHistoryEntries();
+    var historyCount = entries.length;
+    var hasHistory = historyCount > 0;
+
+    if (window.luminaAuth && typeof window.luminaAuth.getState === "function") {
+      authState = window.luminaAuth.getState();
+    }
+
+    if (els.historySummaryBar) {
+      els.historySummaryBar.hidden = !(authState && authState.isAuthenticated);
+    }
+
+    if (els.historySummaryText) {
+      els.historySummaryText.textContent = hasHistory ? "履歴 " + historyCount + "件" : "履歴 0件";
+    }
+
+    if (els.historyInlineHint) {
+      els.historyInlineHint.textContent = hasHistory
+        ? "このアカウントに保存された過去のチェックを、いつでも見返せます。"
+        : "ログイン中のアカウントに、過去のチェック履歴が残ります。";
+    }
+
+    if (els.historyToggle) {
+      els.historyToggle.textContent = hasHistory ? "履歴を見る (" + historyCount + "件)" : "履歴を見る";
+    }
   }
 
   function readLocalHistoryEntries() {
@@ -2588,6 +2624,7 @@
       .then(function (entries) {
         state.remoteHistoryEntries = Array.isArray(entries) ? entries : [];
         state.remoteHistoryLoaded = true;
+        updateHistoryAwareness();
         if (state.isHistoryOpen) {
           renderHistoryList();
         }
@@ -2595,6 +2632,7 @@
       })
       .catch(function (error) {
         console.warn("Failed to load remote history entries", error);
+        updateHistoryAwareness();
         return [];
       });
   }

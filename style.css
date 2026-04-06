@@ -2259,6 +2259,27 @@ body.login-page::after {
   flex-wrap: wrap;
 }
 
+.workspace-history-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.workspace-history-pill {
+  border-color: rgba(125, 192, 255, 0.28);
+  background: rgba(125, 192, 255, 0.12);
+  color: rgba(226, 241, 255, 0.92);
+}
+
+.workspace-history-text {
+  color: rgba(216, 228, 241, 0.76);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
 .workspace-utility-kicker,
 .workspace-utility-caption {
   margin: 0;
@@ -2344,6 +2365,13 @@ body.login-page::after {
 .workspace-auth-link {
   min-width: 132px;
   justify-content: center;
+}
+
+.history-inline-hint {
+  margin: 10px 0 0;
+  color: rgba(196, 208, 223, 0.66);
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 .viewer-utility-button,
@@ -4383,10 +4411,12 @@ body.login-page::after {
   display: grid;
   place-items: center;
   min-height: 240px;
+  padding: 20px;
   border-radius: 22px;
   border: 1px dashed rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
   text-align: center;
+  line-height: 1.65;
 }
 
 .history-empty[hidden] {
@@ -4693,6 +4723,10 @@ body.login-page::after {
     gap: 10px;
   }
 
+  .workspace-history-summary {
+    width: 100%;
+  }
+
   .workspace-auth-bar {
     width: 100%;
     justify-content: space-between;
@@ -4742,6 +4776,14 @@ body.login-page::after {
     min-width: 108px;
     padding-left: 12px;
     padding-right: 12px;
+  }
+
+  .workspace-history-text {
+    font-size: 0.76rem;
+  }
+
+  .history-inline-hint {
+    font-size: 0.76rem;
   }
 
   .sidebar-guide-wrap,

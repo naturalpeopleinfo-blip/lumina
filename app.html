@@ -21,6 +21,10 @@
           <span class="workspace-utility-divider" aria-hidden="true"></span>
           <p class="workspace-utility-caption">アカウント</p>
           <span id="appAuthStatus" class="card-pill is-empty">未ログイン</span>
+          <div id="historySummaryBar" class="workspace-history-summary" hidden>
+            <span class="card-pill workspace-history-pill">履歴保存中</span>
+            <span id="historySummaryText" class="workspace-history-text">履歴 0件</span>
+          </div>
         </div>
 
         <div class="workspace-auth-bar">
@@ -79,8 +83,9 @@
 
             <div class="source-action-row">
               <label id="sourceLoadButton" for="fileInput" class="action-button action-button-primary">素材を読み込む</label>
-              <button id="historyToggle" class="action-button action-button-ghost" type="button">履歴</button>
+              <button id="historyToggle" class="action-button action-button-ghost" type="button">履歴を見る</button>
             </div>
+            <p id="historyInlineHint" class="history-inline-hint">ログイン中のアカウントに、過去のチェック履歴が残ります。</p>
           </section>
 
           <section id="guideStepModes" class="control-card setup-card">
@@ -277,8 +282,8 @@
     <section class="modal-panel modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
       <div class="modal-header">
         <div>
-          <p class="eyebrow">履歴</p>
-          <h3 id="historyTitle">過去のチェック記録</h3>
+          <p class="eyebrow">アカウント履歴</p>
+          <h3 id="historyTitle">このアカウントのチェック履歴</h3>
         </div>
         <button id="historyClose" class="action-button action-button-ghost" type="button">閉じる</button>
       </div>
@@ -289,7 +294,7 @@
           <button id="historyCurrentPdfButton" class="action-button action-button-primary" type="button">チェック内容をPDF化</button>
           <button id="historyTodayPdfButton" class="action-button action-button-ghost" type="button">今日の履歴をPDF化</button>
         </div>
-        <div id="historyEmpty" class="history-empty">まだ履歴はありません。</div>
+        <div id="historyEmpty" class="history-empty">まだ履歴はありません。チェックすると、このアカウントに保存されます。</div>
         <div id="historyList" class="history-list" aria-live="polite"></div>
       </div>
     </section>
