@@ -7,7 +7,7 @@
   <script>document.documentElement.classList.add('has-js');</script>
   <meta
     name="description"
-    content="そのテロップ、隠れているかもしれません。公開前に見切れリスクを確認し、修正依頼までまとめられる縦動画チェックツール。"
+    content="そのテロップ、スマホでは見えていません。投稿画面での見切れリスクを公開前に確認し、修正依頼までまとめられる縦動画チェックツール。"
   >
   <link rel="stylesheet" href="style.css">
 </head>
@@ -32,13 +32,46 @@
         <div class="landing-hero-copy">
           <h1>
             <span class="landing-hero-gradient landing-hero-line">そのテロップ、</span>
-            <span class="landing-hero-gradient landing-hero-line">隠れてませんか?</span>
+            <span class="landing-hero-gradient landing-hero-line">スマホでは</span>
+            <span class="landing-hero-gradient landing-hero-line">見えていません</span>
           </h1>
-          <p class="landing-lead">
-            ショート動画の字幕や重要な要素は、完成時には問題なく見えても、投稿画面ではUIに重なって見切れることがあります。Lumina Zone は、その見落としを公開前に確認し、修正依頼までつなげるチェックツールです。
-          </p>
-          <p class="landing-hero-target">動画編集者・SNS運用者・制作チームの最終確認に。</p>
+        </div>
 
+        <div class="landing-hero-demo" aria-label="セーフゾーンのビフォーアフター">
+          <div class="landing-hero-demo-grid">
+            <figure class="landing-about-card landing-hero-demo-card">
+              <figcaption class="landing-about-label landing-hero-demo-label">
+                <span>Before</span>
+                <small>編集画面では問題なし</small>
+              </figcaption>
+              <div class="landing-diagram-phone landing-diagram-phone-before" aria-hidden="true"></div>
+            </figure>
+
+            <figure class="landing-about-card landing-hero-demo-card landing-hero-demo-card-after">
+              <figcaption class="landing-about-label landing-hero-demo-label">
+                <span>After</span>
+                <small>投稿画面ではUIが重なる</small>
+              </figcaption>
+              <div class="landing-diagram-phone landing-diagram-phone-after" aria-hidden="true">
+                <div class="landing-diagram-danger landing-diagram-danger-top"></div>
+                <div class="landing-diagram-danger landing-diagram-danger-left"></div>
+                <div class="landing-diagram-danger landing-diagram-danger-right"></div>
+                <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
+                <span class="landing-hero-danger-pill">ここは危険</span>
+                <div class="landing-diagram-safe"></div>
+              </div>
+            </figure>
+          </div>
+          <p class="landing-hero-demo-note">同じ動画でも、投稿画面では見え方が変わります。</p>
+        </div>
+
+        <div class="landing-hero-support">
+          <p class="landing-lead">
+            完成時は問題なく見えていても、投稿画面ではUIに隠れてしまうことがあります。
+          </p>
+          <p class="landing-lead landing-lead-secondary">
+            Lumina Zoneは、その見落としを公開前に確認できるショート動画向けのセーフゾーンチェッカーです。
+          </p>
           <div class="landing-actions">
             <a href="./login.html" class="landing-button landing-button-primary landing-hero-cta" id="landingHeroCta" data-cta-source="hero">無料で確認する</a>
           </div>
@@ -65,27 +98,6 @@
               </span>
             </div>
           </div>
-        </div>
-
-        <div class="landing-hero-demo" aria-label="セーフゾーンのビフォーアフター">
-          <div class="landing-hero-demo-grid">
-            <figure class="landing-about-card landing-hero-demo-card">
-              <figcaption class="landing-about-label">Before</figcaption>
-              <div class="landing-diagram-phone landing-diagram-phone-before" aria-hidden="true"></div>
-            </figure>
-
-            <figure class="landing-about-card landing-hero-demo-card">
-              <figcaption class="landing-about-label">After</figcaption>
-              <div class="landing-diagram-phone landing-diagram-phone-after" aria-hidden="true">
-                <div class="landing-diagram-danger landing-diagram-danger-top"></div>
-                <div class="landing-diagram-danger landing-diagram-danger-left"></div>
-                <div class="landing-diagram-danger landing-diagram-danger-right"></div>
-                <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
-                <div class="landing-diagram-safe"></div>
-              </div>
-            </figure>
-          </div>
-          <p class="landing-hero-demo-note">投稿画面では、字幕や重要な要素がUIに重なることがあります。</p>
         </div>
       </section>
 
