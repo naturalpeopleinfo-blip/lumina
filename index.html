@@ -57,12 +57,17 @@
                 <div class="landing-diagram-danger landing-diagram-danger-left"></div>
                 <div class="landing-diagram-danger landing-diagram-danger-right"></div>
                 <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
-                <span class="landing-hero-danger-pill">ここは危険</span>
+                <div class="landing-hero-ui-hints">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span class="landing-hero-danger-pill">ここ、見えていません</span>
                 <div class="landing-diagram-safe"></div>
               </div>
             </figure>
           </div>
-          <p class="landing-hero-demo-note">同じ動画でも、投稿画面では見え方が変わります。</p>
+          <p class="landing-hero-demo-note">完成画面では見えていても、投稿画面では隠れることがあります。</p>
         </div>
 
         <div class="landing-hero-support">
@@ -72,10 +77,10 @@
           <p class="landing-lead landing-lead-secondary">
             Lumina Zoneは、その見落としを公開前に確認できるショート動画向けのセーフゾーンチェッカーです。
           </p>
+          <p class="landing-hero-cta-note">まずは1分で確認できます</p>
           <div class="landing-actions">
             <a href="./login.html" class="landing-button landing-button-primary landing-hero-cta" id="landingHeroCta" data-cta-source="hero">無料で確認する</a>
           </div>
-
           <div class="landing-hero-platforms" aria-label="対応SNS">
             <span class="landing-platform-label">対応SNS</span>
             <div class="landing-platforms">
@@ -112,19 +117,16 @@
 
         <div class="landing-highlights-grid">
           <article class="landing-highlight-card landing-card">
-            <p class="landing-section-kicker">Issue 1</p>
             <h3>テロップ位置を、なんとなくで決めている。</h3>
-            <p>編集画面では問題なく見えても、投稿画面のUIとは重なり方が変わります。</p>
+            <p class="landing-highlight-note">編集画面では見えていても、投稿画面では重なり方が変わります。</p>
           </article>
           <article class="landing-highlight-card landing-card">
-            <p class="landing-section-kicker">Issue 2</p>
-            <h3>投稿後に「見切れてた」と気づくことがある。</h3>
-            <p>公開後に気づくと、差し戻しや再確認が必要になり、手戻りが増えます。</p>
+            <h3>投稿後に、「見切れてた」と気づく。</h3>
+            <p class="landing-highlight-note">公開後に気づくと、差し戻しや再確認が必要になり、手戻りが増えます。</p>
           </article>
           <article class="landing-highlight-card landing-card">
-            <p class="landing-section-kicker">Issue 3</p>
             <h3>修正位置の共有が、毎回あいまいになる。</h3>
-            <p>時間と位置を口頭やチャットで説明すると、修正のやり取りが長引きやすくなります。</p>
+            <p class="landing-highlight-note">時間と位置を口頭やチャットで説明すると、修正のやり取りが長引きやすくなります。</p>
           </article>
         </div>
       </section>
@@ -134,7 +136,7 @@
           <p class="landing-section-kicker">Timing</p>
           <h2>公開前の見落としをゼロにする、最後の保険。</h2>
           <p class="landing-section-intro">
-            編集が終わったあとに1度だけ確認するだけで、投稿後の見切れや手戻りを減らせます。
+            編集が終わったあとに1度確認するだけで、投稿後の見切れや手戻りを減らせます。
           </p>
         </div>
 
@@ -272,7 +274,7 @@
           <p class="landing-section-kicker">Preview</p>
           <h2>投稿前に、この画面で確認できます。</h2>
           <p class="landing-section-intro">
-            最終ファイルをブラウザで開き、各SNSのUIを重ねながら見切れリスクを確認できます。
+            最終ファイルを開いて、各SNSのUIとの重なりをその場で確認できます。
           </p>
         </div>
 
@@ -349,15 +351,6 @@
         </div>
 
         <div class="landing-report-stack">
-          <div class="landing-report-copy">
-            <p>
-              確認位置、修正メモ、対象SNSを、ひとつのレポートに整理できます。
-            </p>
-            <p>
-              投稿前の確認から、修正依頼の共有まで、ひとつの流れで完結します。
-            </p>
-          </div>
-
           <div class="landing-report-signals" aria-label="レポートでできること">
             <span class="landing-report-signal">確認位置を記録</span>
             <span class="landing-report-signal">修正メモを残せる</span>
@@ -436,10 +429,16 @@
 
       <section class="landing-section landing-section-centered landing-trust-section" aria-label="安心して使える理由">
         <div class="landing-trust-card landing-card">
+          <div class="landing-trust-copy">
+            <p class="landing-section-kicker">Fast & Private</p>
+            <h2>アップロード不要。ローカルのまま、すぐ確認できます。</h2>
+            <p class="landing-trust-intro">
+              書き出しや読み込みの待ち時間がなく、公開前データの漏洩リスクもありません。
+            </p>
+          </div>
           <ul class="landing-trust-list">
             <li>動画はブラウザ内で処理されます</li>
             <li>動画ファイルや内容は収集しません</li>
-            <li>改善のために利用状況のみを計測します</li>
           </ul>
         </div>
       </section>
