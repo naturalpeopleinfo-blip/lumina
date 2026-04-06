@@ -375,6 +375,17 @@
     });
   }
 
+  function getToken() {
+    if (!window.Clerk || !window.Clerk.session || typeof window.Clerk.session.getToken !== "function") {
+      return Promise.resolve(null);
+    }
+
+    return window.Clerk.session.getToken().catch(function (error) {
+      console.warn("Failed to fetch Clerk session token", error);
+      return null;
+    });
+  }
+
   function bindDomEvents() {
     var signInButton = document.getElementById("googleSignInButton");
     var signOutButton = document.getElementById("authSignOutButton");
@@ -466,6 +477,7 @@
   window.luminaAuth = {
     onChange: onChange,
     getState: getState,
+    getToken: getToken,
     signInWithGoogle: signInWithGoogle,
     signOut: signOut
   };

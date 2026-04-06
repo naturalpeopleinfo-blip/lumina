@@ -4,6 +4,10 @@ const AppConfig = {
     clerkFrontendApiUrl: "https://summary-marmoset-78.clerk.accounts.dev",
     redirectTo: "https://luminazone.jp/app.html"
   },
+  database: {
+    supabaseUrl: "https://kmwnpiibbxtajdgfaouw.supabase.co",
+    supabasePublishableKey: "sb_publishable_zSqPaLB1pT-nn_XVYi632A_QPVFkTD1"
+  },
   platforms: {
     tiktok: { right: "15%", bottom: "20%", top: "5%" },
     reels: { right: "12%", bottom: "22%", top: "0%" },

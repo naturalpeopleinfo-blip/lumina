@@ -151,7 +151,10 @@
     onboardingStep: 0,
     isPreviewSeeking: false,
     pdfNeedsAttention: false,
-    lastTrackedMediaKey: ""
+    lastTrackedMediaKey: "",
+    currentProjectId: "",
+    remoteHistoryEntries: [],
+    remoteHistoryLoaded: false
   };
 
   var platforms = null;
@@ -184,7 +187,28 @@
     updateAutoStopButton();
     setControlsEnabled(false);
     requestStageFit();
+    bindAuthPersistence();
     track("app_open");
+  }
+
+  function bindAuthPersistence() {
+    if (!window.luminaAuth || typeof window.luminaAuth.onChange !== "function") {
+      return;
+    }
+
+    window.luminaAuth.onChange(function (authState) {
+      if (!authState || !authState.isAuthenticated) {
+        state.currentProjectId = "";
+        state.remoteHistoryEntries = [];
+        state.remoteHistoryLoaded = false;
+        if (state.isHistoryOpen) {
+          renderHistoryList();
+        }
+        return;
+      }
+
+      syncUserAndRefreshHistory();
+    });
   }
 
   function cacheElements() {
@@ -658,6 +682,7 @@
     state.isPreviewSeeking = false;
     state.pdfNeedsAttention = state.flags.length > 0;
     state.lastTrackedMediaKey = "";
+    state.currentProjectId = "";
     state.objectUrl = URL.createObjectURL(file);
 
     els.video.src = state.objectUrl;
@@ -680,6 +705,7 @@
     renderCommentEditor();
     updateAutoStopButton();
     requestStageFit();
+    maybeLoadRemoteProjectSnapshot(state.mediaKey);
     showToast(file.name + " を読み込みました。", "success");
   }
 
@@ -1244,6 +1270,7 @@
     renderHistoryList();
     els.historyModal.hidden = false;
     state.isHistoryOpen = true;
+    refreshRemoteHistory();
     track("history_open");
   }
 
@@ -1733,6 +1760,7 @@
     try {
       window.localStorage.setItem(FLAG_STORAGE_PREFIX + state.mediaKey, JSON.stringify(state.flags));
       persistHistorySnapshot();
+      persistProjectSnapshotToDb();
     } catch (error) {
       showToast("チェック記録のローカル保存に失敗しました。", "warning");
     }
@@ -1910,7 +1938,7 @@
     updatePdfButtons();
   }
 
-  function readHistoryEntries() {
+  function readLocalHistoryEntries() {
     return readHistoryIndex().map(function (record) {
       var flags = readFlagsFromStorage(record.mediaKey);
 
@@ -1924,6 +1952,28 @@
       };
     }).filter(function (record) {
       return record.flags.length > 0;
+    });
+  }
+
+  function readHistoryEntries() {
+    return mergeHistoryEntries(readLocalHistoryEntries(), state.remoteHistoryEntries || []);
+  }
+
+  function mergeHistoryEntries(localEntries, remoteEntries) {
+    var merged = {};
+
+    localEntries.forEach(function (entry) {
+      merged[entry.mediaKey] = entry;
+    });
+
+    remoteEntries.forEach(function (entry) {
+      merged[entry.mediaKey] = entry;
+    });
+
+    return Object.keys(merged).map(function (key) {
+      return merged[key];
+    }).sort(function (left, right) {
+      return right.lastOpened - left.lastOpened;
     });
   }
 
@@ -1981,6 +2031,16 @@
     if (openReportWindow(report)) {
       state.pdfNeedsAttention = false;
       updatePdfButtons();
+      recordPdfExportToDb({
+        reportType: "current",
+        exportFileName: report.documentTitle,
+        markerCount: state.flags.length,
+        projectCount: 1,
+        meta: {
+          mediaKey: state.mediaKey,
+          fileName: state.fileName || "未命名素材"
+        }
+      });
       track("pdf_export", {
         report_type: "current",
         marker_count: state.flags.length
@@ -2017,6 +2077,17 @@
     };
 
     if (openReportWindow(report)) {
+      recordPdfExportToDb({
+        reportType: "today",
+        exportFileName: report.documentTitle,
+        markerCount: totalFlags,
+        projectCount: entries.length,
+        meta: {
+          mediaKeys: entries.map(function (entry) {
+            return entry.mediaKey;
+          })
+        }
+      });
       track("pdf_export", {
         report_type: "today",
         item_count: entries.length,
@@ -2458,6 +2529,127 @@
 
   function buildMediaKey(file) {
     return [file.name, file.size, file.lastModified].join("__");
+  }
+
+  function syncUserAndRefreshHistory() {
+    if (!window.luminaDb || typeof window.luminaDb.syncCurrentUserProfile !== "function") {
+      return;
+    }
+
+    window.luminaDb.syncCurrentUserProfile()
+      .catch(function (error) {
+        console.warn("Failed to sync app user", error);
+      });
+
+    refreshRemoteHistory();
+  }
+
+  function maybeLoadRemoteProjectSnapshot(mediaKey) {
+    if (!mediaKey || !window.luminaDb || typeof window.luminaDb.loadProjectSnapshot !== "function") {
+      return;
+    }
+
+    if (state.flags.length) {
+      return;
+    }
+
+    window.luminaDb.loadProjectSnapshot(mediaKey)
+      .then(function (entry) {
+        if (!entry || state.mediaKey !== mediaKey || state.flags.length) {
+          return;
+        }
+
+        state.currentProjectId = entry.projectId || "";
+        state.flags = entry.flags.slice();
+        state.pdfNeedsAttention = state.flags.length > 0;
+        renderFlags();
+        renderCommentEditor();
+        syncTimeline();
+
+        if (state.isHistoryOpen) {
+          renderHistoryList();
+        }
+
+        if (entry.flags.length) {
+          showToast("過去のチェック履歴を読み込みました。", "info");
+        }
+      })
+      .catch(function (error) {
+        console.warn("Failed to load remote project snapshot", error);
+      });
+  }
+
+  function refreshRemoteHistory() {
+    if (!window.luminaDb || typeof window.luminaDb.loadHistoryEntries !== "function") {
+      return Promise.resolve([]);
+    }
+
+    return window.luminaDb.loadHistoryEntries()
+      .then(function (entries) {
+        state.remoteHistoryEntries = Array.isArray(entries) ? entries : [];
+        state.remoteHistoryLoaded = true;
+        if (state.isHistoryOpen) {
+          renderHistoryList();
+        }
+        return state.remoteHistoryEntries;
+      })
+      .catch(function (error) {
+        console.warn("Failed to load remote history entries", error);
+        return [];
+      });
+  }
+
+  function buildProjectSnapshotPayload() {
+    return {
+      mediaKey: state.mediaKey,
+      fileName: state.fileName || "未命名素材",
+      fileSizeBytes: state.fileSize || 0,
+      durationText: els.metaDuration.textContent || "00:00",
+      resolutionText: els.metaResolution.textContent || "-- × --",
+      flags: state.flags.map(function (flag) {
+        return {
+          id: flag.id,
+          time: getFlagStartTime(flag),
+          zone: flag.zone,
+          x: flag.x,
+          y: flag.y,
+          platform: normalizePlatformKey(flag.platform),
+          comment: flag.comment || ""
+        };
+      })
+    };
+  }
+
+  function persistProjectSnapshotToDb() {
+    if (!window.luminaDb || typeof window.luminaDb.saveProjectSnapshot !== "function") {
+      return;
+    }
+
+    window.luminaDb.saveProjectSnapshot(buildProjectSnapshotPayload())
+      .then(function (result) {
+        state.currentProjectId = result && result.projectId ? result.projectId : "";
+        refreshRemoteHistory();
+      })
+      .catch(function (error) {
+        console.warn("Failed to persist project snapshot", error);
+      });
+  }
+
+  function recordPdfExportToDb(payload) {
+    if (!window.luminaDb || typeof window.luminaDb.recordPdfExport !== "function") {
+      return;
+    }
+
+    window.luminaDb.recordPdfExport({
+      projectId: state.currentProjectId || null,
+      reportType: payload.reportType,
+      exportFileName: payload.exportFileName,
+      markerCount: payload.markerCount,
+      projectCount: payload.projectCount,
+      meta: payload.meta || {}
+    }).catch(function (error) {
+      console.warn("Failed to record pdf export", error);
+    });
   }
 
   function jumpToTime(seconds, pauseVideo) {
