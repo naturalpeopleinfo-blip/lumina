@@ -7,7 +7,7 @@
   <script>document.documentElement.classList.add('has-js');</script>
   <meta
     name="description"
-    content="テロップ事故を、投稿前に防ぐ。縦動画のセーフゾーンをすばやく確認し、修正依頼用レポートまでまとめられるチェックツール。"
+    content="そのテロップ、隠れているかもしれません。公開前に見切れリスクを確認し、修正依頼までまとめられる縦動画チェックツール。"
   >
   <link rel="stylesheet" href="style.css">
 </head>
@@ -23,7 +23,7 @@
       </a>
 
       <nav class="landing-nav" aria-label="ページ内ナビゲーション">
-        <a href="./login.html" class="landing-nav-cta" id="landingHeaderCta" data-cta-source="header">チェックを始める</a>
+        <a href="./login.html" class="landing-nav-cta" id="landingHeaderCta" data-cta-source="header">無料で確認する</a>
       </nav>
     </header>
 
@@ -31,16 +31,16 @@
       <section class="landing-hero">
         <div class="landing-hero-copy">
           <h1>
-            <span class="landing-hero-gradient landing-hero-line">テロップ事故を</span>
-            <span class="landing-hero-gradient landing-hero-line">投稿前に防ぐ。</span>
+            <span class="landing-hero-gradient landing-hero-line">そのテロップ、</span>
+            <span class="landing-hero-gradient landing-hero-line">隠れてませんか?</span>
           </h1>
           <p class="landing-lead">
-            縦動画のセーフゾーンをすばやく確認し、修正依頼用レポートまでまとめられるチェックツールです。
+            ショート動画の字幕や重要な要素は、完成時には問題なく見えても、投稿画面ではUIに重なって見切れることがあります。Lumina Zone は、その見落としを公開前に確認し、修正依頼までつなげるチェックツールです。
           </p>
-          <p class="landing-hero-target">ディレクター・SNS運用者の最終チェックに。</p>
+          <p class="landing-hero-target">動画編集者・SNS運用者・制作チームの最終確認に。</p>
 
           <div class="landing-actions">
-            <a href="./login.html" class="landing-button landing-button-primary landing-hero-cta" id="landingHeroCta" data-cta-source="hero">チェックを始める</a>
+            <a href="./login.html" class="landing-button landing-button-primary landing-hero-cta" id="landingHeroCta" data-cta-source="hero">無料で確認する</a>
           </div>
 
           <div class="landing-hero-platforms" aria-label="対応SNS">
@@ -67,55 +67,14 @@
           </div>
         </div>
 
-        <figure class="landing-hero-device">
-          <img
-            src="./assets/mac-hero.png"
-            alt="Lumina Zone を表示したノートPCのイメージ"
-            class="landing-hero-device-image"
-          >
-        </figure>
-      </section>
-
-      <section class="landing-section landing-section-centered landing-highlights-section" aria-label="Lumina Zone の主な特徴">
-        <div class="landing-highlights-grid">
-          <article class="landing-highlight-card landing-card">
-            <p class="landing-section-kicker">Feature 1</p>
-            <h3>ローカル処理ですぐ確認。</h3>
-            <p>重い動画もアップロード不要。手元のブラウザでそのまま開けます。</p>
-          </article>
-          <article class="landing-highlight-card landing-card">
-            <p class="landing-section-kicker">Feature 2</p>
-            <h3>各SNSのUI枠を重ねて表示。</h3>
-            <p>TikTok・Instagram・YouTube の表示UIを切り替えながら確認できます。</p>
-          </article>
-          <article class="landing-highlight-card landing-card">
-            <p class="landing-section-kicker">Feature 3</p>
-            <h3>修正依頼用PDFまで完成。</h3>
-            <p>気になる箇所を記録するだけで、共有用レポートまでまとめられます。</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="about" class="landing-section landing-section-centered">
-        <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Safe Zone</p>
-          <h2>一見問題なく見えても、安心ではありません。</h2>
-          <p class="landing-section-intro">
-            安全エリアの外にある要素は、SNSのUIや端末の表示差で見えにくくなることがあります。
-          </p>
-        </div>
-
-        <div class="landing-about-stack">
-          <div class="landing-about-compare" aria-label="セーフゾーンのビフォーアフター">
-            <figure class="landing-about-card">
+        <div class="landing-hero-demo" aria-label="セーフゾーンのビフォーアフター">
+          <div class="landing-hero-demo-grid">
+            <figure class="landing-about-card landing-hero-demo-card">
               <figcaption class="landing-about-label">Before</figcaption>
               <div class="landing-diagram-phone landing-diagram-phone-before" aria-hidden="true"></div>
-              <p class="landing-about-card-copy">
-                一見問題なく見えても、この時点では危険エリアが見えていません。
-              </p>
             </figure>
 
-            <figure class="landing-about-card">
+            <figure class="landing-about-card landing-hero-demo-card">
               <figcaption class="landing-about-label">After</figcaption>
               <div class="landing-diagram-phone landing-diagram-phone-after" aria-hidden="true">
                 <div class="landing-diagram-danger landing-diagram-danger-top"></div>
@@ -124,17 +83,37 @@
                 <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
                 <div class="landing-diagram-safe"></div>
               </div>
-              <p class="landing-about-card-copy">
-                赤いゾーンに触れる要素は、SNSのUIや端末の表示差で見えにくくなる可能性があります。
-              </p>
             </figure>
           </div>
+          <p class="landing-hero-demo-note">投稿画面では、字幕や重要な要素がUIに重なることがあります。</p>
+        </div>
+      </section>
 
-          <div class="landing-about-copy">
-            <p>
-              Lumina Zone は、その危険エリアを投稿前に確認するためのツールです。
-            </p>
-          </div>
+      <section class="landing-section landing-section-centered landing-highlights-section" aria-label="よくある見落とし">
+        <div class="landing-section-head landing-section-head-centered">
+          <p class="landing-section-kicker">Common Problems</p>
+          <h2>こういう見落とし、ありませんか。</h2>
+          <p class="landing-section-intro">
+            ちゃんと作っている動画でも、投稿前の最後の確認だけは抜けやすいものです。
+          </p>
+        </div>
+
+        <div class="landing-highlights-grid">
+          <article class="landing-highlight-card landing-card">
+            <p class="landing-section-kicker">Issue 1</p>
+            <h3>テロップ位置を、なんとなくで決めている。</h3>
+            <p>編集画面では問題なく見えても、投稿画面のUIとは重なり方が変わります。</p>
+          </article>
+          <article class="landing-highlight-card landing-card">
+            <p class="landing-section-kicker">Issue 2</p>
+            <h3>投稿後に「見切れてた」と気づくことがある。</h3>
+            <p>公開後に気づくと、差し戻しや再確認が必要になり、手戻りが増えます。</p>
+          </article>
+          <article class="landing-highlight-card landing-card">
+            <p class="landing-section-kicker">Issue 3</p>
+            <h3>修正位置の共有が、毎回あいまいになる。</h3>
+            <p>時間と位置を口頭やチャットで説明すると、修正のやり取りが長引きやすくなります。</p>
+          </article>
         </div>
       </section>
 
@@ -143,7 +122,7 @@
           <p class="landing-section-kicker">Timing</p>
           <h2>公開前の見落としをゼロにする、最後の保険。</h2>
           <p class="landing-section-intro">
-            編集が終わった最終ファイルを、投稿前に確認するためのツールです。
+            編集が終わったあとに1度だけ確認するだけで、投稿後の見切れや手戻りを減らせます。
           </p>
         </div>
 
@@ -235,13 +214,13 @@
 
       <section class="landing-section landing-section-centered landing-compare-section" aria-label="よくある確認方法との違い">
         <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Compare</p>
+          <p class="landing-section-kicker">Solution</p>
           <h2 class="landing-compare-heading">
-            <span class="landing-compare-heading-line">いまの確認方法より、</span>
-            <span class="landing-compare-gradient landing-compare-heading-line">速くて迷いません。</span>
+            <span class="landing-compare-heading-line">確認から修正依頼まで、</span>
+            <span class="landing-compare-gradient landing-compare-heading-line">ひとつの流れで。</span>
           </h2>
           <p class="landing-section-intro">
-            スマホ実機確認や透過PNG重ねより、投稿前の最終チェックと修正依頼をひとつの流れで進められます。
+            最終ファイルをその場で開き、SNSごとのUIを重ねて確認し、気になる箇所はそのまま共有できます。
           </p>
         </div>
 
@@ -274,6 +253,24 @@
             </ul>
           </article>
         </div>
+      </section>
+
+      <section id="about" class="landing-section landing-section-centered landing-preview-section">
+        <div class="landing-section-head landing-section-head-centered">
+          <p class="landing-section-kicker">Preview</p>
+          <h2>投稿前に、この画面で確認できます。</h2>
+          <p class="landing-section-intro">
+            最終ファイルをブラウザで開き、各SNSのUIを重ねながら見切れリスクを確認できます。
+          </p>
+        </div>
+
+        <figure class="landing-preview-card landing-card">
+          <img
+            src="./assets/mac-hero.png"
+            alt="Lumina Zone の確認画面"
+            class="landing-preview-image"
+          >
+        </figure>
       </section>
 
       <section class="landing-section landing-section-centered landing-proof-section" aria-label="セーフゾーンと成果に関する公開データ">
@@ -439,11 +436,11 @@
         <div class="landing-cta landing-card">
           <div class="landing-cta-copy">
             <p class="landing-section-kicker">Start</p>
-            <h2>まずは1本、確認してみる。</h2>
-            <p>Googleログインで無料ではじめられます。</p>
+            <h2>まずは1本、無料で確認する。</h2>
+            <p>気になる動画が1本あるなら、投稿前にいま確認できます。</p>
           </div>
           <div class="landing-actions landing-cta-actions">
-            <a href="./login.html" class="landing-button landing-button-primary" data-cta-source="footer">チェックを始める</a>
+            <a href="./login.html" class="landing-button landing-button-primary" data-cta-source="footer">無料で確認する</a>
           </div>
         </div>
       </section>
