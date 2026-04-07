@@ -872,7 +872,7 @@
 
     if (els.historyExportSelectedButton) {
       els.historyExportSelectedButton.disabled = !hasSelectedHistoryPdf;
-      els.historyExportSelectedButton.title = hasSelectedHistoryPdf ? "選んだ記録だけをPDFレポートで開きます。" : "記録を選ぶと使えます。";
+      els.historyExportSelectedButton.title = hasSelectedHistoryPdf ? "選んだ素材だけをPDFレポートで開きます。" : "素材を選ぶと使えます。";
       els.historyExportSelectedButton.classList.toggle("is-suggested", hasSelectedHistoryPdf);
     }
 
@@ -1959,16 +1959,13 @@
     };
   }
 
-  function buildHistorySelectionKey(mediaKey, flag) {
-    var fallbackId = [getFlagStartTime(flag), flag.zone || "center", normalizePlatformKey(flag.platform || "all")].join("_");
-    return String(mediaKey || "") + "::" + String(flag && flag.id ? flag.id : fallbackId);
+  function isHistoryEntrySelected(mediaKey) {
+    return !!state.selectedHistoryKeys[String(mediaKey || "")];
   }
 
-  function isHistoryFlagSelected(mediaKey, flag) {
-    return !!state.selectedHistoryKeys[buildHistorySelectionKey(mediaKey, flag)];
-  }
+  function toggleHistoryEntrySelection(mediaKey) {
+    var selectionKey = String(mediaKey || "");
 
-  function toggleHistoryFlagSelection(selectionKey) {
     if (!selectionKey) {
       return;
     }
@@ -2002,12 +1999,8 @@
 
   function getSelectedHistoryEntries(entries) {
     return (entries || []).reduce(function (result, entry) {
-      var selectedFlags = entry.flags.filter(function (flag) {
-        return isHistoryFlagSelected(entry.mediaKey, flag);
-      });
-
-      if (selectedFlags.length) {
-        result.push(buildHistoryReportEntry(entry, selectedFlags));
+      if (isHistoryEntrySelected(entry.mediaKey)) {
+        result.push(buildHistoryReportEntry(entry, entry.flags));
       }
 
       return result;
@@ -2027,8 +2020,10 @@
     }
 
     els.historyList.innerHTML = entries.map(function (entry) {
+      var isSelected = isHistoryEntrySelected(entry.mediaKey);
+
       return (
-        '<article class="history-item">' +
+        '<article class="history-item' + (isSelected ? " is-selected" : "") + '">' +
           '<div class="history-item-header">' +
             '<div class="history-item-copy">' +
               '<strong title="' + escapeHtml(entry.fileName) + '">' + escapeHtml(entry.fileName) + "</strong>" +
@@ -2036,19 +2031,14 @@
             "</div>" +
             '<div class="history-item-actions">' +
               '<span class="history-date">' + escapeHtml(formatHistoryDate(entry.lastOpened)) + "</span>" +
+              '<button class="action-button action-button-ghost history-item-select' + (isSelected ? " is-selected" : "") + '" type="button" data-history-select-entry="' + escapeHtml(entry.mediaKey) + '">' + (isSelected ? "選択中" : "選択") + "</button>" +
               '<button class="action-button action-button-ghost history-item-export" type="button" data-history-export-entry="' + escapeHtml(entry.mediaKey) + '">この素材をPDF化</button>' +
             "</div>" +
           "</div>" +
           '<div class="history-chip-row">' +
             entry.flags.map(function (flag) {
-              var selectionKey = buildHistorySelectionKey(entry.mediaKey, flag);
-              var isSelected = isHistoryFlagSelected(entry.mediaKey, flag);
-
               return (
-                '<div class="history-chip-group' + (isSelected ? " is-selected" : "") + '">' +
-                  '<button class="history-chip-select" type="button" aria-pressed="' + (isSelected ? "true" : "false") + '" data-history-select-key="' + escapeHtml(selectionKey) + '" title="' + (isSelected ? "選択解除" : "PDFに含める") + '">' +
-                    '<span class="history-chip-select-dot" aria-hidden="true"></span>' +
-                  "</button>" +
+                '<div class="history-chip-group">' +
                   '<button class="history-flag-chip" type="button"' +
                   ' data-history-key="' + escapeHtml(entry.mediaKey) + '"' +
                   ' data-history-time="' + getFlagStartTime(flag) + '">' +
@@ -2123,14 +2113,14 @@
   }
 
   function onHistoryListClick(event) {
-    var selectButton = event.target.closest("[data-history-select-key]");
+    var selectButton = event.target.closest("[data-history-select-entry]");
     var exportButton = event.target.closest("[data-history-export-entry]");
     var chip = event.target.closest("[data-history-time]");
     var time = 0;
     var mediaKey = "";
 
     if (selectButton) {
-      toggleHistoryFlagSelection(selectButton.getAttribute("data-history-select-key") || "");
+      toggleHistoryEntrySelection(selectButton.getAttribute("data-history-select-entry") || "");
       return;
     }
 
@@ -2270,14 +2260,14 @@
     var entries = getSelectedHistoryEntries(readHistoryEntries());
 
     if (!entries.length) {
-      showToast("PDFに含める記録を選んでください。", "warning");
+      showToast("PDFに含める素材を選んでください。", "warning");
       return;
     }
 
     exportHistoryReport(entries, {
       reportType: "history_selected",
-      reportTitle: "選択した履歴のレポート",
-      toastMessage: "選択した項目をPDF化しました。"
+      reportTitle: "選択した素材のレポート",
+      toastMessage: "選択した素材をPDF化しました。"
     });
   }
 
