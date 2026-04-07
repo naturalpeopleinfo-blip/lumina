@@ -94,6 +94,8 @@ img {
 
 body.landing-page {
   overflow: auto;
+  overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100%;
   background:
     radial-gradient(circle at 10% 0%, rgba(10, 132, 255, 0.16), transparent 24%),
@@ -899,11 +901,11 @@ body.app-page .empty-state p {
 
 .landing-hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
   grid-template-areas:
     "copy demo"
     "support demo";
-  gap: clamp(32px, 4vw, 64px);
+  gap: clamp(24px, 3vw, 44px);
   align-items: start;
   padding: clamp(34px, 5vw, 62px) 0 clamp(12px, 2vw, 24px);
 }
@@ -913,6 +915,7 @@ body.app-page .empty-state p {
   grid-area: copy;
   gap: 0;
   max-width: 36rem;
+  min-width: 0;
   justify-items: start;
   text-align: left;
 }
@@ -922,6 +925,7 @@ body.app-page .empty-state p {
   display: grid;
   gap: 14px;
   max-width: 33rem;
+  min-width: 0;
   justify-items: start;
   text-align: left;
 }
@@ -1037,19 +1041,22 @@ body.app-page .empty-state p {
   grid-area: demo;
   display: grid;
   gap: 14px;
-  width: min(100%, 700px);
-  justify-self: end;
+  width: 100%;
+  max-width: 620px;
+  min-width: 0;
+  justify-self: stretch;
 }
 
 .landing-hero-demo-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: clamp(12px, 1.5vw, 18px);
   align-items: start;
 }
 
 .landing-hero-demo-card {
   gap: 12px;
+  min-width: 0;
 }
 
 .landing-hero-demo-label {
@@ -1057,6 +1064,7 @@ body.app-page .empty-state p {
   gap: 5px;
   justify-items: center;
   padding: 10px 14px 8px;
+  max-width: 100%;
   min-height: 0;
   text-transform: none;
   letter-spacing: 0.03em;
@@ -1231,7 +1239,8 @@ body.app-page .empty-state p {
 
 .landing-diagram-phone {
   position: relative;
-  width: min(292px, 100%);
+  width: 100%;
+  max-width: 264px;
   margin: 0 auto;
   aspect-ratio: 9 / 16;
   border-radius: 30px;
@@ -3084,6 +3093,7 @@ body.landing-page .landing-cta h2 {
 body.landing-page .landing-hero h1 {
   font-weight: 640;
   letter-spacing: -0.05em;
+  font-size: clamp(2.55rem, 3.9vw, 4.15rem);
 }
 
 body.landing-page .landing-hero-gradient,
