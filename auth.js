@@ -247,7 +247,7 @@
     var avatar = document.getElementById("appAuthAvatar");
     var signOutButton = document.getElementById("appSignOutButton");
 
-    if (!loggedOutState || !loggedInState || !status) {
+    if (!loggedOutState || !loggedInState) {
       return;
     }
 
@@ -255,8 +255,10 @@
     loggedInState.hidden = !state.user;
 
     if (!state.user) {
-      status.textContent = state.enabled ? "未ログイン" : "確認中";
-      status.classList.add("is-empty");
+      if (status) {
+        status.textContent = state.enabled ? "未ログイン" : "確認中";
+        status.classList.add("is-empty");
+      }
       if (signOutButton) {
         signOutButton.disabled = true;
       }
@@ -264,8 +266,10 @@
       return;
     }
 
-    status.textContent = "ログイン中";
-    status.classList.remove("is-empty");
+    if (status) {
+      status.textContent = "ログイン中";
+      status.classList.remove("is-empty");
+    }
 
     if (userName) {
       userName.textContent = getUserName(state.user);

@@ -154,7 +154,10 @@
     lastTrackedMediaKey: "",
     currentProjectId: "",
     remoteHistoryEntries: [],
-    remoteHistoryLoaded: false
+    remoteHistoryLoaded: false,
+    selectedHistoryKeys: {},
+    freshFlagId: "",
+    freshFlagTimer: 0
   };
 
   var platforms = null;
@@ -254,13 +257,10 @@
     els.commentEditor = document.getElementById("commentEditor");
     els.helpToggle = document.getElementById("helpToggle");
     els.historyToggle = document.getElementById("historyToggle");
-    els.historyInlineHint = document.getElementById("historyInlineHint");
-    els.historySummaryBar = document.getElementById("historySummaryBar");
-    els.historySummaryText = document.getElementById("historySummaryText");
     els.historyModal = document.getElementById("historyModal");
     els.historyClose = document.getElementById("historyClose");
-    els.historyCurrentPdfButton = document.getElementById("historyCurrentPdfButton");
-    els.historyTodayPdfButton = document.getElementById("historyTodayPdfButton");
+    els.historyExportSelectedButton = document.getElementById("historyExportSelectedButton");
+    els.historyExportAllButton = document.getElementById("historyExportAllButton");
     els.historyEmpty = document.getElementById("historyEmpty");
     els.historyList = document.getElementById("historyList");
     els.confirmModal = document.getElementById("confirmModal");
@@ -328,12 +328,24 @@
       track("guide_open");
       openOnboarding(0);
     });
-    els.historyToggle.addEventListener("click", openHistoryModal);
-    els.historyClose.addEventListener("click", closeHistoryModal);
-    els.historyCurrentPdfButton.addEventListener("click", exportCurrentPdf);
-    els.historyTodayPdfButton.addEventListener("click", exportTodayHistoryPdf);
-    els.historyModal.addEventListener("click", onHistoryModalClick);
-    els.historyList.addEventListener("click", onHistoryListClick);
+    if (els.historyToggle) {
+      els.historyToggle.addEventListener("click", openHistoryModal);
+    }
+    if (els.historyClose) {
+      els.historyClose.addEventListener("click", closeHistoryModal);
+    }
+    if (els.historyExportSelectedButton) {
+      els.historyExportSelectedButton.addEventListener("click", exportSelectedHistoryPdf);
+    }
+    if (els.historyExportAllButton) {
+      els.historyExportAllButton.addEventListener("click", exportAllHistoryPdf);
+    }
+    if (els.historyModal) {
+      els.historyModal.addEventListener("click", onHistoryModalClick);
+    }
+    if (els.historyList) {
+      els.historyList.addEventListener("click", onHistoryListClick);
+    }
     els.confirmCancel.addEventListener("click", closeConfirmModal);
     els.confirmAccept.addEventListener("click", confirmPendingAction);
     els.confirmModal.addEventListener("click", onConfirmModalClick);
@@ -411,11 +423,13 @@
 
     els.modeButtons.innerHTML = order.map(function (key) {
       var meta = getPlatformMeta(key);
+      var buttonClass = key === "all" ? "platform-token platform-token-all" : "platform-token platform-token-icon-only";
       return (
-        '<button class="platform-button" type="button" data-platform="' + key + '"' +
+        '<button class="' + buttonClass + '" type="button" data-platform="' + key + '" aria-label="' + meta.label + '"' +
         ' style="--button-accent:' + meta.accent + ";--button-accent-secondary:" + meta.accentSecondary + ";--button-accent-soft:" + meta.accentSoft + ';">' +
-        '<span class="platform-icon">' + getPlatformIconMarkup(key, meta) + "</span>" +
-        '<span class="platform-label">' + meta.label + "</span>" +
+        '<span class="platform-token-core">' +
+        getPlatformIconMarkup(key, meta) +
+        "</span>" +
         "</button>"
       );
     }).join("");
@@ -492,9 +506,14 @@
         ? allSelected
         : state.activePlatforms.indexOf(key) !== -1;
 
-      button.classList.toggle("is-active", isActive);
+      button.classList.remove("is-active");
       button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      button.setAttribute("data-selected", isActive ? "true" : "false");
     });
+
+    if (els.modeDescription) {
+      els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
+    }
   }
 
   function hasActiveSelection() {
@@ -565,8 +584,12 @@
     els.stageSurface.style.setProperty("--overlay-right-upper", selected.rightUpper || selected.right);
     els.stageSurface.style.setProperty("--overlay-step-y", selected.stepY || selected.top);
 
-    els.modeLabel.textContent = EMPTY_MODE_LABEL;
-    els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
+    if (els.modeLabel) {
+      els.modeLabel.textContent = EMPTY_MODE_LABEL;
+    }
+    if (els.modeDescription) {
+      els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
+    }
 
     setPlatformTheme(meta);
     updatePlatformButtons();
@@ -597,8 +620,12 @@
     els.stageSurface.style.setProperty("--overlay-left", fallbackSettings.left);
     els.stageSurface.style.setProperty("--overlay-right-upper", fallbackSettings.rightUpper || fallbackSettings.right);
     els.stageSurface.style.setProperty("--overlay-step-y", fallbackSettings.stepY || fallbackSettings.top);
-    els.modeLabel.textContent = EMPTY_MODE_LABEL;
-    els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
+    if (els.modeLabel) {
+      els.modeLabel.textContent = EMPTY_MODE_LABEL;
+    }
+    if (els.modeDescription) {
+      els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
+    }
     setPlatformTheme(fallbackMeta);
     updatePlatformButtons();
     updateFlagsHint();
@@ -832,7 +859,9 @@
 
   function updatePdfButtons() {
     var hasCurrentPdf = hasMediaLoaded() && state.flags.length > 0;
-    var hasTodayPdf = getTodayHistoryEntries().length > 0;
+    var historyEntries = readHistoryEntries();
+    var hasHistoryPdf = historyEntries.length > 0;
+    var hasSelectedHistoryPdf = getSelectedHistoryEntries(historyEntries).length > 0;
     var shouldSuggestCurrentPdf = hasCurrentPdf && state.pdfNeedsAttention;
 
     if (els.exportCurrentPdfButton) {
@@ -841,15 +870,15 @@
       els.exportCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf);
     }
 
-    if (els.historyCurrentPdfButton) {
-      els.historyCurrentPdfButton.disabled = !hasCurrentPdf;
-      els.historyCurrentPdfButton.title = hasCurrentPdf ? "今のチェック内容をPDFレポートで開きます。" : HINT_NEEDS_RECORDS;
-      els.historyCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf);
+    if (els.historyExportSelectedButton) {
+      els.historyExportSelectedButton.disabled = !hasSelectedHistoryPdf;
+      els.historyExportSelectedButton.title = hasSelectedHistoryPdf ? "選んだ記録だけをPDFレポートで開きます。" : "記録を選ぶと使えます。";
+      els.historyExportSelectedButton.classList.toggle("is-suggested", hasSelectedHistoryPdf);
     }
 
-    if (els.historyTodayPdfButton) {
-      els.historyTodayPdfButton.disabled = !hasTodayPdf;
-      els.historyTodayPdfButton.title = hasTodayPdf ? "今日の履歴をまとめてPDF用に開きます。" : HINT_NEEDS_HISTORY;
+    if (els.historyExportAllButton) {
+      els.historyExportAllButton.disabled = !hasHistoryPdf;
+      els.historyExportAllButton.title = hasHistoryPdf ? "このアカウントの履歴をまとめてPDFレポートで開きます。" : HINT_NEEDS_HISTORY;
     }
   }
 
@@ -1272,6 +1301,7 @@
   }
 
   function openHistoryModal() {
+    state.selectedHistoryKeys = {};
     renderHistoryList();
     els.historyModal.hidden = false;
     state.isHistoryOpen = true;
@@ -1282,6 +1312,7 @@
   function closeHistoryModal() {
     els.historyModal.hidden = true;
     state.isHistoryOpen = false;
+    state.selectedHistoryKeys = {};
   }
 
   function onHistoryModalClick(event) {
@@ -1343,8 +1374,7 @@
     state.pdfNeedsAttention = true;
     sortFlags();
     persistFlags();
-    renderFlags();
-    renderCommentEditor();
+    startFreshFlagGuidance(flag.id);
     syncTimeline();
     track("marker_add", {
       zone: flag.zone,
@@ -1425,6 +1455,33 @@
     return formatDuration(getFlagStartTime(flag));
   }
 
+  function getDisplayedFlags() {
+    return state.flags.slice().sort(function (left, right) {
+      return (right.createdAt || 0) - (left.createdAt || 0);
+    });
+  }
+
+  function clearFreshFlagGuidance() {
+    if (state.freshFlagTimer) {
+      window.clearTimeout(state.freshFlagTimer);
+      state.freshFlagTimer = 0;
+    }
+    state.freshFlagId = "";
+  }
+
+  function startFreshFlagGuidance(flagId) {
+    clearFreshFlagGuidance();
+    state.freshFlagId = flagId;
+    renderFlags();
+    renderCommentEditor();
+    state.freshFlagTimer = window.setTimeout(function () {
+      state.freshFlagId = "";
+      state.freshFlagTimer = 0;
+      renderFlags();
+      renderCommentEditor();
+    }, 4000);
+  }
+
   function sortFlags() {
     state.flags.sort(function (left, right) {
       return getFlagStartTime(left) - getFlagStartTime(right);
@@ -1469,6 +1526,7 @@
 
     els.commentEditor.classList.toggle("is-disabled", !flag);
     els.commentEditor.classList.toggle("has-selection", !!flag);
+    els.commentEditor.classList.toggle("is-guided", !!flag && flag.id === state.freshFlagId);
 
     if (!flag) {
       els.commentEditorTitle.textContent = "記録を選ぶと、共有メモを残せます。";
@@ -1612,7 +1670,7 @@
       intent: "clear-flags",
       title: "チェック記録を削除しますか？",
       message: "今のチェック記録をすべて削除します。元に戻せません。",
-      acceptLabel: "すべて削除"
+      acceptLabel: "リセット"
     });
   }
 
@@ -1621,6 +1679,7 @@
     state.selectedFlagId = "";
     state.autoStopTargetTime = null;
     state.pdfNeedsAttention = false;
+    clearFreshFlagGuidance();
     persistFlags();
     renderFlags();
     syncTimeline();
@@ -1630,6 +1689,7 @@
 
   function renderFlags() {
     var activeFlagId = getFocusedFlagId(els.video.currentTime || 0);
+    var displayedFlags = getDisplayedFlags();
 
     els.flagsCount.textContent = state.flags.length + "件";
     els.flagsCount.classList.toggle("is-empty", !state.flags.length);
@@ -1646,20 +1706,20 @@
       return;
     }
 
-    els.flagsList.innerHTML = state.flags.map(function (flag) {
-      var platform = getPlatformMeta(flag.platform);
+    els.flagsList.innerHTML = displayedFlags.map(function (flag) {
       var isActive = flag.id === activeFlagId;
+      var isFresh = flag.id === state.freshFlagId;
       var timeLabel = getFlagTitle(flag);
 
       return (
-        '<article class="flag-item' + (isActive ? " is-active" : "") + '" data-flag-id="' + escapeHtml(flag.id) + '">' +
+        '<article class="flag-item' + (isActive ? " is-active" : "") + (isFresh ? " is-fresh" : "") + '" data-flag-id="' + escapeHtml(flag.id) + '">' +
           '<button class="flag-time-button" type="button" data-flag-jump="' + escapeHtml(flag.id) + '" data-time="' + getFlagStartTime(flag) + '">' +
             escapeHtml(timeLabel) +
           "</button>" +
           '<div class="flag-meta">' +
             ((flag.comment || "").length ? '<span class="flag-comment-badge">メモ</span>' : "") +
             '<span class="flag-zone-badge" data-zone="' + escapeHtml(flag.zone) + '">' + escapeHtml(FLAG_LABELS[flag.zone]) + "</span>" +
-            '<span class="flag-platform-badge">' + escapeHtml(platform.label) + "</span>" +
+            getPlatformInlineMarkup(flag.platform, "flag-platform-badge") +
           "</div>" +
           '<button class="flag-delete" type="button" data-flag-delete="' + escapeHtml(flag.id) + '">削除</button>' +
         "</article>"
@@ -1899,6 +1959,61 @@
     };
   }
 
+  function buildHistorySelectionKey(mediaKey, flag) {
+    var fallbackId = [getFlagStartTime(flag), flag.zone || "center", normalizePlatformKey(flag.platform || "all")].join("_");
+    return String(mediaKey || "") + "::" + String(flag && flag.id ? flag.id : fallbackId);
+  }
+
+  function isHistoryFlagSelected(mediaKey, flag) {
+    return !!state.selectedHistoryKeys[buildHistorySelectionKey(mediaKey, flag)];
+  }
+
+  function toggleHistoryFlagSelection(selectionKey) {
+    if (!selectionKey) {
+      return;
+    }
+
+    if (state.selectedHistoryKeys[selectionKey]) {
+      delete state.selectedHistoryKeys[selectionKey];
+    } else {
+      state.selectedHistoryKeys[selectionKey] = true;
+    }
+
+    renderHistoryList();
+  }
+
+  function buildHistoryReportEntry(entry, flags) {
+    var sortedFlags = sortFlagsForReport(flags || []);
+    var reportPlatformKey = buildReportPlatformKey(sortedFlags, "");
+    var canPreviewCurrentMedia = entry.mediaKey === state.mediaKey && hasMediaLoaded();
+
+    return {
+      mediaKey: entry.mediaKey,
+      fileName: entry.fileName,
+      durationText: entry.durationText,
+      resolutionText: entry.resolutionText,
+      settingsLabel: buildReportSettingsLabel(sortedFlags, reportPlatformKey),
+      lastOpened: entry.lastOpened,
+      flags: sortedFlags,
+      previewImageDataUrl: canPreviewCurrentMedia ? createReportPreviewImageDataUrl(reportPlatformKey, sortedFlags) : "",
+      previewCaption: canPreviewCurrentMedia ? "現在開いている素材の表示イメージ" : "保存された確認履歴"
+    };
+  }
+
+  function getSelectedHistoryEntries(entries) {
+    return (entries || []).reduce(function (result, entry) {
+      var selectedFlags = entry.flags.filter(function (flag) {
+        return isHistoryFlagSelected(entry.mediaKey, flag);
+      });
+
+      if (selectedFlags.length) {
+        result.push(buildHistoryReportEntry(entry, selectedFlags));
+      }
+
+      return result;
+    }, []);
+  }
+
   function renderHistoryList() {
     var entries = readHistoryEntries();
 
@@ -1919,22 +2034,33 @@
               '<strong title="' + escapeHtml(entry.fileName) + '">' + escapeHtml(entry.fileName) + "</strong>" +
               '<span>' + escapeHtml(entry.durationText + " / " + entry.resolutionText + " / " + entry.flags.length + "件") + "</span>" +
             "</div>" +
-            '<span class="history-date">' + escapeHtml(formatHistoryDate(entry.lastOpened)) + "</span>" +
+            '<div class="history-item-actions">' +
+              '<span class="history-date">' + escapeHtml(formatHistoryDate(entry.lastOpened)) + "</span>" +
+              '<button class="action-button action-button-ghost history-item-export" type="button" data-history-export-entry="' + escapeHtml(entry.mediaKey) + '">この素材をPDF化</button>' +
+            "</div>" +
           "</div>" +
           '<div class="history-chip-row">' +
             entry.flags.map(function (flag) {
+              var selectionKey = buildHistorySelectionKey(entry.mediaKey, flag);
+              var isSelected = isHistoryFlagSelected(entry.mediaKey, flag);
+
               return (
-                '<button class="history-flag-chip" type="button"' +
-                ' data-history-key="' + escapeHtml(entry.mediaKey) + '"' +
-                ' data-history-time="' + getFlagStartTime(flag) + '">' +
-                  '<span class="history-chip-time">' + escapeHtml(getFlagTitle(flag)) + "</span>" +
-                  '<span class="history-chip-meta">' +
-                    ((flag.comment || "").length ? '<span class="history-chip-kind">メモ</span>' : "") +
-                    '<span class="history-chip-zone" data-zone="' + escapeHtml(flag.zone) + '">' + escapeHtml(FLAG_LABELS[flag.zone]) + "</span>" +
-                    '<span class="history-chip-platform">' + escapeHtml(getPlatformMeta(flag.platform).label) + "</span>" +
-                  "</span>" +
-                  ((flag.comment || "").length ? '<span class="history-chip-note">' + escapeHtml(flag.comment) + "</span>" : "") +
-                "</button>"
+                '<div class="history-chip-group' + (isSelected ? " is-selected" : "") + '">' +
+                  '<button class="history-chip-select" type="button" aria-pressed="' + (isSelected ? "true" : "false") + '" data-history-select-key="' + escapeHtml(selectionKey) + '" title="' + (isSelected ? "選択解除" : "PDFに含める") + '">' +
+                    '<span class="history-chip-select-dot" aria-hidden="true"></span>' +
+                  "</button>" +
+                  '<button class="history-flag-chip" type="button"' +
+                  ' data-history-key="' + escapeHtml(entry.mediaKey) + '"' +
+                  ' data-history-time="' + getFlagStartTime(flag) + '">' +
+                    '<span class="history-chip-time">' + escapeHtml(getFlagTitle(flag)) + "</span>" +
+                    '<span class="history-chip-meta">' +
+                      ((flag.comment || "").length ? '<span class="history-chip-kind">メモ</span>' : "") +
+                      '<span class="history-chip-zone" data-zone="' + escapeHtml(flag.zone) + '">' + escapeHtml(FLAG_LABELS[flag.zone]) + "</span>" +
+                      getPlatformInlineMarkup(flag.platform, "history-chip-platform") +
+                    "</span>" +
+                    ((flag.comment || "").length ? '<span class="history-chip-note">' + escapeHtml(flag.comment) + "</span>" : "") +
+                  "</button>" +
+                "</div>"
               );
             }).join("") +
           "</div>" +
@@ -1946,31 +2072,14 @@
   }
 
   function updateHistoryAwareness() {
-    var authState = null;
     var entries = readHistoryEntries();
-    var historyCount = entries.length;
-    var hasHistory = historyCount > 0;
-
-    if (window.luminaAuth && typeof window.luminaAuth.getState === "function") {
-      authState = window.luminaAuth.getState();
-    }
-
-    if (els.historySummaryBar) {
-      els.historySummaryBar.hidden = !(authState && authState.isAuthenticated);
-    }
-
-    if (els.historySummaryText) {
-      els.historySummaryText.textContent = hasHistory ? "履歴 " + historyCount + "件" : "履歴 0件";
-    }
-
-    if (els.historyInlineHint) {
-      els.historyInlineHint.textContent = hasHistory
-        ? "このアカウントに保存された過去のチェックを、いつでも見返せます。"
-        : "ログイン中のアカウントに、過去のチェック履歴が残ります。";
-    }
 
     if (els.historyToggle) {
-      els.historyToggle.textContent = hasHistory ? "履歴を見る (" + historyCount + "件)" : "履歴を見る";
+      els.historyToggle.textContent = "履歴を見る";
+      els.historyToggle.disabled = entries.length === 0;
+      els.historyToggle.title = entries.length
+        ? "保存されたチェック履歴を開きます。"
+        : "履歴が保存されると、ここから開けます。";
     }
   }
 
@@ -2014,9 +2123,21 @@
   }
 
   function onHistoryListClick(event) {
+    var selectButton = event.target.closest("[data-history-select-key]");
+    var exportButton = event.target.closest("[data-history-export-entry]");
     var chip = event.target.closest("[data-history-time]");
     var time = 0;
     var mediaKey = "";
+
+    if (selectButton) {
+      toggleHistoryFlagSelection(selectButton.getAttribute("data-history-select-key") || "");
+      return;
+    }
+
+    if (exportButton) {
+      exportHistoryEntryPdf(exportButton.getAttribute("data-history-export-entry") || "");
+      return;
+    }
 
     if (!chip) {
       return;
@@ -2085,13 +2206,13 @@
     }
   }
 
-  function exportTodayHistoryPdf() {
-    var entries = getTodayHistoryEntries();
+  function exportHistoryReport(entries, options) {
     var report = null;
     var totalFlags = 0;
+    var settings = options || {};
 
     if (!entries.length) {
-      showToast("今日の履歴がありません。", "warning");
+      showToast("PDFにまとめる履歴がありません。", "warning");
       return;
     }
 
@@ -2100,9 +2221,9 @@
     });
 
     report = {
-      documentTitle: buildReportFileName("", true),
+      documentTitle: settings.documentTitle || buildReportFileName("", true),
       exportDateText: formatReportDateTime(Date.now()),
-      reportTitle: "今日の確認レポート",
+      reportTitle: settings.reportTitle || "確認履歴レポート",
       summary:
         '<section class="report-summary">' +
           '<div class="report-summary-item"><span>出力日</span><strong>' + escapeHtml(formatReportDateLabel(Date.now())) + "</strong></div>" +
@@ -2114,7 +2235,7 @@
 
     if (openReportWindow(report)) {
       recordPdfExportToDb({
-        reportType: "today",
+        reportType: settings.reportType || "history_all",
         exportFileName: report.documentTitle,
         markerCount: totalFlags,
         projectCount: entries.length,
@@ -2125,12 +2246,56 @@
         }
       });
       track("pdf_export", {
-        report_type: "today",
+        report_type: settings.reportType || "history_all",
         item_count: entries.length,
         marker_count: totalFlags
       });
-      showToast("今日の履歴レポートを開きました。", "success");
+      showToast(settings.toastMessage || "履歴レポートを開きました。", "success");
     }
+  }
+
+  function exportAllHistoryPdf() {
+    var entries = readHistoryEntries().map(function (entry) {
+      return buildHistoryReportEntry(entry, entry.flags);
+    });
+
+    exportHistoryReport(entries, {
+      reportType: "history_all",
+      reportTitle: "アカウント履歴レポート",
+      toastMessage: "履歴をまとめてPDF化しました。"
+    });
+  }
+
+  function exportSelectedHistoryPdf() {
+    var entries = getSelectedHistoryEntries(readHistoryEntries());
+
+    if (!entries.length) {
+      showToast("PDFに含める記録を選んでください。", "warning");
+      return;
+    }
+
+    exportHistoryReport(entries, {
+      reportType: "history_selected",
+      reportTitle: "選択した履歴のレポート",
+      toastMessage: "選択した項目をPDF化しました。"
+    });
+  }
+
+  function exportHistoryEntryPdf(mediaKey) {
+    var entry = readHistoryEntries().find(function (item) {
+      return item.mediaKey === mediaKey;
+    });
+
+    if (!entry) {
+      showToast("この素材の履歴を見つけられませんでした。", "warning");
+      return;
+    }
+
+    exportHistoryReport([buildHistoryReportEntry(entry, entry.flags)], {
+      reportType: "history_entry",
+      reportTitle: "素材別チェックレポート",
+      toastMessage: "この素材の履歴をPDF化しました。"
+    });
   }
 
   function buildCurrentReportEntry() {
@@ -2318,7 +2483,7 @@
         "<tr>" +
           "<td>" + escapeHtml(getFlagTitle(flag)) + "</td>" +
           "<td>" + escapeHtml(FLAG_LABELS[flag.zone]) + "</td>" +
-          "<td>" + escapeHtml(getPlatformMeta(flag.platform).label) + "</td>" +
+          "<td>" + getPlatformInlineMarkup(flag.platform, "report-platform-icons") + "</td>" +
           "<td>" + escapeHtml((flag.comment || "").trim() || "—") + "</td>" +
         "</tr>"
       );
@@ -2399,6 +2564,19 @@
       '.report-table th, .report-table td { text-align: left; padding: 12px 14px; vertical-align: top; border-bottom: 1px solid rgba(15, 23, 42, 0.08); }',
       '.report-table th { color: #1e3a8a; font-size: 0.84rem; font-weight: 700; letter-spacing: 0.01em; }',
       '.report-table td { color: #1f2937; line-height: 1.55; }',
+      '.platform-inline-group { display: inline-flex; align-items: center; gap: 7px; flex-wrap: nowrap; vertical-align: middle; }',
+      '.platform-inline-plus { color: #64748b; font-size: 0.82rem; font-weight: 700; line-height: 1; }',
+      '.platform-inline-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; flex: 0 0 auto; }',
+      '.platform-inline-svg { width: 12px; height: 12px; fill: currentColor; overflow: visible; }',
+      '.platform-inline-icon-all { background: linear-gradient(180deg, #5fe172, #34c759); color: #ffffff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.34); }',
+      '.platform-inline-all-text { font-size: 0.52rem; font-weight: 800; letter-spacing: 0.08em; line-height: 1; }',
+      '.platform-inline-icon-tiktok { background: radial-gradient(circle at 30% 20%, rgba(120,255,240,0.16), transparent 44%), linear-gradient(180deg, #132531, #0f172a 74%); color: #ffffff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); }',
+      '.platform-inline-icon-instagram { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 7%, #fd5949 34%, #d6249f 61%, #285aeb 100%); color: #ffffff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.22); }',
+      '.platform-inline-icon-youtube { background: linear-gradient(180deg, #ff4d67, #ff2d55); color: #ffffff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.22); }',
+      '.platform-inline-icon-tiktok .tiktok-cyan { fill: #25f4ee; }',
+      '.platform-inline-icon-tiktok .tiktok-red { fill: #fe2c55; }',
+      '.platform-inline-icon-tiktok .tiktok-main { fill: #ffffff; }',
+      '.report-platform-icons { min-width: 0; }',
       '.report-table tbody tr:last-child td { border-bottom: 0; }',
       '.report-footer { margin-top: 16px; color: #64748b; font-size: 0.82rem; text-align: right; }',
       '@media print { body { background: #ffffff; } .report-body { padding: 0; } .report-actions { display: none !important; } .report-header, .report-section, .report-summary-item, .report-meta-item { box-shadow: none; } }',
@@ -2940,45 +3118,120 @@
     return buildCompositePlatformMeta(platformKeys);
   }
 
-  function getPlatformIconMarkup(key, meta) {
+  function getPlatformInlineIconMarkup(key) {
     if (key === "tiktok") {
       return (
-        '<svg class="platform-svg" viewBox="0 0 24 24" aria-hidden="true">' +
-        '<path d="M14 4h2.2c.3 1.7 1.5 3 3.5 3.3v2.2c-1.5-.1-2.8-.6-3.8-1.3v5.3c0 3.2-2.3 5.5-5.3 5.5-2.6 0-4.7-1.9-4.7-4.4 0-2.8 2.4-4.8 5.3-4.8.3 0 .6 0 .9.1v2.2a3.7 3.7 0 0 0-.9-.1c-1.5 0-2.8 1-2.8 2.4 0 1.3 1 2.3 2.3 2.3 1.5 0 2.4-1.1 2.4-2.6V4z" fill="' + meta.accentSecondary + '" transform="translate(1 1)"></path>' +
-        '<path d="M14 4h2.2c.3 1.7 1.5 3 3.5 3.3v2.2c-1.5-.1-2.8-.6-3.8-1.3v5.3c0 3.2-2.3 5.5-5.3 5.5-2.6 0-4.7-1.9-4.7-4.4 0-2.8 2.4-4.8 5.3-4.8.3 0 .6 0 .9.1v2.2a3.7 3.7 0 0 0-.9-.1c-1.5 0-2.8 1-2.8 2.4 0 1.3 1 2.3 2.3 2.3 1.5 0 2.4-1.1 2.4-2.6V4z" fill="' + meta.accent + '" transform="translate(-1 -1)"></path>' +
-        '<path d="M14 4h2.2c.3 1.7 1.5 3 3.5 3.3v2.2c-1.5-.1-2.8-.6-3.8-1.3v5.3c0 3.2-2.3 5.5-5.3 5.5-2.6 0-4.7-1.9-4.7-4.4 0-2.8 2.4-4.8 5.3-4.8.3 0 .6 0 .9.1v2.2a3.7 3.7 0 0 0-.9-.1c-1.5 0-2.8 1-2.8 2.4 0 1.3 1 2.3 2.3 2.3 1.5 0 2.4-1.1 2.4-2.6V4z" fill="#ffffff"></path>' +
-        "</svg>"
+        '<span class="platform-inline-icon platform-inline-icon-tiktok" aria-hidden="true">' +
+          '<svg class="platform-inline-svg" viewBox="0 0 24 24">' +
+            '<path class="tiktok-shadow tiktok-cyan" d="M13.8 3.8c.4 1.6 1.4 2.8 2.9 3.6 1 .5 1.8.7 2.4.7v2.5c-.8 0-1.9-.2-3.2-.8-.6-.3-1.3-.7-1.9-1.3v7c0 3.1-2.4 5.5-5.5 5.5s-5.4-2.4-5.4-5.5 2.4-5.5 5.4-5.5c.4 0 .8 0 1.2.1v2.6a4 4 0 0 0-1.2-.2c-1.6 0-2.8 1.2-2.8 2.9 0 1.6 1.2 2.8 2.8 2.8 1.6 0 2.9-1.2 2.9-2.8V3.8h2.4Z"></path>' +
+            '<path class="tiktok-shadow tiktok-red" d="M14.9 3c.4 1.5 1.5 2.8 3 3.6 1 .5 1.9.7 2.5.7v2.7c-.8 0-2-.2-3.4-.9-.7-.3-1.4-.8-2-1.4v7.2c0 3.1-2.5 5.6-5.6 5.6S3.8 18 3.8 14.9s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.1-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3s1.3 2.9 2.9 2.9 2.9-1.3 2.9-2.9V3h2.6Z"></path>' +
+            '<path class="tiktok-main" d="M14.4 3.3c.4 1.6 1.5 2.9 3 3.7 1 .5 1.9.7 2.4.7v2.6c-.8 0-2-.2-3.3-.9-.7-.3-1.4-.8-2-1.4v7.1c0 3.1-2.5 5.6-5.6 5.6S3.5 18.2 3.5 15.1s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.2-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3S7.5 18 9.1 18s2.9-1.3 2.9-2.9V3.3h2.4Z"></path>' +
+          "</svg>" +
+        "</span>"
       );
     }
 
     if (key === "reels") {
       return (
-        '<svg class="platform-svg" viewBox="0 0 24 24" aria-hidden="true">' +
-        '<rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="' + meta.accent + '" stroke-width="1.8"></rect>' +
-        '<path d="M4.5 9h15" stroke="' + meta.accentSecondary + '" stroke-width="1.6" stroke-linecap="round"></path>' +
-        '<path d="M8 4.8l3.5 4.1" stroke="' + meta.accentSecondary + '" stroke-width="1.6" stroke-linecap="round"></path>' +
-        '<path d="M12.5 4.8l3.5 4.1" stroke="' + meta.accentSecondary + '" stroke-width="1.6" stroke-linecap="round"></path>' +
-        '<path d="M10 11l5 3-5 3z" fill="' + meta.accent + '"></path>' +
-        "</svg>"
+        '<span class="platform-inline-icon platform-inline-icon-instagram" aria-hidden="true">' +
+          '<svg class="platform-inline-svg" viewBox="0 0 24 24">' +
+            '<path d="M7.2 3h9.6A4.2 4.2 0 0 1 21 7.2v9.6a4.2 4.2 0 0 1-4.2 4.2H7.2A4.2 4.2 0 0 1 3 16.8V7.2A4.2 4.2 0 0 1 7.2 3Zm0 2.2a2 2 0 0 0-2 2v9.6a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V7.2a2 2 0 0 0-2-2H7.2Zm4.8 2.3A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2.2A2.3 2.3 0 1 0 14.3 12 2.3 2.3 0 0 0 12 9.7Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path>' +
+          "</svg>" +
+        "</span>"
       );
     }
 
     if (key === "shorts") {
       return (
-        '<svg class="platform-svg" viewBox="0 0 24 24" aria-hidden="true">' +
-        '<path d="M9 4.8c1.2-.7 2.8.1 2.8 1.5v2.1l3.3-1.9c1.3-.8 3 .1 3 1.6v.3c0 .8-.4 1.5-1.1 1.9l-2.7 1.6 2.7 1.6c.7.4 1.1 1.1 1.1 1.9v.3c0 1.5-1.7 2.4-3 1.6l-3.3-1.9v2.1c0 1.4-1.6 2.2-2.8 1.5L6.2 17.5A2.1 2.1 0 0 1 5 15.7v-7.4c0-.8.4-1.5 1.2-1.9L9 4.8z" fill="' + meta.accent + '"></path>' +
-        '<path d="M11 9.3l4.3 2.7L11 14.7z" fill="#ffffff"></path>' +
-        "</svg>"
+        '<span class="platform-inline-icon platform-inline-icon-youtube" aria-hidden="true">' +
+          '<svg class="platform-inline-svg" viewBox="0 0 24 24">' +
+            '<path d="M20.4 7.2c-.2-.9-.9-1.6-1.8-1.8C17 5 12 5 12 5s-5 0-6.6.4c-.9.2-1.6.9-1.8 1.8C3.2 8.8 3.2 12 3.2 12s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8 1.6.4 6.6.4 6.6.4s5 0 6.6-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8ZM10.2 15.4V8.6L15.9 12l-5.7 3.4Z"></path>' +
+          "</svg>" +
+        "</span>"
       );
     }
 
     return (
-      '<svg class="platform-svg" viewBox="0 0 24 24" aria-hidden="true">' +
+      '<span class="platform-inline-icon platform-inline-icon-all" aria-hidden="true">' +
+        '<span class="platform-inline-all-text">ALL</span>' +
+      "</span>"
+    );
+  }
+
+  function getPlatformInlineMarkup(platformSelection, className) {
+    var platformKey = normalizePlatformKey(platformSelection || "all");
+    var platformKeys = getPlatformKeys(platformKey);
+    var markup = [];
+    var classes = "platform-inline-group" + (className ? " " + className : "");
+
+    if (platformKey === "all" || platformKeys.length === PLATFORM_ORDER.length) {
+      markup.push(getPlatformInlineIconMarkup("all"));
+    } else {
+      platformKeys.forEach(function (key, index) {
+        if (index > 0) {
+          markup.push('<span class="platform-inline-plus" aria-hidden="true">+</span>');
+        }
+        markup.push(getPlatformInlineIconMarkup(key));
+      });
+    }
+
+    return (
+      '<span class="' + classes + '" aria-label="' + escapeHtml(getPlatformMeta(platformKey).label) + '">' +
+        markup.join("") +
+      "</span>"
+    );
+  }
+
+  function getPlatformIconMarkup(key, meta) {
+    if (key === "tiktok") {
+      return (
+        '<span class="platform-token-icon platform-token-icon-brand platform-token-icon-tiktok">' +
+        '<svg class="platform-token-svg" viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path class="tiktok-shadow tiktok-cyan" d="M13.8 3.8c.4 1.6 1.4 2.8 2.9 3.6 1 .5 1.8.7 2.4.7v2.5c-.8 0-1.9-.2-3.2-.8-.6-.3-1.3-.7-1.9-1.3v7c0 3.1-2.4 5.5-5.5 5.5s-5.4-2.4-5.4-5.5 2.4-5.5 5.4-5.5c.4 0 .8 0 1.2.1v2.6a4 4 0 0 0-1.2-.2c-1.6 0-2.8 1.2-2.8 2.9 0 1.6 1.2 2.8 2.8 2.8 1.6 0 2.9-1.2 2.9-2.8V3.8h2.4Z"></path>' +
+        '<path class="tiktok-shadow tiktok-red" d="M14.9 3c.4 1.5 1.5 2.8 3 3.6 1 .5 1.9.7 2.5.7v2.7c-.8 0-2-.2-3.4-.9-.7-.3-1.4-.8-2-1.4v7.2c0 3.1-2.5 5.6-5.6 5.6S3.8 18 3.8 14.9s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.1-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3s1.3 2.9 2.9 2.9 2.9-1.3 2.9-2.9V3h2.6Z"></path>' +
+        '<path class="tiktok-main" d="M14.4 3.3c.4 1.6 1.5 2.9 3 3.7 1 .5 1.9.7 2.4.7v2.6c-.8 0-2-.2-3.3-.9-.7-.3-1.4-.8-2-1.4v7.1c0 3.1-2.5 5.6-5.6 5.6S3.5 18.2 3.5 15.1s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.2-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3S7.5 18 9.1 18s2.9-1.3 2.9-2.9V3.3h2.4Z"></path>' +
+        "</svg>" +
+        "</span>"
+      );
+    }
+
+    if (key === "reels") {
+      return (
+        '<span class="platform-token-icon platform-token-icon-brand platform-token-icon-instagram">' +
+        '<svg class="platform-token-svg" viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M7.2 3h9.6A4.2 4.2 0 0 1 21 7.2v9.6a4.2 4.2 0 0 1-4.2 4.2H7.2A4.2 4.2 0 0 1 3 16.8V7.2A4.2 4.2 0 0 1 7.2 3Zm0 2.2a2 2 0 0 0-2 2v9.6a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V7.2a2 2 0 0 0-2-2H7.2Zm4.8 2.3A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2.2A2.3 2.3 0 1 0 14.3 12 2.3 2.3 0 0 0 12 9.7Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path>' +
+        "</svg>" +
+        "</span>"
+      );
+    }
+
+    if (key === "shorts") {
+      return (
+        '<span class="platform-token-icon platform-token-icon-brand platform-token-icon-youtube">' +
+        '<svg class="platform-token-svg" viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M20.4 7.2c-.2-.9-.9-1.6-1.8-1.8C17 5 12 5 12 5s-5 0-6.6.4c-.9.2-1.6.9-1.8 1.8C3.2 8.8 3.2 12 3.2 12s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8 1.6.4 6.6.4 6.6.4s5 0 6.6-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8ZM10.2 15.4V8.6L15.9 12l-5.7 3.4Z"></path>' +
+        "</svg>" +
+        "</span>"
+      );
+    }
+
+    if (key === "all") {
+      return (
+        '<span class="platform-token-icon platform-token-icon-brand platform-token-icon-all">' +
+        '<span class="platform-token-icon-all-text">ALL</span>' +
+        "</span>"
+      );
+    }
+
+    return (
+      '<span class="platform-token-icon platform-token-icon-grid">' +
+      '<svg class="platform-token-svg" viewBox="0 0 24 24" aria-hidden="true">' +
       '<rect x="4" y="4" width="6" height="6" rx="1.6" fill="' + meta.accent + '"></rect>' +
       '<rect x="14" y="4" width="6" height="6" rx="1.6" fill="' + meta.accentSecondary + '"></rect>' +
       '<rect x="4" y="14" width="6" height="6" rx="1.6" fill="' + meta.accentSecondary + '"></rect>' +
       '<rect x="14" y="14" width="6" height="6" rx="1.6" fill="' + meta.accent + '"></rect>' +
-      "</svg>"
+      "</svg>" +
+      "</span>"
     );
   }
 
