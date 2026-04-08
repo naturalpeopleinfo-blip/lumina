@@ -1016,9 +1016,9 @@ body.app-page .empty-state p {
 
 .landing-hero-cta-note {
   margin: 0;
-  color: rgba(226, 236, 248, 0.84);
+  color: #c95700;
   font-size: 0.88rem;
-  font-weight: 560;
+  font-weight: 700;
   letter-spacing: 0.01em;
 }
 
@@ -3147,6 +3147,11 @@ body.landing-page .landing-footer {
   color: rgb(110, 110, 115);
   font-weight: 500;
   letter-spacing: 0.01em;
+}
+
+body.landing-page .landing-hero-cta-note {
+  color: #c95700;
+  font-weight: 700;
 }
 
 body.landing-page .landing-lead {
