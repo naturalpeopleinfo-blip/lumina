@@ -3,6 +3,9 @@
 
   var config = typeof AppConfig !== "undefined" && AppConfig ? AppConfig : {};
   var authConfig = config.auth || {};
+  var DEFAULT_PRO_CHECKOUT_URL = "https://buy.stripe.com/4gM5kC0zg4AL5b04siffy01";
+  var PRO_INTENT_KEY = "lumina-auth-intent";
+  var PRO_CHECKOUT_STARTED_KEY = "lumina-pro-checkout-started";
   var subscribers = [];
   var clerkLoaded = false;
   var appRedirectStarted = false;
@@ -42,6 +45,101 @@
     }
 
     return window.location.origin + "/app.html";
+  }
+
+  function getCheckoutUrl() {
+    return authConfig.proCheckoutUrl || DEFAULT_PRO_CHECKOUT_URL;
+  }
+
+  function getAppRedirectForIntent(intent) {
+    var redirectTo = getRedirectTo();
+
+    if (intent !== "pro") {
+      return redirectTo;
+    }
+
+    try {
+      var parsed = new URL(redirectTo, window.location.origin);
+      parsed.searchParams.set("intent", "pro");
+      return parsed.toString();
+    } catch (error) {
+      return redirectTo + (redirectTo.indexOf("?") >= 0 ? "&" : "?") + "intent=pro";
+    }
+  }
+
+  function canUseSessionStorage() {
+    try {
+      return !!window.sessionStorage;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function setPendingAuthIntent(intent) {
+    if (!canUseSessionStorage()) {
+      return;
+    }
+
+    if (intent === "pro") {
+      window.sessionStorage.setItem(PRO_INTENT_KEY, intent);
+      window.sessionStorage.removeItem(PRO_CHECKOUT_STARTED_KEY);
+      return;
+    }
+
+    window.sessionStorage.removeItem(PRO_INTENT_KEY);
+    window.sessionStorage.removeItem(PRO_CHECKOUT_STARTED_KEY);
+  }
+
+  function getPendingAuthIntent() {
+    if (window.location && window.location.search) {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var queryIntent = params.get("intent");
+        if (queryIntent === "pro") {
+          return queryIntent;
+        }
+      } catch (error) {
+      }
+    }
+
+    if (!canUseSessionStorage()) {
+      return "";
+    }
+
+    return window.sessionStorage.getItem(PRO_INTENT_KEY) || "";
+  }
+
+  function clearPendingAuthIntent() {
+    if (canUseSessionStorage()) {
+      window.sessionStorage.removeItem(PRO_INTENT_KEY);
+    }
+
+    if (window.location && window.location.search && window.history && typeof window.history.replaceState === "function") {
+      try {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has("intent")) {
+          url.searchParams.delete("intent");
+          window.history.replaceState({}, document.title, url.toString());
+        }
+      } catch (error) {
+      }
+    }
+  }
+
+  function hasStartedProCheckout() {
+    if (!canUseSessionStorage()) {
+      return false;
+    }
+
+    return window.sessionStorage.getItem(PRO_CHECKOUT_STARTED_KEY) === "1";
+  }
+
+  function markProCheckoutStarted() {
+    if (!canUseSessionStorage()) {
+      return;
+    }
+
+    window.sessionStorage.setItem(PRO_CHECKOUT_STARTED_KEY, "1");
   }
 
   function getUserName(user) {
@@ -155,6 +253,7 @@
     state.ready = true;
     renderAuthPanel();
     maybeRequireAppLogin();
+    maybeStartPendingProCheckout();
     syncAnalyticsIdentity();
     notify();
   }
@@ -188,7 +287,10 @@
     var userEmail = document.getElementById("authUserEmail");
     var avatar = document.getElementById("authAvatar");
     var signInButton = document.getElementById("googleSignInButton");
+    var signInProButton = document.getElementById("googleSignInProButton");
+    var authStartProButton = document.getElementById("authStartProButton");
     var signInButtonLabel = signInButton ? signInButton.querySelector(".google-signin-button-label") : null;
+    var signInProButtonLabel = signInProButton ? signInProButton.querySelector(".google-signin-button-label") : null;
 
     if (!loadingState || !loggedOutState || !loggedInState) {
       renderAppAccountCard();
@@ -202,9 +304,18 @@
     if (signInButton) {
       signInButton.disabled = !state.enabled;
       if (signInButtonLabel) {
-        signInButtonLabel.textContent = state.enabled ? "Googleでログイン" : "Googleログイン準備中";
+        signInButtonLabel.textContent = state.enabled ? "Googleで無料ではじめる" : "Googleログイン準備中";
       } else {
-        signInButton.textContent = state.enabled ? "Googleでログイン" : "Googleログイン準備中";
+        signInButton.textContent = state.enabled ? "Googleで無料ではじめる" : "Googleログイン準備中";
+      }
+    }
+
+    if (signInProButton) {
+      signInProButton.disabled = !state.enabled;
+      if (signInProButtonLabel) {
+        signInProButtonLabel.textContent = state.enabled ? "GoogleでログインしてPROを開始" : "Googleログイン準備中";
+      } else {
+        signInProButton.textContent = state.enabled ? "GoogleでログインしてPROを開始" : "Googleログイン準備中";
       }
     }
 
@@ -233,6 +344,10 @@
       } else {
         avatar.textContent = getInitials(state.user);
       }
+    }
+
+    if (authStartProButton) {
+      authStartProButton.disabled = false;
     }
 
     renderAppAccountCard();
@@ -339,12 +454,13 @@
     });
   }
 
-  function signInWithGoogle() {
+  function signInWithGoogle(options) {
     if (!window.Clerk) {
       return Promise.resolve();
     }
 
-    var redirectTo = getRedirectTo();
+    var intent = options && options.intent === "pro" ? "pro" : "";
+    var redirectTo = getAppRedirectForIntent(intent);
 
     var signInResource =
       (window.Clerk.signIn && typeof window.Clerk.signIn.authenticateWithRedirect === "function"
@@ -361,6 +477,7 @@
     }
 
     track("auth_google_click", { source: getAuthSource(), provider: "clerk" });
+    setPendingAuthIntent(intent);
 
     return signInResource.authenticateWithRedirect({
       strategy: "oauth_google",
@@ -377,8 +494,46 @@
     track("auth_sign_out", { source: getAuthSource() });
 
     return window.Clerk.signOut().then(function () {
+      setPendingAuthIntent("");
       setUser(null);
     });
+  }
+
+  function startProCheckout() {
+    var checkoutUrl = getCheckoutUrl();
+
+    if (!checkoutUrl) {
+      return;
+    }
+
+    clearPendingAuthIntent();
+    markProCheckoutStarted();
+    window.location.assign(checkoutUrl);
+  }
+
+  function maybeStartPendingProCheckout() {
+    if (getAuthSource() !== "app") {
+      return;
+    }
+
+    if (!state.ready || !state.enabled || !state.user) {
+      return;
+    }
+
+    if (window.location && window.location.protocol === "file:") {
+      return;
+    }
+
+    if (getPendingAuthIntent() !== "pro") {
+      return;
+    }
+
+    if (hasStartedProCheckout()) {
+      clearPendingAuthIntent();
+      return;
+    }
+
+    startProCheckout();
   }
 
   function getToken() {
@@ -394,14 +549,30 @@
 
   function bindDomEvents() {
     var signInButton = document.getElementById("googleSignInButton");
+    var signInProButton = document.getElementById("googleSignInProButton");
+    var authStartProButton = document.getElementById("authStartProButton");
     var signOutButton = document.getElementById("authSignOutButton");
     var appSignOutButton = document.getElementById("appSignOutButton");
 
     if (signInButton) {
       signInButton.addEventListener("click", function () {
-        signInWithGoogle().catch(function (error) {
+        signInWithGoogle({ intent: "" }).catch(function (error) {
           console.error("Failed to start Clerk Google sign-in", error);
         });
+      });
+    }
+
+    if (signInProButton) {
+      signInProButton.addEventListener("click", function () {
+        signInWithGoogle({ intent: "pro" }).catch(function (error) {
+          console.error("Failed to start Clerk Google sign-in for PRO", error);
+        });
+      });
+    }
+
+    if (authStartProButton) {
+      authStartProButton.addEventListener("click", function () {
+        startProCheckout();
       });
     }
 
