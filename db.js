@@ -72,17 +72,49 @@
 
   async function syncCurrentUserProfile() {
     return runAsAuthenticated(async function (client, user) {
+      var existingResponse = await client
+        .from("app_users")
+        .select("*")
+        .eq("clerk_user_id", user.id)
+        .maybeSingle();
       var payload = {
         clerk_user_id: user.id,
         email: user.email || "",
         full_name: user.name || "",
         avatar_url: user.avatarUrl || ""
       };
-      var response = await client
-        .from("app_users")
-        .upsert(payload, { onConflict: "clerk_user_id" })
-        .select("*")
-        .single();
+      var response = null;
+
+      if (existingResponse.error) {
+        throw existingResponse.error;
+      }
+
+      if (existingResponse.data) {
+        response = await client
+          .from("app_users")
+          .update({
+            email: payload.email,
+            full_name: payload.full_name,
+            avatar_url: payload.avatar_url
+          })
+          .eq("clerk_user_id", user.id)
+          .select("*")
+          .single();
+      } else {
+        response = await client
+          .from("app_users")
+          .insert({
+            clerk_user_id: payload.clerk_user_id,
+            email: payload.email,
+            full_name: payload.full_name,
+            avatar_url: payload.avatar_url,
+            plan: "free",
+            daily_limit: 2,
+            beta_unlocked: false
+          })
+          .select("*")
+          .single();
+      }
 
       if (response.error) {
         throw response.error;

@@ -34,10 +34,10 @@ create table if not exists public.app_users (
   full_name text,
   avatar_url text,
   plan text not null default 'free'
-    check (plan in ('free', 'beta_pro', 'team')),
+    check (plan in ('free', 'pro', 'beta_pro', 'team')),
   daily_limit integer not null default 2
     check (daily_limit >= 0),
-  beta_unlocked boolean not null default true,
+  beta_unlocked boolean not null default false,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -101,7 +101,7 @@ create table if not exists public.pdf_exports (
     references public.app_users(clerk_user_id) on delete cascade,
   project_id uuid references public.projects(id) on delete set null,
   report_type text not null
-    check (report_type in ('current', 'today')),
+    check (report_type in ('current', 'history_all', 'history_selected', 'history_entry')),
   export_file_name text not null,
   marker_count integer not null default 0
     check (marker_count >= 0),

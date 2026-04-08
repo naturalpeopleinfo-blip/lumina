@@ -49,6 +49,8 @@
   var EMPTY_MODE_DESCRIPTION = "1つ以上選ぶと、セーフゾーンの枠が表示されます。";
   var HINT_NEEDS_RECORDS = "記録すると使えます。";
   var HINT_NEEDS_HISTORY = "履歴がたまると使えます。";
+  var FREE_DAILY_PDF_LIMIT = 2;
+  var PDF_LIMIT_REACHED_MESSAGE = "本日の無料枠を使い切りました。PROなら無制限でPDF化できます。";
   var ONBOARDING_STEPS = [
     {
       selector: "#guideStepSource",
@@ -153,6 +155,11 @@
     pdfNeedsAttention: false,
     lastTrackedMediaKey: "",
     currentProjectId: "",
+    accountProfile: null,
+    normalizedPlan: "free",
+    dailyLimit: FREE_DAILY_PDF_LIMIT,
+    pdfExportsToday: 0,
+    isBetaUnlocked: false,
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
     selectedHistoryKeys: {},
@@ -202,6 +209,7 @@
 
     window.luminaAuth.onChange(function (authState) {
       if (!authState || !authState.isAuthenticated) {
+        clearAccountProfile();
         state.currentProjectId = "";
         state.remoteHistoryEntries = [];
         state.remoteHistoryLoaded = false;
@@ -214,6 +222,14 @@
 
       syncUserAndRefreshHistory();
     });
+  }
+
+  function getCurrentAuthState() {
+    if (!window.luminaAuth || typeof window.luminaAuth.getState !== "function") {
+      return null;
+    }
+
+    return window.luminaAuth.getState();
   }
 
   function cacheElements() {
@@ -257,6 +273,9 @@
     els.commentEditor = document.getElementById("commentEditor");
     els.helpToggle = document.getElementById("helpToggle");
     els.historyToggle = document.getElementById("historyToggle");
+    els.workspacePlanMeter = document.getElementById("workspacePlanMeter");
+    els.workspacePlanLabel = document.getElementById("workspacePlanLabel");
+    els.workspacePlanUsage = document.getElementById("workspacePlanUsage");
     els.historyModal = document.getElementById("historyModal");
     els.historyClose = document.getElementById("historyClose");
     els.historyExportSelectedButton = document.getElementById("historyExportSelectedButton");
@@ -844,6 +863,122 @@
     els.sourceLoadButton.textContent = state.fileName ? "別素材を読み込む" : "素材を読み込む";
   }
 
+  function normalizePlanValue(plan) {
+    var value = String(plan || "free").toLowerCase();
+
+    if (value === "pro" || value === "team" || value === "beta_pro") {
+      return "pro";
+    }
+
+    return "free";
+  }
+
+  function applyAccountProfile(profile) {
+    state.accountProfile = profile || null;
+    state.normalizedPlan = normalizePlanValue(profile && profile.plan);
+    state.dailyLimit = Number(profile && profile.daily_limit) || FREE_DAILY_PDF_LIMIT;
+    state.isBetaUnlocked = !!(profile && profile.beta_unlocked);
+    updatePlanMeter();
+    updatePdfButtons();
+  }
+
+  function clearAccountProfile() {
+    state.accountProfile = null;
+    state.normalizedPlan = "free";
+    state.dailyLimit = FREE_DAILY_PDF_LIMIT;
+    state.pdfExportsToday = 0;
+    state.isBetaUnlocked = false;
+    updatePlanMeter();
+    updatePdfButtons();
+  }
+
+  function hasUnlimitedPdfAccess() {
+    return state.isBetaUnlocked || state.normalizedPlan === "pro";
+  }
+
+  function getRemainingPdfExports() {
+    var dailyLimit = Number(state.dailyLimit) || FREE_DAILY_PDF_LIMIT;
+
+    if (hasUnlimitedPdfAccess()) {
+      return Number.POSITIVE_INFINITY;
+    }
+
+    return Math.max(0, dailyLimit - (Number(state.pdfExportsToday) || 0));
+  }
+
+  function isPdfExportLocked() {
+    return !hasUnlimitedPdfAccess() && getRemainingPdfExports() <= 0;
+  }
+
+  function updatePlanMeter() {
+    var authState = getCurrentAuthState();
+    var planValue = String(state.accountProfile && state.accountProfile.plan || "").toLowerCase();
+    var label = "無料";
+    var usage = "";
+
+    if (!els.workspacePlanMeter || !els.workspacePlanLabel || !els.workspacePlanUsage) {
+      return;
+    }
+
+    if (!authState || !authState.isAuthenticated) {
+      els.workspacePlanMeter.hidden = true;
+      els.workspacePlanMeter.classList.remove("is-pro", "is-beta", "is-limit");
+      return;
+    }
+
+    if (state.isBetaUnlocked || planValue === "beta_pro") {
+      label = "無料β";
+      usage = "フル機能を利用可能";
+    } else if (state.normalizedPlan === "pro") {
+      label = "PRO";
+      usage = "無制限";
+    } else {
+      label = "無料";
+      usage = "本日あと" + getRemainingPdfExports() + "回";
+    }
+
+    els.workspacePlanMeter.hidden = false;
+    els.workspacePlanLabel.textContent = label;
+    els.workspacePlanUsage.textContent = usage;
+    els.workspacePlanMeter.classList.toggle("is-pro", state.normalizedPlan === "pro" && !state.isBetaUnlocked);
+    els.workspacePlanMeter.classList.toggle("is-beta", state.isBetaUnlocked || planValue === "beta_pro");
+    els.workspacePlanMeter.classList.toggle("is-limit", isPdfExportLocked());
+  }
+
+  function refreshPdfUsageCount() {
+    if (!window.luminaDb || typeof window.luminaDb.getPdfExportsTodayCount !== "function") {
+      state.pdfExportsToday = 0;
+      updatePlanMeter();
+      updatePdfButtons();
+      return Promise.resolve(0);
+    }
+
+    return window.luminaDb.getPdfExportsTodayCount()
+      .then(function (count) {
+        state.pdfExportsToday = Number(count) || 0;
+        updatePlanMeter();
+        updatePdfButtons();
+        return state.pdfExportsToday;
+      })
+      .catch(function (error) {
+        console.warn("Failed to refresh pdf export usage", error);
+        updatePlanMeter();
+        updatePdfButtons();
+        return state.pdfExportsToday;
+      });
+  }
+
+  function ensurePdfExportAvailable() {
+    if (!isPdfExportLocked()) {
+      return Promise.resolve(true);
+    }
+
+    showToast(PDF_LIMIT_REACHED_MESSAGE, "warning");
+    updatePlanMeter();
+    updatePdfButtons();
+    return Promise.resolve(false);
+  }
+
   function setControlsEnabled(enabled) {
     els.playToggle.disabled = !enabled;
     els.jumpBack.disabled = !enabled;
@@ -863,22 +998,29 @@
     var hasHistoryPdf = historyEntries.length > 0;
     var hasSelectedHistoryPdf = getSelectedHistoryEntries(historyEntries).length > 0;
     var shouldSuggestCurrentPdf = hasCurrentPdf && state.pdfNeedsAttention;
+    var isLocked = isPdfExportLocked();
+    var currentTitle = hasCurrentPdf ? "今のチェック内容をPDFレポートで開きます。" : HINT_NEEDS_RECORDS;
+    var selectedTitle = hasSelectedHistoryPdf ? "選んだ素材だけをPDFレポートで開きます。" : "素材を選ぶと使えます。";
+    var allTitle = hasHistoryPdf ? "このアカウントの履歴をまとめてPDFレポートで開きます。" : HINT_NEEDS_HISTORY;
 
     if (els.exportCurrentPdfButton) {
-      els.exportCurrentPdfButton.disabled = !hasCurrentPdf;
-      els.exportCurrentPdfButton.title = hasCurrentPdf ? "今のチェック内容をPDFレポートで開きます。" : HINT_NEEDS_RECORDS;
-      els.exportCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf);
+      els.exportCurrentPdfButton.disabled = !hasCurrentPdf || isLocked;
+      els.exportCurrentPdfButton.title = hasCurrentPdf && isLocked ? PDF_LIMIT_REACHED_MESSAGE : currentTitle;
+      els.exportCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf && !isLocked);
+      els.exportCurrentPdfButton.classList.toggle("is-locked", !!(hasCurrentPdf && isLocked));
     }
 
     if (els.historyExportSelectedButton) {
-      els.historyExportSelectedButton.disabled = !hasSelectedHistoryPdf;
-      els.historyExportSelectedButton.title = hasSelectedHistoryPdf ? "選んだ素材だけをPDFレポートで開きます。" : "素材を選ぶと使えます。";
-      els.historyExportSelectedButton.classList.toggle("is-suggested", hasSelectedHistoryPdf);
+      els.historyExportSelectedButton.disabled = !hasSelectedHistoryPdf || isLocked;
+      els.historyExportSelectedButton.title = hasSelectedHistoryPdf && isLocked ? PDF_LIMIT_REACHED_MESSAGE : selectedTitle;
+      els.historyExportSelectedButton.classList.toggle("is-suggested", hasSelectedHistoryPdf && !isLocked);
+      els.historyExportSelectedButton.classList.toggle("is-locked", !!(hasSelectedHistoryPdf && isLocked));
     }
 
     if (els.historyExportAllButton) {
-      els.historyExportAllButton.disabled = !hasHistoryPdf;
-      els.historyExportAllButton.title = hasHistoryPdf ? "このアカウントの履歴をまとめてPDFレポートで開きます。" : HINT_NEEDS_HISTORY;
+      els.historyExportAllButton.disabled = !hasHistoryPdf || isLocked;
+      els.historyExportAllButton.title = hasHistoryPdf && isLocked ? PDF_LIMIT_REACHED_MESSAGE : allTitle;
+      els.historyExportAllButton.classList.toggle("is-locked", !!(hasHistoryPdf && isLocked));
     }
   }
 
@@ -2009,6 +2151,8 @@
 
   function renderHistoryList() {
     var entries = readHistoryEntries();
+    var isLocked = isPdfExportLocked();
+    var exportDisabledMarkup = isLocked ? ' disabled title="' + escapeHtml(PDF_LIMIT_REACHED_MESSAGE) + '"' : "";
 
     els.historyEmpty.hidden = entries.length > 0;
 
@@ -2032,7 +2176,7 @@
             '<div class="history-item-actions">' +
               '<span class="history-date">' + escapeHtml(formatHistoryDate(entry.lastOpened)) + "</span>" +
               '<button class="action-button action-button-ghost history-item-select' + (isSelected ? " is-selected" : "") + '" type="button" data-history-select-entry="' + escapeHtml(entry.mediaKey) + '">' + (isSelected ? "選択中" : "選択") + "</button>" +
-              '<button class="action-button action-button-ghost history-item-export" type="button" data-history-export-entry="' + escapeHtml(entry.mediaKey) + '">この素材をPDF化</button>' +
+              '<button class="action-button action-button-ghost history-item-export' + (isLocked ? " is-locked" : "") + '" type="button" data-history-export-entry="' + escapeHtml(entry.mediaKey) + '"' + exportDisabledMarkup + '>この素材をPDF化</button>' +
             "</div>" +
           "</div>" +
           '<div class="history-chip-row">' +
@@ -2147,7 +2291,7 @@
     showToast("同じ素材を開いている時だけ、履歴の時刻から戻れます。", "warning");
   }
 
-  function exportCurrentPdf() {
+  async function exportCurrentPdf() {
     var reportEntry = null;
     var report = null;
 
@@ -2158,6 +2302,10 @@
 
     if (!state.flags.length) {
       showToast("PDFにまとめる記録がありません。", "warning");
+      return;
+    }
+
+    if (!(await ensurePdfExportAvailable())) {
       return;
     }
 
@@ -2178,7 +2326,7 @@
     if (openReportWindow(report)) {
       state.pdfNeedsAttention = false;
       updatePdfButtons();
-      recordPdfExportToDb({
+      await recordPdfExportToDb({
         reportType: "current",
         exportFileName: report.documentTitle,
         markerCount: state.flags.length,
@@ -2196,13 +2344,17 @@
     }
   }
 
-  function exportHistoryReport(entries, options) {
+  async function exportHistoryReport(entries, options) {
     var report = null;
     var totalFlags = 0;
     var settings = options || {};
 
     if (!entries.length) {
       showToast("PDFにまとめる履歴がありません。", "warning");
+      return;
+    }
+
+    if (!(await ensurePdfExportAvailable())) {
       return;
     }
 
@@ -2224,7 +2376,7 @@
     };
 
     if (openReportWindow(report)) {
-      recordPdfExportToDb({
+      await recordPdfExportToDb({
         reportType: settings.reportType || "history_all",
         exportFileName: report.documentTitle,
         markerCount: totalFlags,
@@ -2740,12 +2892,18 @@
       return;
     }
 
-    window.luminaDb.syncCurrentUserProfile()
+    return window.luminaDb.syncCurrentUserProfile()
+      .then(function (profile) {
+        applyAccountProfile(profile || (window.luminaDb.getCurrentProfile ? window.luminaDb.getCurrentProfile() : null));
+        return refreshPdfUsageCount();
+      })
+      .then(function () {
+        return refreshRemoteHistory();
+      })
       .catch(function (error) {
         console.warn("Failed to sync app user", error);
+        updatePlanMeter();
       });
-
-    refreshRemoteHistory();
   }
 
   function maybeLoadRemoteProjectSnapshot(mediaKey) {
@@ -2792,6 +2950,7 @@
       .then(function (entries) {
         state.remoteHistoryEntries = Array.isArray(entries) ? entries : [];
         state.remoteHistoryLoaded = true;
+        updatePdfButtons();
         updateHistoryAwareness();
         if (state.isHistoryOpen) {
           renderHistoryList();
@@ -2800,6 +2959,7 @@
       })
       .catch(function (error) {
         console.warn("Failed to load remote history entries", error);
+        updatePdfButtons();
         updateHistoryAwareness();
         return [];
       });
@@ -2843,18 +3003,23 @@
 
   function recordPdfExportToDb(payload) {
     if (!window.luminaDb || typeof window.luminaDb.recordPdfExport !== "function") {
-      return;
+      return Promise.resolve(false);
     }
 
-    window.luminaDb.recordPdfExport({
+    return window.luminaDb.recordPdfExport({
       projectId: state.currentProjectId || null,
       reportType: payload.reportType,
       exportFileName: payload.exportFileName,
       markerCount: payload.markerCount,
       projectCount: payload.projectCount,
       meta: payload.meta || {}
+    }).then(function (result) {
+      return refreshPdfUsageCount().then(function () {
+        return result;
+      });
     }).catch(function (error) {
       console.warn("Failed to record pdf export", error);
+      return false;
     });
   }
 
