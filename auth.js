@@ -344,6 +344,8 @@
       return Promise.resolve();
     }
 
+    var redirectTo = getRedirectTo();
+
     var signInResource =
       (window.Clerk.signIn && typeof window.Clerk.signIn.authenticateWithRedirect === "function"
         ? window.Clerk.signIn
@@ -363,7 +365,11 @@
     return signInResource.authenticateWithRedirect({
       strategy: "oauth_google",
       redirectUrl: window.location.origin + "/clerk-callback.html",
-      redirectUrlComplete: getRedirectTo()
+      redirectUrlComplete: redirectTo,
+      signInForceRedirectUrl: redirectTo,
+      signInFallbackRedirectUrl: redirectTo,
+      signUpForceRedirectUrl: redirectTo,
+      signUpFallbackRedirectUrl: redirectTo
     });
   }
 
