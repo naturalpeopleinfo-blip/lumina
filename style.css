@@ -912,7 +912,7 @@ body.app-page .empty-state p {
 
 .landing-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+  grid-template-columns: minmax(0, 0.96fr) minmax(0, 500px);
   grid-template-areas:
     "copy demo"
     "support demo";
@@ -990,7 +990,9 @@ body.app-page .empty-state p {
 
 .landing-hero-line {
   display: block;
-  white-space: nowrap;
+  max-width: 100%;
+  white-space: normal;
+  text-wrap: balance;
 }
 
 .landing-compare-heading {
@@ -1053,7 +1055,7 @@ body.app-page .empty-state p {
   display: grid;
   gap: 14px;
   width: 100%;
-  max-width: 520px;
+  max-width: min(100%, 500px);
   min-width: 0;
   justify-self: end;
 }
@@ -7103,9 +7105,27 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   }
 }
 
+@media (max-width: 1240px) {
+  body.landing-page .landing-hero {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "copy"
+      "demo"
+      "support";
+    gap: 20px;
+  }
+
+  .landing-hero-copy,
+  .landing-hero-support,
+  .landing-hero-demo {
+    max-width: min(100%, 620px);
+    justify-self: start;
+  }
+}
+
 @media (max-width: 1120px) {
   .login-shell {
-    width: min(100% - 24px, 100%);
+    width: min(calc(100% - 24px), 100%);
     padding-top: 20px;
   }
 
@@ -7114,7 +7134,7 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   }
 
   .landing-shell {
-    width: min(100% - 24px, 100%);
+    width: min(calc(100% - 24px), 100%);
     padding-top: 20px;
   }
 
@@ -7132,11 +7152,6 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   .landing-compare-grid,
   .landing-proof-stats {
     grid-template-columns: 1fr;
-  }
-
-  body.landing-page .landing-hero {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
-    gap: 22px;
   }
 
   .landing-hero-copy {
@@ -7175,7 +7190,7 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 
 @media (max-width: 760px) {
   .login-shell {
-    width: min(100% - 20px, 100%);
+    width: min(calc(100% - 20px), 100%);
     padding-bottom: 32px;
   }
 
@@ -7248,7 +7263,7 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   }
 
   .landing-shell {
-    width: min(100% - 20px, 100%);
+    width: min(calc(100% - 20px), 100%);
     padding-bottom: 32px;
   }
 
@@ -7347,10 +7362,6 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 
   .landing-hero-demo-card {
     width: 100%;
-  }
-
-  .landing-hero-line {
-    white-space: nowrap;
   }
 
   .landing-steps-grid,
