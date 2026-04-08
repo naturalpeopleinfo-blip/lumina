@@ -23,6 +23,35 @@
     return window.location.origin + "/app.html";
   }
 
+  function normalizeRedirectTarget(target) {
+    var fallback = getRedirectTo();
+
+    if (!target) {
+      return fallback;
+    }
+
+    try {
+      var parsed = new URL(target, window.location.origin);
+      if (parsed.origin !== window.location.origin) {
+        return parsed.toString();
+      }
+
+      if (parsed.pathname === "/" || /\/index\.html$/.test(parsed.pathname)) {
+        return fallback;
+      }
+
+      return parsed.toString();
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  function navigate(target) {
+    var nextTarget = normalizeRedirectTarget(target);
+    window.location.replace(nextTarget);
+    return Promise.resolve();
+  }
+
   function loadClerkScript() {
     if (window.Clerk) {
       return Promise.resolve(window.Clerk);
@@ -58,14 +87,26 @@
             throw new Error("Clerk redirect callback is not available.");
           }
 
-          return clerk.handleRedirectCallback({
-            signInUrl: window.location.origin + "/login.html",
-            signUpUrl: window.location.origin + "/login.html",
-            signInForceRedirectUrl: getRedirectTo(),
-            signUpForceRedirectUrl: getRedirectTo(),
-            signInFallbackRedirectUrl: getRedirectTo(),
-            signUpFallbackRedirectUrl: getRedirectTo()
-          });
+          return clerk
+            .handleRedirectCallback(
+              {
+                signInUrl: window.location.origin + "/login.html",
+                signUpUrl: window.location.origin + "/login.html",
+                signInForceRedirectUrl: getRedirectTo(),
+                signUpForceRedirectUrl: getRedirectTo(),
+                signInFallbackRedirectUrl: getRedirectTo(),
+                signUpFallbackRedirectUrl: getRedirectTo(),
+                continueSignUpUrl: getRedirectTo()
+              },
+              navigate
+            )
+            .then(function () {
+              if (/\/clerk-callback\.html$/.test(window.location.pathname)) {
+                return navigate(getRedirectTo());
+              }
+
+              return null;
+            });
         });
       })
       .catch(function (error) {

@@ -365,11 +365,7 @@
     return signInResource.authenticateWithRedirect({
       strategy: "oauth_google",
       redirectUrl: window.location.origin + "/clerk-callback.html",
-      redirectUrlComplete: redirectTo,
-      signInForceRedirectUrl: redirectTo,
-      signInFallbackRedirectUrl: redirectTo,
-      signUpForceRedirectUrl: redirectTo,
-      signUpFallbackRedirectUrl: redirectTo
+      redirectUrlComplete: redirectTo
     });
   }
 
