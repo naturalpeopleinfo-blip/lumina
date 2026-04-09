@@ -501,18 +501,18 @@
     if (signInProButton) {
       signInProButton.disabled = !state.enabled;
       if (signInProButtonLabel) {
-        signInProButtonLabel.textContent = state.enabled ? "Googleでログインして通常プランで始める" : "Googleログイン準備中";
+        signInProButtonLabel.textContent = state.enabled ? "Googleでログインして通常プランを開始" : "Googleログイン準備中";
       } else {
-        signInProButton.textContent = state.enabled ? "Googleでログインして通常プランで始める" : "Googleログイン準備中";
+        signInProButton.textContent = state.enabled ? "Googleでログインして通常プランを開始" : "Googleログイン準備中";
       }
     }
 
     if (signInCampaignButton) {
       signInCampaignButton.disabled = !state.enabled;
       if (signInCampaignButtonLabel) {
-        signInCampaignButtonLabel.textContent = state.enabled ? "Googleでログインして特別プランで始める" : "Googleログイン準備中";
+        signInCampaignButtonLabel.textContent = state.enabled ? "Googleでログインして特別プランを開始" : "Googleログイン準備中";
       } else {
-        signInCampaignButton.textContent = state.enabled ? "Googleでログインして特別プランで始める" : "Googleログイン準備中";
+        signInCampaignButton.textContent = state.enabled ? "Googleでログインして特別プランを開始" : "Googleログイン準備中";
       }
     }
 
