@@ -161,6 +161,9 @@
     dailyLimit: FREE_DAILY_PDF_LIMIT,
     pdfExportsToday: 0,
     isBetaUnlocked: false,
+    stripeSubscriptionStatus: "",
+    billingCancelAtPeriodEnd: false,
+    billingCurrentPeriodEnd: "",
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
     selectedHistoryKeys: {},
@@ -888,6 +891,9 @@
     state.normalizedPlan = normalizePlanValue(profile && profile.plan);
     state.dailyLimit = Number(profile && profile.daily_limit) || FREE_DAILY_PDF_LIMIT;
     state.isBetaUnlocked = !!(profile && profile.beta_unlocked);
+    state.stripeSubscriptionStatus = String(profile && profile.stripe_subscription_status || "");
+    state.billingCancelAtPeriodEnd = !!(profile && profile.billing_cancel_at_period_end);
+    state.billingCurrentPeriodEnd = String(profile && profile.billing_current_period_end || "");
     updatePlanMeter();
     updateBookmarkHint();
     updatePdfButtons();
@@ -899,6 +905,9 @@
     state.dailyLimit = FREE_DAILY_PDF_LIMIT;
     state.pdfExportsToday = 0;
     state.isBetaUnlocked = false;
+    state.stripeSubscriptionStatus = "";
+    state.billingCancelAtPeriodEnd = false;
+    state.billingCurrentPeriodEnd = "";
     updatePlanMeter();
     updateBookmarkHint();
     updatePdfButtons();
@@ -975,6 +984,28 @@
     return state.isBetaUnlocked || state.normalizedPlan === "pro";
   }
 
+  function getBillingPeriodEndDateText() {
+    if (!state.billingCurrentPeriodEnd) {
+      return "";
+    }
+
+    try {
+      var date = new Date(state.billingCurrentPeriodEnd);
+
+      if (!date || Number.isNaN(date.getTime())) {
+        return "";
+      }
+
+      return new Intl.DateTimeFormat("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(date);
+    } catch (error) {
+      return "";
+    }
+  }
+
   function getRemainingPdfExports() {
     var dailyLimit = Number(state.dailyLimit) || FREE_DAILY_PDF_LIMIT;
 
@@ -1010,7 +1041,13 @@
       usage = "フル機能を利用可能";
     } else if (state.normalizedPlan === "pro") {
       label = "PRO";
-      usage = "無制限";
+      if (state.billingCancelAtPeriodEnd) {
+        usage = getBillingPeriodEndDateText()
+          ? getBillingPeriodEndDateText() + "まで利用可能"
+          : "解約予約中";
+      } else {
+        usage = "無制限";
+      }
     } else {
       label = "無料";
       usage = getRemainingPdfExports() > 0
@@ -1024,6 +1061,7 @@
     els.workspacePlanMeter.classList.toggle("is-pro", state.normalizedPlan === "pro" && !state.isBetaUnlocked);
     els.workspacePlanMeter.classList.toggle("is-beta", state.isBetaUnlocked || planValue === "beta_pro");
     els.workspacePlanMeter.classList.toggle("is-limit", isPdfExportLocked());
+    els.workspacePlanMeter.classList.toggle("is-canceling", state.normalizedPlan === "pro" && state.billingCancelAtPeriodEnd);
     updateWorkspaceBillingAction();
     updateBookmarkHint();
   }

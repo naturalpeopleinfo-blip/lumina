@@ -202,6 +202,19 @@ function shouldGrantPro(status) {
   return ACTIVE_PRO_STATUSES.has(String(status || "").toLowerCase());
 }
 
+function toIsoDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(Number(value) * 1000);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString();
+}
+
 async function handleCheckoutCompleted(session) {
   const clerkUserId = session && session.client_reference_id ? String(session.client_reference_id) : "";
   const subscriptionId = normalizeSubscriptionId(session && session.subscription);
@@ -230,16 +243,22 @@ async function handleSubscriptionUpdate(subscription, isDeleted) {
   const subscriptionId = subscription && subscription.id ? String(subscription.id) : "";
   const customerId = subscription && subscription.customer ? String(subscription.customer) : "";
   const status = isDeleted ? "canceled" : String(subscription && subscription.status || "");
+  const cancelAtPeriodEnd = !!(subscription && subscription.cancel_at_period_end);
+  const currentPeriodEnd = toIsoDate(subscription && subscription.current_period_end);
   const record = shouldGrantPro(status)
     ? buildProRecord({
         stripe_customer_id: customerId || null,
         stripe_subscription_id: subscriptionId || null,
-        stripe_subscription_status: status
+        stripe_subscription_status: status,
+        billing_cancel_at_period_end: cancelAtPeriodEnd,
+        billing_current_period_end: currentPeriodEnd
       })
     : buildFreeRecord({
         stripe_customer_id: customerId || null,
         stripe_subscription_id: subscriptionId || null,
-        stripe_subscription_status: status
+        stripe_subscription_status: status,
+        billing_cancel_at_period_end: false,
+        billing_current_period_end: null
       });
 
   let result = await updateAppUserByFilter("stripe_subscription_id", subscriptionId, record);

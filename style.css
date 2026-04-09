@@ -4368,6 +4368,17 @@ body.app-page .workspace-history-trigger.action-button:disabled {
   color: rgba(181, 93, 0, 0.98);
 }
 
+.workspace-plan-meter.is-canceling {
+  border-color: rgba(255, 159, 10, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 235, 0.98), rgba(255, 251, 244, 0.98)),
+    rgba(255, 249, 241, 0.98);
+}
+
+.workspace-plan-meter.is-canceling strong {
+  color: rgba(181, 93, 0, 0.98);
+}
+
 .workspace-utility-kicker,
 .workspace-utility-caption {
   margin: 0;

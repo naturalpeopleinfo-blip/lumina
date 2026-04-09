@@ -13,6 +13,12 @@ alter table public.app_users
 alter table public.app_users
   add column if not exists pro_activated_at timestamptz;
 
+alter table public.app_users
+  add column if not exists billing_cancel_at_period_end boolean not null default false;
+
+alter table public.app_users
+  add column if not exists billing_current_period_end timestamptz;
+
 create unique index if not exists idx_app_users_stripe_customer_id_unique
   on public.app_users (stripe_customer_id)
   where stripe_customer_id is not null;
