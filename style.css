@@ -491,6 +491,14 @@ body.login-page::after {
   line-height: 1.5;
 }
 
+.login-browser-note {
+  margin: 14px 4px 0;
+  color: rgba(110, 110, 115, 0.94);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
 .google-signin-button-pro {
   border-color: rgba(96, 166, 255, 0.18);
   background:
