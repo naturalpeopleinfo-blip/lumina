@@ -491,6 +491,27 @@ body.login-page::after {
   line-height: 1.5;
 }
 
+.login-choice-offer-box {
+  display: grid;
+  gap: 4px;
+  margin: -2px 0 2px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(12, 143, 90, 0.14);
+  background:
+    linear-gradient(180deg, rgba(241, 253, 246, 0.98), rgba(232, 249, 239, 0.96)),
+    rgba(236, 249, 240, 0.96);
+}
+
+.login-choice-offer-kicker {
+  margin: 0;
+  color: #0c8f5a;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .login-browser-note {
   margin: 14px 4px 0;
   color: rgba(110, 110, 115, 0.94);
@@ -1010,19 +1031,48 @@ body.app-page .empty-state p {
 }
 
 .landing-nav-campaign {
-  color: #0c8f5a !important;
-  font-size: 0.84rem;
-  font-weight: 700 !important;
-  letter-spacing: 0.01em;
-  padding-inline: 4px !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 14px !important;
+  border-radius: 999px;
+  border: 1px solid rgba(12, 143, 90, 0.16);
+  background:
+    linear-gradient(180deg, rgba(240, 253, 245, 0.98), rgba(229, 248, 236, 0.96)),
+    rgba(236, 249, 240, 0.98) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 12px 24px rgba(12, 143, 90, 0.08) !important;
+  text-decoration: none;
 }
 
 .landing-nav-campaign:hover {
-  color: #087247 !important;
-  background: transparent !important;
+  border-color: rgba(8, 114, 71, 0.22);
+  background:
+    linear-gradient(180deg, rgba(244, 254, 248, 0.99), rgba(232, 249, 239, 0.97)),
+    rgba(240, 251, 244, 0.98) !important;
   transform: translateY(-1px);
+}
+
+.landing-nav-campaign-label,
+.landing-nav-campaign-copy {
+  display: block;
+}
+
+.landing-nav-campaign-label {
+  color: #0c8f5a;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.landing-nav-campaign-copy {
+  color: #0a7f51;
+  font-size: 0.8rem;
+  font-weight: 720;
+  letter-spacing: 0.01em;
 }
 
 .landing-nav-cta {
@@ -4537,6 +4587,97 @@ body.landing-page .landing-trust-card {
 body.landing-page .landing-trust-section {
   padding-top: 52px;
   padding-bottom: 52px;
+}
+
+body.landing-page .landing-origin-section {
+  padding-top: 34px;
+  padding-bottom: 34px;
+}
+
+body.landing-page .landing-origin-card {
+  width: min(100%, 1040px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 28px;
+  padding: 32px 34px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 34px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 249, 251, 0.96)),
+    radial-gradient(circle at top left, rgba(0, 113, 227, 0.05), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(82, 196, 26, 0.04), transparent 32%);
+  box-shadow:
+    0 18px 38px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+body.landing-page .landing-origin-card::after {
+  display: none;
+}
+
+body.landing-page .landing-origin-copy {
+  display: grid;
+  gap: 14px;
+  max-width: 43rem;
+}
+
+body.landing-page .landing-origin-copy h2 {
+  margin: 0;
+  max-width: none;
+  color: rgba(29, 29, 31, 0.98);
+  font-size: clamp(2rem, 3.1vw, 2.9rem);
+  font-weight: 620;
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+}
+
+body.landing-page .landing-origin-copy p {
+  margin: 0;
+  color: rgba(29, 29, 31, 0.72);
+  font-size: 1rem;
+  font-weight: 540;
+  line-height: 1.74;
+  text-wrap: pretty;
+}
+
+body.landing-page .landing-origin-credit {
+  display: grid;
+  justify-items: end;
+  align-content: end;
+  gap: 10px;
+  padding-bottom: 2px;
+}
+
+body.landing-page .landing-origin-photo {
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 18px;
+  filter: grayscale(1) contrast(1.08) brightness(0.98);
+  box-shadow:
+    0 12px 24px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+body.landing-page .landing-origin-meta {
+  display: grid;
+  gap: 3px;
+  text-align: right;
+}
+
+body.landing-page .landing-origin-role {
+  color: rgba(110, 110, 115, 0.88);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+body.landing-page .landing-origin-meta strong {
+  color: rgba(29, 29, 31, 0.94);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 body.landing-page .landing-trust-card::after {
@@ -8500,6 +8641,48 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
     padding-bottom: 34px;
   }
 
+  body.landing-page .landing-origin-section {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  body.landing-page .landing-origin-card {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 18px;
+    padding: 24px 22px;
+    border-radius: 28px;
+  }
+
+  body.landing-page .landing-origin-copy {
+    gap: 12px;
+  }
+
+  body.landing-page .landing-origin-copy h2 {
+    font-size: clamp(1.9rem, 8.4vw, 2.36rem);
+    line-height: 1.1;
+  }
+
+  body.landing-page .landing-origin-copy p {
+    font-size: 1.02rem;
+    line-height: 1.7;
+  }
+
+  body.landing-page .landing-origin-credit {
+    justify-items: start;
+    gap: 8px;
+  }
+
+  body.landing-page .landing-origin-photo {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+  }
+
+  body.landing-page .landing-origin-meta {
+    text-align: left;
+  }
+
   body.landing-page .landing-trust-card {
     grid-template-columns: 1fr;
     padding: 24px 22px;
@@ -10368,11 +10551,11 @@ body.app-page .sidebar-right .comment-editor.is-guided {
 
 /* 2026-04-09 campaign pricing entry */
 .login-choice-offer {
-  margin: -2px 0 2px;
-  color: #0c8f5a;
-  font-size: 0.83rem;
+  margin: 0;
+  color: #087247;
+  font-size: 0.84rem;
   font-weight: 700;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .google-signin-button-campaign {
