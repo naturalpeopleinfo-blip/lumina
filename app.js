@@ -165,6 +165,7 @@
     billingCancelAtPeriodEnd: false,
     billingCurrentPeriodEnd: "",
     hasBillingPortal: false,
+    hasCampaignCheckout: false,
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
     selectedHistoryKeys: {},
@@ -915,6 +916,7 @@
     state.billingCancelAtPeriodEnd = false;
     state.billingCurrentPeriodEnd = "";
     state.hasBillingPortal = false;
+    state.hasCampaignCheckout = false;
     updatePlanMeter();
     updateBookmarkHint();
     updatePdfButtons();
@@ -923,6 +925,8 @@
   function syncBillingCapabilities() {
     if (!window.luminaAuth || typeof window.luminaAuth.getBillingCapabilities !== "function") {
       state.hasBillingPortal = false;
+      state.hasCampaignCheckout = false;
+      updateWorkspaceBillingAction();
       updateWorkspacePlanManageAction();
       return;
     }
@@ -930,10 +934,14 @@
     window.luminaAuth.getBillingCapabilities()
       .then(function (capabilities) {
         state.hasBillingPortal = !!(capabilities && capabilities.hasPortal);
+        state.hasCampaignCheckout = !!(capabilities && capabilities.hasCampaignCheckout);
+        updateWorkspaceBillingAction();
         updateWorkspacePlanManageAction();
       })
       .catch(function () {
         state.hasBillingPortal = false;
+        state.hasCampaignCheckout = false;
+        updateWorkspaceBillingAction();
         updateWorkspacePlanManageAction();
       });
   }
@@ -994,14 +1002,18 @@
     }
 
     if (isPdfExportLocked()) {
-      els.workspaceBillingAction.textContent = "PROで無制限にする";
-      els.workspaceBillingAction.title = "本日の無料枠を使い切っています。PROなら無制限でPDF化できます。";
+      els.workspaceBillingAction.textContent = state.hasCampaignCheckout ? "特別プランで無制限にする" : "PROで無制限にする";
+      els.workspaceBillingAction.title = state.hasCampaignCheckout
+        ? "本日の無料枠を使い切っています。特別プランなら無制限でPDF化できます。"
+        : "本日の無料枠を使い切っています。PROなら無制限でPDF化できます。";
       els.workspaceBillingAction.classList.add("is-urgent");
       return;
     }
 
-    els.workspaceBillingAction.textContent = "PROにする";
-    els.workspaceBillingAction.title = "月額1,080円で無制限に使えます。";
+    els.workspaceBillingAction.textContent = state.hasCampaignCheckout ? "特別プランを開始" : "PROにする";
+    els.workspaceBillingAction.title = state.hasCampaignCheckout
+      ? "キャンペーン中の特別プランで無制限に使い始められます。"
+      : "月額1,080円で無制限に使えます。";
     els.workspaceBillingAction.classList.remove("is-urgent");
   }
 
@@ -1114,15 +1126,17 @@
   }
 
   function onWorkspaceBillingActionClick() {
-    if (window.luminaAuth && typeof window.luminaAuth.startProCheckout === "function") {
-      window.luminaAuth.startProCheckout().catch(function (error) {
-        console.error("Failed to start PRO checkout from workspace bar", error);
+    var checkoutStarter = state.hasCampaignCheckout ? "startCampaignCheckout" : "startProCheckout";
+
+    if (window.luminaAuth && typeof window.luminaAuth[checkoutStarter] === "function") {
+      window.luminaAuth[checkoutStarter]().catch(function (error) {
+        console.error("Failed to start checkout from workspace bar", error);
         showToast("決済画面を開けませんでした。しばらくしてからお試しください。", "warning");
       });
       return;
     }
 
-    window.location.href = "./login.html?intent=pro";
+    window.location.href = state.hasCampaignCheckout ? "./login.html?intent=campaign" : "./login.html?intent=pro";
   }
 
   function onWorkspacePlanManageClick() {
