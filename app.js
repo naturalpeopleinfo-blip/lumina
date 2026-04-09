@@ -164,6 +164,7 @@
     stripeSubscriptionStatus: "",
     billingCancelAtPeriodEnd: false,
     billingCurrentPeriodEnd: "",
+    hasBillingPortal: false,
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
     selectedHistoryKeys: {},
@@ -280,6 +281,7 @@
     els.workspacePlanMeter = document.getElementById("workspacePlanMeter");
     els.workspacePlanLabel = document.getElementById("workspacePlanLabel");
     els.workspacePlanUsage = document.getElementById("workspacePlanUsage");
+    els.workspacePlanManage = document.getElementById("workspacePlanManage");
     els.workspaceBillingAction = document.getElementById("workspaceBillingAction");
     els.workspaceBookmarkBanner = document.getElementById("workspaceBookmarkBanner");
     els.workspaceBookmarkDismiss = document.getElementById("workspaceBookmarkDismiss");
@@ -340,6 +342,9 @@
     }
     if (els.workspaceBookmarkDismiss) {
       els.workspaceBookmarkDismiss.addEventListener("click", dismissBookmarkHint);
+    }
+    if (els.workspacePlanManage) {
+      els.workspacePlanManage.addEventListener("click", onWorkspacePlanManageClick);
     }
     if (els.workspaceBillingAction) {
       els.workspaceBillingAction.addEventListener("click", onWorkspaceBillingActionClick);
@@ -894,6 +899,7 @@
     state.stripeSubscriptionStatus = String(profile && profile.stripe_subscription_status || "");
     state.billingCancelAtPeriodEnd = !!(profile && profile.billing_cancel_at_period_end);
     state.billingCurrentPeriodEnd = String(profile && profile.billing_current_period_end || "");
+    syncBillingCapabilities();
     updatePlanMeter();
     updateBookmarkHint();
     updatePdfButtons();
@@ -908,9 +914,28 @@
     state.stripeSubscriptionStatus = "";
     state.billingCancelAtPeriodEnd = false;
     state.billingCurrentPeriodEnd = "";
+    state.hasBillingPortal = false;
     updatePlanMeter();
     updateBookmarkHint();
     updatePdfButtons();
+  }
+
+  function syncBillingCapabilities() {
+    if (!window.luminaAuth || typeof window.luminaAuth.getBillingCapabilities !== "function") {
+      state.hasBillingPortal = false;
+      updateWorkspacePlanManageAction();
+      return;
+    }
+
+    window.luminaAuth.getBillingCapabilities()
+      .then(function (capabilities) {
+        state.hasBillingPortal = !!(capabilities && capabilities.hasPortal);
+        updateWorkspacePlanManageAction();
+      })
+      .catch(function () {
+        state.hasBillingPortal = false;
+        updateWorkspacePlanManageAction();
+      });
   }
 
   function canUseLocalStorage() {
@@ -978,6 +1003,27 @@
     els.workspaceBillingAction.textContent = "PROにする";
     els.workspaceBillingAction.title = "月額1,080円で無制限に使えます。";
     els.workspaceBillingAction.classList.remove("is-urgent");
+  }
+
+  function updateWorkspacePlanManageAction() {
+    var authState = getCurrentAuthState();
+    var shouldShow = !!(
+      els.workspacePlanManage &&
+      authState &&
+      authState.isAuthenticated &&
+      state.hasBillingPortal &&
+      (state.normalizedPlan === "pro" || state.billingCancelAtPeriodEnd || !!state.stripeSubscriptionStatus)
+    );
+
+    if (!els.workspacePlanManage) {
+      return;
+    }
+
+    els.workspacePlanManage.hidden = !shouldShow;
+    els.workspacePlanManage.textContent = state.billingCancelAtPeriodEnd ? "契約を確認" : "プラン管理";
+    els.workspacePlanManage.title = state.billingCancelAtPeriodEnd
+      ? "解約予定日や契約内容を確認できます。"
+      : "支払い方法や解約設定を確認できます。";
   }
 
   function hasUnlimitedPdfAccess() {
@@ -1062,6 +1108,7 @@
     els.workspacePlanMeter.classList.toggle("is-beta", state.isBetaUnlocked || planValue === "beta_pro");
     els.workspacePlanMeter.classList.toggle("is-limit", isPdfExportLocked());
     els.workspacePlanMeter.classList.toggle("is-canceling", state.normalizedPlan === "pro" && state.billingCancelAtPeriodEnd);
+    updateWorkspacePlanManageAction();
     updateWorkspaceBillingAction();
     updateBookmarkHint();
   }
@@ -1076,6 +1123,18 @@
     }
 
     window.location.href = "./login.html?intent=pro";
+  }
+
+  function onWorkspacePlanManageClick() {
+    if (window.luminaAuth && typeof window.luminaAuth.startBillingPortal === "function") {
+      window.luminaAuth.startBillingPortal().catch(function (error) {
+        console.error("Failed to open billing portal", error);
+        showToast("プラン管理ページを開けませんでした。しばらくしてからお試しください。", "warning");
+      });
+      return;
+    }
+
+    showToast("プラン管理ページを開けませんでした。しばらくしてからお試しください。", "warning");
   }
 
   function refreshPdfUsageCount() {

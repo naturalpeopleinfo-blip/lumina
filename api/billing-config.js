@@ -1,4 +1,5 @@
 const DEFAULT_LIVE_CHECKOUT_URL = "https://buy.stripe.com/4gM5kC0zg4AL5b04siffy01";
+const DEFAULT_LIVE_PORTAL_URL = "";
 
 function json(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -18,6 +19,14 @@ function getCheckoutUrl(mode) {
   return process.env.STRIPE_PRO_CHECKOUT_URL || DEFAULT_LIVE_CHECKOUT_URL;
 }
 
+function getPortalLoginUrl(mode) {
+  if (mode === "test") {
+    return process.env.STRIPE_CUSTOMER_PORTAL_LOGIN_URL_TEST || "";
+  }
+
+  return process.env.STRIPE_CUSTOMER_PORTAL_LOGIN_URL || DEFAULT_LIVE_PORTAL_URL;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") {
     return json(res, 405, { error: "Method not allowed" });
@@ -25,6 +34,7 @@ module.exports = async function handler(req, res) {
 
   const mode = normalizeMode(req.query && req.query.mode);
   const checkoutUrl = getCheckoutUrl(mode);
+  const portalLoginUrl = getPortalLoginUrl(mode);
 
   if (!checkoutUrl) {
     return json(res, 404, { error: "Checkout URL is not configured", mode: mode });
@@ -32,6 +42,7 @@ module.exports = async function handler(req, res) {
 
   return json(res, 200, {
     mode: mode,
-    checkoutUrl: checkoutUrl
+    checkoutUrl: checkoutUrl,
+    portalLoginUrl: portalLoginUrl
   });
 };

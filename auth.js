@@ -4,6 +4,7 @@
   var config = typeof AppConfig !== "undefined" && AppConfig ? AppConfig : {};
   var authConfig = config.auth || {};
   var DEFAULT_PRO_CHECKOUT_URL = "https://buy.stripe.com/4gM5kC0zg4AL5b04siffy01";
+  var DEFAULT_CUSTOMER_PORTAL_LOGIN_URL = "";
   var PRO_INTENT_KEY = "lumina-auth-intent";
   var PRO_CHECKOUT_STARTED_KEY = "lumina-pro-checkout-started";
   var BILLING_MODE_KEY = "lumina-billing-mode";
@@ -102,11 +103,22 @@
     return authConfig.proCheckoutUrl || DEFAULT_PRO_CHECKOUT_URL;
   }
 
-  function getCheckoutUrl(mode) {
+  function getFallbackPortalUrl(mode) {
+    if (mode === "test") {
+      return authConfig.customerPortalUrlTest || "";
+    }
+
+    return authConfig.customerPortalUrl || DEFAULT_CUSTOMER_PORTAL_LOGIN_URL;
+  }
+
+  function getBillingConfig(mode) {
     var normalized = normalizeBillingMode(mode);
 
     if (!window.location || window.location.protocol === "file:") {
-      return Promise.resolve(getFallbackCheckoutUrl(normalized));
+      return Promise.resolve({
+        checkoutUrl: getFallbackCheckoutUrl(normalized),
+        portalLoginUrl: getFallbackPortalUrl(normalized)
+      });
     }
 
     return fetch(window.location.origin + "/api/billing-config?mode=" + encodeURIComponent(normalized), {
@@ -122,14 +134,16 @@
         return response.json();
       })
       .then(function (payload) {
-        if (payload && payload.checkoutUrl) {
-          return payload.checkoutUrl;
-        }
-
-        return getFallbackCheckoutUrl(normalized);
+        return {
+          checkoutUrl: payload && payload.checkoutUrl ? payload.checkoutUrl : getFallbackCheckoutUrl(normalized),
+          portalLoginUrl: payload && payload.portalLoginUrl ? payload.portalLoginUrl : getFallbackPortalUrl(normalized)
+        };
       })
       .catch(function () {
-        return getFallbackCheckoutUrl(normalized);
+        return {
+          checkoutUrl: getFallbackCheckoutUrl(normalized),
+          portalLoginUrl: getFallbackPortalUrl(normalized)
+        };
       });
   }
 
@@ -160,6 +174,41 @@
       return parsed.toString();
     } catch (error) {
       return checkoutUrl + (checkoutUrl.indexOf("?") >= 0 ? "&" : "?") + "client_reference_id=" + encodeURIComponent(userId);
+    }
+  }
+
+  function buildPortalUrlWithUserContext(portalUrl) {
+    var email = state.user ? getUserEmail(state.user) : "";
+    var returnTo = getRedirectTo();
+
+    if (!portalUrl) {
+      return portalUrl;
+    }
+
+    try {
+      var parsed = new URL(portalUrl, window.location.origin);
+
+      if (email) {
+        parsed.searchParams.set("prefilled_email", email);
+      }
+
+      if (returnTo) {
+        parsed.searchParams.set("return_url", appendBillingMode(returnTo, getBillingMode()));
+      }
+
+      return parsed.toString();
+    } catch (error) {
+      var nextUrl = portalUrl;
+
+      if (email) {
+        nextUrl += (nextUrl.indexOf("?") >= 0 ? "&" : "?") + "prefilled_email=" + encodeURIComponent(email);
+      }
+
+      if (returnTo) {
+        nextUrl += (nextUrl.indexOf("?") >= 0 ? "&" : "?") + "return_url=" + encodeURIComponent(appendBillingMode(returnTo, getBillingMode()));
+      }
+
+      return nextUrl;
     }
   }
 
@@ -622,8 +671,8 @@
   function startProCheckout() {
     var billingMode = getBillingMode();
 
-    return getCheckoutUrl(billingMode).then(function (checkoutUrl) {
-      var checkoutUrlWithUser = buildCheckoutUrlWithUserContext(checkoutUrl);
+    return getBillingConfig(billingMode).then(function (billingConfig) {
+      var checkoutUrlWithUser = buildCheckoutUrlWithUserContext(billingConfig && billingConfig.checkoutUrl);
 
       if (!checkoutUrlWithUser) {
         throw new Error("Checkout URL is missing");
@@ -637,6 +686,38 @@
       clearPendingAuthIntent();
       markProCheckoutStarted();
       window.location.assign(checkoutUrlWithUser);
+    });
+  }
+
+  function startBillingPortal() {
+    var billingMode = getBillingMode();
+
+    return getBillingConfig(billingMode).then(function (billingConfig) {
+      var portalUrl = buildPortalUrlWithUserContext(billingConfig && billingConfig.portalLoginUrl);
+
+      if (!portalUrl) {
+        throw new Error("Customer portal URL is missing");
+      }
+
+      track("billing_portal_open", {
+        source: getAuthSource(),
+        billing_mode: billingMode,
+        has_user: !!(state.user && state.user.id)
+      });
+
+      window.location.assign(portalUrl);
+    });
+  }
+
+  function getBillingCapabilities() {
+    var billingMode = getBillingMode();
+
+    return getBillingConfig(billingMode).then(function (billingConfig) {
+      return {
+        hasCheckout: !!(billingConfig && billingConfig.checkoutUrl),
+        hasPortal: !!(billingConfig && billingConfig.portalLoginUrl),
+        billingMode: billingMode
+      };
     });
   }
 
@@ -788,7 +869,9 @@
     onChange: onChange,
     getState: getState,
     getToken: getToken,
+    getBillingCapabilities: getBillingCapabilities,
     startProCheckout: startProCheckout,
+    startBillingPortal: startBillingPortal,
     signInWithGoogle: signInWithGoogle,
     signOut: signOut
   };
