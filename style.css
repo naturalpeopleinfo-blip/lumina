@@ -4215,6 +4215,12 @@ body.landing-page .landing-step-note {
   display: none !important;
 }
 
+.workspace-plan-meter[hidden],
+.workspace-plan-manage[hidden],
+.workspace-billing-action[hidden] {
+  display: none !important;
+}
+
 .workspace-bookmark-copy {
   color: rgba(228, 238, 252, 0.84);
   font-size: 0.8rem;
