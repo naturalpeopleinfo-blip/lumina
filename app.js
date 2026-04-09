@@ -277,6 +277,7 @@
     els.workspacePlanMeter = document.getElementById("workspacePlanMeter");
     els.workspacePlanLabel = document.getElementById("workspacePlanLabel");
     els.workspacePlanUsage = document.getElementById("workspacePlanUsage");
+    els.workspaceBillingAction = document.getElementById("workspaceBillingAction");
     els.workspaceBookmarkBanner = document.getElementById("workspaceBookmarkBanner");
     els.workspaceBookmarkDismiss = document.getElementById("workspaceBookmarkDismiss");
     els.historyModal = document.getElementById("historyModal");
@@ -336,6 +337,9 @@
     }
     if (els.workspaceBookmarkDismiss) {
       els.workspaceBookmarkDismiss.addEventListener("click", dismissBookmarkHint);
+    }
+    if (els.workspaceBillingAction) {
+      els.workspaceBillingAction.addEventListener("click", onWorkspaceBillingActionClick);
     }
     els.saveCommentButton.addEventListener("click", saveSelectedFlagComment);
     els.clearCommentButton.addEventListener("click", clearSelectedFlagComment);
@@ -935,6 +939,38 @@
     els.workspaceBookmarkBanner.hidden = !shouldShow;
   }
 
+  function updateWorkspaceBillingAction() {
+    var authState = getCurrentAuthState();
+    var shouldShow = !!(
+      els.workspaceBillingAction &&
+      authState &&
+      authState.isAuthenticated &&
+      !hasUnlimitedPdfAccess()
+    );
+
+    if (!els.workspaceBillingAction) {
+      return;
+    }
+
+    els.workspaceBillingAction.hidden = !shouldShow;
+    els.workspaceBillingAction.classList.remove("is-urgent");
+
+    if (!shouldShow) {
+      return;
+    }
+
+    if (isPdfExportLocked()) {
+      els.workspaceBillingAction.textContent = "PROで無制限にする";
+      els.workspaceBillingAction.title = "本日の無料枠を使い切っています。PROなら無制限でPDF化できます。";
+      els.workspaceBillingAction.classList.add("is-urgent");
+      return;
+    }
+
+    els.workspaceBillingAction.textContent = "PROにする";
+    els.workspaceBillingAction.title = "月額1,080円で無制限に使えます。";
+    els.workspaceBillingAction.classList.remove("is-urgent");
+  }
+
   function hasUnlimitedPdfAccess() {
     return state.isBetaUnlocked || state.normalizedPlan === "pro";
   }
@@ -977,7 +1013,9 @@
       usage = "無制限";
     } else {
       label = "無料";
-      usage = "本日あと" + getRemainingPdfExports() + "回";
+      usage = getRemainingPdfExports() > 0
+        ? "本日あと" + getRemainingPdfExports() + "回"
+        : "本日の無料枠を利用済み";
     }
 
     els.workspacePlanMeter.hidden = false;
@@ -986,7 +1024,20 @@
     els.workspacePlanMeter.classList.toggle("is-pro", state.normalizedPlan === "pro" && !state.isBetaUnlocked);
     els.workspacePlanMeter.classList.toggle("is-beta", state.isBetaUnlocked || planValue === "beta_pro");
     els.workspacePlanMeter.classList.toggle("is-limit", isPdfExportLocked());
+    updateWorkspaceBillingAction();
     updateBookmarkHint();
+  }
+
+  function onWorkspaceBillingActionClick() {
+    if (window.luminaAuth && typeof window.luminaAuth.startProCheckout === "function") {
+      window.luminaAuth.startProCheckout().catch(function (error) {
+        console.error("Failed to start PRO checkout from workspace bar", error);
+        showToast("決済画面を開けませんでした。しばらくしてからお試しください。", "warning");
+      });
+      return;
+    }
+
+    window.location.href = "./login.html?intent=pro";
   }
 
   function refreshPdfUsageCount() {

@@ -788,6 +788,7 @@
     onChange: onChange,
     getState: getState,
     getToken: getToken,
+    startProCheckout: startProCheckout,
     signInWithGoogle: signInWithGoogle,
     signOut: signOut
   };

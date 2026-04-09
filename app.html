@@ -8,7 +8,7 @@
     name="description"
     content="映像制作会社向けの完全ローカル動作セーフゾーン確認SPAツール Lumina Zone"
   >
-  <link rel="stylesheet" href="style.css?v=20260409-login-choice-1">
+  <link rel="stylesheet" href="style.css?v=20260409-app-topbar-1">
 </head>
 <body class="app-page">
   <div class="app-shell">
@@ -31,6 +31,15 @@
             <strong id="workspacePlanLabel">無料</strong>
             <span id="workspacePlanUsage">本日あと2回</span>
           </div>
+
+          <button
+            id="workspaceBillingAction"
+            class="action-button action-button-primary workspace-billing-action"
+            type="button"
+            hidden
+          >
+            PROにする
+          </button>
 
           <div id="appAuthLoggedOut" class="workspace-auth-state">
             <a href="./login.html" class="action-button action-button-ghost workspace-auth-link">Googleでログイン</a>
@@ -340,9 +349,9 @@
 
   <script src="config.js"></script>
   <script src="analytics.js"></script>
-  <script src="auth.js?v=20260409-billing-mode-1"></script>
+  <script src="auth.js?v=20260409-app-topbar-1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="db.js"></script>
-  <script src="app.js?v=20260409-billing-2"></script>
+  <script src="app.js?v=20260409-app-topbar-1"></script>
 </body>
 </html>
