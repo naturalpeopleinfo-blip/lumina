@@ -8,7 +8,6 @@
   var DEFAULT_CUSTOMER_PORTAL_LOGIN_URL = "";
   var PRO_INTENT_KEY = "lumina-auth-intent";
   var PRO_CHECKOUT_STARTED_KEY = "lumina-pro-checkout-started";
-  var BILLING_MODE_KEY = "lumina-billing-mode";
   var subscribers = [];
   var clerkLoaded = false;
   var appRedirectStarted = false;
@@ -66,34 +65,8 @@
     }
   }
 
-  function setBillingMode(mode) {
-    if (!canUseSessionStorage()) {
-      return;
-    }
-
-    var normalized = normalizeBillingMode(mode);
-
-    if (normalized === "test") {
-      window.sessionStorage.setItem(BILLING_MODE_KEY, normalized);
-      return;
-    }
-
-    window.sessionStorage.removeItem(BILLING_MODE_KEY);
-  }
-
   function getBillingMode() {
-    var queryMode = normalizeBillingMode(getQueryParam("billing_mode"));
-
-    if (queryMode === "test") {
-      setBillingMode(queryMode);
-      return queryMode;
-    }
-
-    if (canUseSessionStorage()) {
-      return normalizeBillingMode(window.sessionStorage.getItem(BILLING_MODE_KEY) || "");
-    }
-
-    return "live";
+    return normalizeBillingMode(getQueryParam("billing_mode"));
   }
 
   function getFallbackCheckoutUrl(mode) {
@@ -955,12 +928,10 @@
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
-      setBillingMode(getBillingMode());
       bindDomEvents();
       initAuth();
     });
   } else {
-    setBillingMode(getBillingMode());
     bindDomEvents();
     initAuth();
   }
