@@ -21,6 +21,11 @@
           <button id="historyToggle" class="action-button action-button-ghost workspace-history-trigger" type="button">履歴を見る</button>
         </div>
 
+        <div id="workspaceBookmarkBanner" class="workspace-bookmark-banner" hidden>
+          <span class="workspace-bookmark-copy">このページをお気に入り登録すると、次回からすぐ使えます。</span>
+          <button id="workspaceBookmarkDismiss" class="workspace-bookmark-dismiss" type="button" aria-label="お気に入り案内を閉じる">閉じる</button>
+        </div>
+
         <div class="workspace-auth-bar">
           <div id="workspacePlanMeter" class="workspace-plan-meter" hidden>
             <strong id="workspacePlanLabel">無料</strong>
@@ -335,9 +340,9 @@
 
   <script src="config.js"></script>
   <script src="analytics.js"></script>
-  <script src="auth.js?v=20260409-login-choice-1"></script>
+  <script src="auth.js?v=20260409-billing-2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="db.js"></script>
-  <script src="app.js?v=20260409-monetization-1"></script>
+  <script src="app.js?v=20260409-billing-2"></script>
 </body>
 </html>

@@ -51,6 +51,22 @@
     return authConfig.proCheckoutUrl || DEFAULT_PRO_CHECKOUT_URL;
   }
 
+  function buildCheckoutUrlWithUserContext(checkoutUrl) {
+    var userId = state.user && state.user.id ? String(state.user.id) : "";
+
+    if (!checkoutUrl || !userId) {
+      return checkoutUrl;
+    }
+
+    try {
+      var parsed = new URL(checkoutUrl, window.location.origin);
+      parsed.searchParams.set("client_reference_id", userId);
+      return parsed.toString();
+    } catch (error) {
+      return checkoutUrl + (checkoutUrl.indexOf("?") >= 0 ? "&" : "?") + "client_reference_id=" + encodeURIComponent(userId);
+    }
+  }
+
   function getAppRedirectForIntent(intent) {
     var redirectTo = getRedirectTo();
 
@@ -500,12 +516,16 @@
   }
 
   function startProCheckout() {
-    var checkoutUrl = getCheckoutUrl();
+    var checkoutUrl = buildCheckoutUrlWithUserContext(getCheckoutUrl());
 
     if (!checkoutUrl) {
       return;
     }
 
+    track("pro_checkout_start", {
+      source: getAuthSource(),
+      has_user: !!(state.user && state.user.id)
+    });
     clearPendingAuthIntent();
     markProCheckoutStarted();
     window.location.assign(checkoutUrl);

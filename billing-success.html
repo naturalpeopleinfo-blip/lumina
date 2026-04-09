@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina Zone | PRO確認中</title>
+  <meta
+    name="description"
+    content="Stripe決済後のPRO反映状況を確認しています。"
+  >
+  <link rel="stylesheet" href="style.css?v=20260409-billing-2">
+</head>
+<body class="login-page billing-success-page" data-auth-source="billing">
+  <div class="login-shell">
+    <main class="login-main">
+      <section class="login-panel panel billing-success-panel" aria-label="PRO確認中">
+        <a href="./app.html" class="landing-brand login-panel-brand billing-success-brand" aria-label="Lumina Zone アプリ">
+          <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="landing-brand-mark login-panel-brand-mark" width="76" height="76">
+          <span class="login-panel-brand-meta">縦型ショート動画専用<br>セーフゾーンチェッカー</span>
+        </a>
+
+        <div class="login-copy billing-success-copy">
+          <h1>PROの確認を、<br><span class="login-gradient">進めています。</span></h1>
+          <p class="login-benefit-line">決済を確認でき次第、無制限で使えるようになります。</p>
+        </div>
+
+        <section class="auth-panel auth-panel-login billing-success-card" aria-label="PRO確認中">
+          <div class="billing-success-status billing-success-status-loading" id="billingSuccessStatus">
+            <div class="billing-success-spinner" aria-hidden="true"></div>
+            <div class="billing-success-status-copy">
+              <strong id="billingSuccessTitle">決済内容を確認しています。</strong>
+              <p id="billingSuccessMessage">通常は数秒で反映されます。そのままお待ちください。</p>
+            </div>
+          </div>
+
+          <div class="billing-success-actions">
+            <a id="billingSuccessAppLink" href="./app.html" class="action-button action-button-primary">アプリを開く</a>
+            <a id="billingSuccessLoginLink" href="./login.html?intent=pro" class="action-button action-button-ghost" hidden>Googleログインして続ける</a>
+          </div>
+
+          <p class="login-browser-note billing-success-note">
+            数秒たっても反映されない場合は、ページを再読み込みしてください。
+          </p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="analytics.js"></script>
+  <script src="auth.js?v=20260409-billing-2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="db.js"></script>
+  <script src="billing-success.js?v=20260409-billing-2"></script>
+</body>
+</html>

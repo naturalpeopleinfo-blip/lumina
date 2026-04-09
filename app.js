@@ -51,6 +51,7 @@
   var HINT_NEEDS_HISTORY = "履歴がたまると使えます。";
   var FREE_DAILY_PDF_LIMIT = 2;
   var PDF_LIMIT_REACHED_MESSAGE = "本日の無料枠を使い切りました。PROなら無制限でPDF化できます。";
+  var BOOKMARK_HINT_DISMISSED_KEY = "lumina-boundary-pro::bookmark-hint-dismissed";
   var ONBOARDING_STEPS = [
     {
       selector: "#guideStepSource",
@@ -276,6 +277,8 @@
     els.workspacePlanMeter = document.getElementById("workspacePlanMeter");
     els.workspacePlanLabel = document.getElementById("workspacePlanLabel");
     els.workspacePlanUsage = document.getElementById("workspacePlanUsage");
+    els.workspaceBookmarkBanner = document.getElementById("workspaceBookmarkBanner");
+    els.workspaceBookmarkDismiss = document.getElementById("workspaceBookmarkDismiss");
     els.historyModal = document.getElementById("historyModal");
     els.historyClose = document.getElementById("historyClose");
     els.historyExportSelectedButton = document.getElementById("historyExportSelectedButton");
@@ -330,6 +333,9 @@
     els.autoStopToggle.addEventListener("click", toggleAutoStop);
     if (els.exportCurrentPdfButton) {
       els.exportCurrentPdfButton.addEventListener("click", exportCurrentPdf);
+    }
+    if (els.workspaceBookmarkDismiss) {
+      els.workspaceBookmarkDismiss.addEventListener("click", dismissBookmarkHint);
     }
     els.saveCommentButton.addEventListener("click", saveSelectedFlagComment);
     els.clearCommentButton.addEventListener("click", clearSelectedFlagComment);
@@ -879,6 +885,7 @@
     state.dailyLimit = Number(profile && profile.daily_limit) || FREE_DAILY_PDF_LIMIT;
     state.isBetaUnlocked = !!(profile && profile.beta_unlocked);
     updatePlanMeter();
+    updateBookmarkHint();
     updatePdfButtons();
   }
 
@@ -889,7 +896,43 @@
     state.pdfExportsToday = 0;
     state.isBetaUnlocked = false;
     updatePlanMeter();
+    updateBookmarkHint();
     updatePdfButtons();
+  }
+
+  function canUseLocalStorage() {
+    try {
+      return !!window.localStorage;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function hasDismissedBookmarkHint() {
+    if (!canUseLocalStorage()) {
+      return false;
+    }
+
+    return window.localStorage.getItem(BOOKMARK_HINT_DISMISSED_KEY) === "1";
+  }
+
+  function dismissBookmarkHint() {
+    if (canUseLocalStorage()) {
+      window.localStorage.setItem(BOOKMARK_HINT_DISMISSED_KEY, "1");
+    }
+
+    updateBookmarkHint();
+  }
+
+  function updateBookmarkHint() {
+    var authState = getCurrentAuthState();
+    var shouldShow = !!(els.workspaceBookmarkBanner && authState && authState.isAuthenticated && !hasDismissedBookmarkHint());
+
+    if (!els.workspaceBookmarkBanner) {
+      return;
+    }
+
+    els.workspaceBookmarkBanner.hidden = !shouldShow;
   }
 
   function hasUnlimitedPdfAccess() {
@@ -943,6 +986,7 @@
     els.workspacePlanMeter.classList.toggle("is-pro", state.normalizedPlan === "pro" && !state.isBetaUnlocked);
     els.workspacePlanMeter.classList.toggle("is-beta", state.isBetaUnlocked || planValue === "beta_pro");
     els.workspacePlanMeter.classList.toggle("is-limit", isPdfExportLocked());
+    updateBookmarkHint();
   }
 
   function refreshPdfUsageCount() {
