@@ -73,11 +73,41 @@ function verifyStripeSignature(rawBody, signatureHeader, secret) {
   }
 }
 
+function getStripeWebhookSecrets() {
+  return [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_WEBHOOK_SECRET_TEST].filter(Boolean);
+}
+
+function verifyStripeSignatureAgainstKnownSecrets(rawBody, signatureHeader) {
+  const secrets = getStripeWebhookSecrets();
+  let lastError = null;
+
+  if (!secrets.length) {
+    throw new Error("Missing STRIPE_WEBHOOK_SECRET");
+  }
+
+  for (const secret of secrets) {
+    try {
+      verifyStripeSignature(rawBody, signatureHeader, secret);
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("Invalid Stripe signature");
+}
+
 function getSupabaseConfig() {
+  const elevatedKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
   return {
     url: process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL,
-    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+    serviceRoleKey: elevatedKey
   };
+}
+
+function isOpaqueSupabaseKey(value) {
+  return /^sb_(secret|publishable)_/i.test(String(value || ""));
 }
 
 async function supabaseRequest(path, options) {
@@ -91,12 +121,15 @@ async function supabaseRequest(path, options) {
     method: options.method || "GET",
     headers: {
       apikey: config.serviceRoleKey,
-      Authorization: "Bearer " + config.serviceRoleKey,
       "Content-Type": "application/json",
       Prefer: options.prefer || "return=representation"
     },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
+
+  if (!isOpaqueSupabaseKey(config.serviceRoleKey)) {
+    response.headers;
+  }
 
   if (!response.ok) {
     const text = await response.text();
@@ -223,17 +256,17 @@ module.exports = async function handler(req, res) {
     return json(res, 405, { error: "Method not allowed" });
   }
 
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+  if (!getStripeWebhookSecrets().length) {
     return json(res, 500, { error: "Missing STRIPE_WEBHOOK_SECRET" });
   }
 
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!getSupabaseConfig().serviceRoleKey) {
     return json(res, 500, { error: "Missing SUPABASE_SERVICE_ROLE_KEY" });
   }
 
   try {
     const rawBody = await readRawBody(req);
-    verifyStripeSignature(rawBody, req.headers["stripe-signature"], process.env.STRIPE_WEBHOOK_SECRET);
+    verifyStripeSignatureAgainstKnownSecrets(rawBody, req.headers["stripe-signature"]);
 
     const event = JSON.parse(rawBody.toString("utf8"));
 

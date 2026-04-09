@@ -6,6 +6,7 @@
   var DEFAULT_PRO_CHECKOUT_URL = "https://buy.stripe.com/4gM5kC0zg4AL5b04siffy01";
   var PRO_INTENT_KEY = "lumina-auth-intent";
   var PRO_CHECKOUT_STARTED_KEY = "lumina-pro-checkout-started";
+  var BILLING_MODE_KEY = "lumina-billing-mode";
   var subscribers = [];
   var clerkLoaded = false;
   var appRedirectStarted = false;
@@ -47,8 +48,103 @@
     return window.location.origin + "/app.html";
   }
 
-  function getCheckoutUrl() {
+  function normalizeBillingMode(value) {
+    return String(value || "").toLowerCase() === "test" ? "test" : "live";
+  }
+
+  function getQueryParam(name) {
+    if (!window.location || !window.location.search) {
+      return "";
+    }
+
+    try {
+      return new URLSearchParams(window.location.search).get(name) || "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function setBillingMode(mode) {
+    if (!canUseSessionStorage()) {
+      return;
+    }
+
+    var normalized = normalizeBillingMode(mode);
+
+    if (normalized === "test") {
+      window.sessionStorage.setItem(BILLING_MODE_KEY, normalized);
+      return;
+    }
+
+    window.sessionStorage.removeItem(BILLING_MODE_KEY);
+  }
+
+  function getBillingMode() {
+    var queryMode = normalizeBillingMode(getQueryParam("billing_mode"));
+
+    if (queryMode === "test") {
+      setBillingMode(queryMode);
+      return queryMode;
+    }
+
+    if (canUseSessionStorage()) {
+      return normalizeBillingMode(window.sessionStorage.getItem(BILLING_MODE_KEY) || "");
+    }
+
+    return "live";
+  }
+
+  function getFallbackCheckoutUrl(mode) {
+    if (mode === "test") {
+      return authConfig.proCheckoutUrlTest || "";
+    }
+
     return authConfig.proCheckoutUrl || DEFAULT_PRO_CHECKOUT_URL;
+  }
+
+  function getCheckoutUrl(mode) {
+    var normalized = normalizeBillingMode(mode);
+
+    if (!window.location || window.location.protocol === "file:") {
+      return Promise.resolve(getFallbackCheckoutUrl(normalized));
+    }
+
+    return fetch(window.location.origin + "/api/billing-config?mode=" + encodeURIComponent(normalized), {
+      headers: {
+        Accept: "application/json"
+      }
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("Billing config request failed: " + response.status);
+        }
+
+        return response.json();
+      })
+      .then(function (payload) {
+        if (payload && payload.checkoutUrl) {
+          return payload.checkoutUrl;
+        }
+
+        return getFallbackCheckoutUrl(normalized);
+      })
+      .catch(function () {
+        return getFallbackCheckoutUrl(normalized);
+      });
+  }
+
+  function appendBillingMode(url, mode) {
+    if (!url || normalizeBillingMode(mode) !== "test") {
+      return url;
+    }
+
+    try {
+      var parsed = new URL(url, window.location.origin);
+      parsed.searchParams.set("billing_mode", "test");
+      return parsed.toString();
+    } catch (error) {
+      return url + (url.indexOf("?") >= 0 ? "&" : "?") + "billing_mode=test";
+    }
   }
 
   function buildCheckoutUrlWithUserContext(checkoutUrl) {
@@ -69,17 +165,25 @@
 
   function getAppRedirectForIntent(intent) {
     var redirectTo = getRedirectTo();
+    var billingMode = getBillingMode();
 
     if (intent !== "pro") {
-      return redirectTo;
+      return appendBillingMode(redirectTo, billingMode);
     }
 
     try {
       var parsed = new URL(redirectTo, window.location.origin);
       parsed.searchParams.set("intent", "pro");
+      if (billingMode === "test") {
+        parsed.searchParams.set("billing_mode", "test");
+      }
       return parsed.toString();
     } catch (error) {
-      return redirectTo + (redirectTo.indexOf("?") >= 0 ? "&" : "?") + "intent=pro";
+      var suffix = "intent=pro";
+      if (billingMode === "test") {
+        suffix += "&billing_mode=test";
+      }
+      return redirectTo + (redirectTo.indexOf("?") >= 0 ? "&" : "?") + suffix;
     }
   }
 
@@ -516,19 +620,24 @@
   }
 
   function startProCheckout() {
-    var checkoutUrl = buildCheckoutUrlWithUserContext(getCheckoutUrl());
+    var billingMode = getBillingMode();
 
-    if (!checkoutUrl) {
-      return;
-    }
+    return getCheckoutUrl(billingMode).then(function (checkoutUrl) {
+      var checkoutUrlWithUser = buildCheckoutUrlWithUserContext(checkoutUrl);
 
-    track("pro_checkout_start", {
-      source: getAuthSource(),
-      has_user: !!(state.user && state.user.id)
+      if (!checkoutUrlWithUser) {
+        throw new Error("Checkout URL is missing");
+      }
+
+      track("pro_checkout_start", {
+        source: getAuthSource(),
+        has_user: !!(state.user && state.user.id),
+        billing_mode: billingMode
+      });
+      clearPendingAuthIntent();
+      markProCheckoutStarted();
+      window.location.assign(checkoutUrlWithUser);
     });
-    clearPendingAuthIntent();
-    markProCheckoutStarted();
-    window.location.assign(checkoutUrl);
   }
 
   function maybeStartPendingProCheckout() {
@@ -553,7 +662,9 @@
       return;
     }
 
-    startProCheckout();
+    startProCheckout().catch(function (error) {
+      console.error("Failed to start PRO checkout", error);
+    });
   }
 
   function getToken() {
@@ -592,7 +703,9 @@
 
     if (authStartProButton) {
       authStartProButton.addEventListener("click", function () {
-        startProCheckout();
+        startProCheckout().catch(function (error) {
+          console.error("Failed to start PRO checkout", error);
+        });
       });
     }
 
@@ -681,10 +794,12 @@
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
+      setBillingMode(getBillingMode());
       bindDomEvents();
       initAuth();
     });
   } else {
+    setBillingMode(getBillingMode());
     bindDomEvents();
     initAuth();
   }
