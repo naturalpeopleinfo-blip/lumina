@@ -46,7 +46,7 @@
     info: "Lumina Zone"
   };
   var EMPTY_MODE_LABEL = "縦動画セーフゾーンチェッカー";
-  var EMPTY_MODE_DESCRIPTION = "1つ以上選ぶと、セーフゾーンの枠が表示されます。";
+  var EMPTY_MODE_DESCRIPTION = "確認したいSNSを選ぶと、その表示領域が出ます。";
   var HINT_NEEDS_RECORDS = "記録すると使えます。";
   var HINT_NEEDS_HISTORY = "履歴がたまると使えます。";
   var FREE_DAILY_PDF_LIMIT = 2;
@@ -62,14 +62,14 @@
     {
       selector: "#guideStepModes",
       label: "使い方ガイド 2 / 4",
-      title: "表示するSNSを選びます",
-      body: "確認したいSNSを選びます。1つでも、複数でも選べます。"
+      title: "確認するSNSを選びます",
+      body: "確認したいSNSを選ぶと、その表示領域が出ます。1つでも、複数でも選べます。"
     },
     {
       selector: "#stageSurface",
       label: "使い方ガイド 3 / 4",
-      title: "プレビュー画面内をクリックします",
-      body: "クリックする度に、時間と画面内の位置が右に記録されます。メモも可能です。"
+      title: "再生して、気になる位置をクリックします",
+      body: "画面内の気になる位置をクリックする度に、時間と位置が右に記録されます。メモも残せます。"
     },
     {
       selector: "#guideStepShare",
@@ -169,6 +169,7 @@
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
     selectedHistoryKeys: {},
+    hasPlaybackStarted: false,
     freshFlagId: "",
     freshFlagTimer: 0
   };
@@ -205,6 +206,7 @@
     requestStageFit();
     bindAuthPersistence();
     updateHistoryAwareness();
+    syncInlineGuide();
     track("app_open");
   }
 
@@ -264,6 +266,9 @@
     els.metaDuration = document.getElementById("metaDuration");
     els.metaResolution = document.getElementById("metaResolution");
     els.sourceLoadButton = document.getElementById("sourceLoadButton");
+    els.guideStepSource = document.getElementById("guideStepSource");
+    els.guideStepModes = document.getElementById("guideStepModes");
+    els.guideStepShare = document.getElementById("guideStepShare");
     els.exportCurrentPdfButton = document.getElementById("exportCurrentPdfButton");
     els.flagsCount = document.getElementById("flagsCount");
     els.flagsHint = document.getElementById("flagsHint");
@@ -286,6 +291,8 @@
     els.workspaceBillingAction = document.getElementById("workspaceBillingAction");
     els.workspaceBookmarkBanner = document.getElementById("workspaceBookmarkBanner");
     els.workspaceBookmarkDismiss = document.getElementById("workspaceBookmarkDismiss");
+    els.guideStageHint = document.getElementById("guideStageHint");
+    els.guideStageHintCopy = document.getElementById("guideStageHintCopy");
     els.historyModal = document.getElementById("historyModal");
     els.historyClose = document.getElementById("historyClose");
     els.historyExportSelectedButton = document.getElementById("historyExportSelectedButton");
@@ -562,6 +569,133 @@
     els.flagsHint.textContent = "プレビュー画面内をクリックすると、右に記録されます。";
   }
 
+  function getInlineGuideStep() {
+    if (!hasMediaLoaded()) {
+      return "source";
+    }
+
+    if (!hasActiveSelection()) {
+      return "platform";
+    }
+
+    if (!state.hasPlaybackStarted && !state.flags.length) {
+      return "play";
+    }
+
+    if (!state.flags.length) {
+      return "click";
+    }
+
+    if (state.freshFlagId) {
+      return "memo";
+    }
+
+    return "";
+  }
+
+  function syncInlineGuide() {
+    var step = getInlineGuideStep();
+    var sourceHeader = els.guideStepSource ? els.guideStepSource.querySelector(".card-header") : null;
+    var modesHeader = els.guideStepModes ? els.guideStepModes.querySelector(".card-header") : null;
+
+    if (sourceHeader) {
+      if (step === "source") {
+        sourceHeader.setAttribute("data-guide-tag", "まずはここ");
+      } else {
+        sourceHeader.removeAttribute("data-guide-tag");
+      }
+    }
+
+    if (modesHeader) {
+      if (step === "platform") {
+        modesHeader.setAttribute("data-guide-tag", "次はここ");
+      } else {
+        modesHeader.removeAttribute("data-guide-tag");
+      }
+    }
+
+    if (els.guideStepShare) {
+      if (step === "memo") {
+        els.guideStepShare.setAttribute("data-guide-tag", "最後にここ");
+      } else {
+        els.guideStepShare.removeAttribute("data-guide-tag");
+      }
+    }
+
+    if (els.playToggle) {
+      if (step === "play") {
+        els.playToggle.setAttribute("data-guide-tag", "次はここ");
+      } else {
+        els.playToggle.removeAttribute("data-guide-tag");
+      }
+    }
+
+    if (els.guideStepSource) {
+      els.guideStepSource.classList.toggle("is-guide-active", step === "source");
+    }
+
+    if (els.guideStepModes) {
+      els.guideStepModes.classList.toggle("is-guide-active", step === "platform");
+    }
+
+    if (els.guideStepShare) {
+      els.guideStepShare.classList.toggle("is-guide-active", step === "memo");
+    }
+
+    if (els.playToggle) {
+      els.playToggle.classList.toggle("is-guide-active", step === "play");
+    }
+
+    if (els.stageSurface) {
+      els.stageSurface.classList.toggle("is-guide-click", step === "click");
+    }
+
+    if (els.guideStageHint) {
+      els.guideStageHint.hidden = step !== "click";
+    }
+
+    if (els.guideStageHintCopy) {
+      els.guideStageHintCopy.textContent = "画面内の気になる位置をクリック";
+    }
+
+    if (els.modeDescription) {
+      els.modeDescription.textContent = step === "platform"
+        ? "確認したいSNSを選ぶと、その表示領域が出ます。"
+        : EMPTY_MODE_DESCRIPTION;
+    }
+
+    if (!els.flagsHint) {
+      return;
+    }
+
+    if (step === "source") {
+      els.flagsHint.textContent = "まずは素材を読み込むと、ここに記録が並びます。";
+      return;
+    }
+
+    if (step === "platform") {
+      els.flagsHint.textContent = "確認するSNSを選ぶと、ここに記録できます。";
+      return;
+    }
+
+    if (step === "play") {
+      els.flagsHint.textContent = "次に再生して、気になる場所で止めます。";
+      return;
+    }
+
+    if (step === "click") {
+      els.flagsHint.textContent = "画面内の気になる位置をクリックすると、右に記録されます。";
+      return;
+    }
+
+    if (step === "memo") {
+      els.flagsHint.textContent = "必要ならメモを残して保存できます。";
+      return;
+    }
+
+    updateFlagsHint();
+  }
+
   function toggleAutoStop() {
     state.autoStopEnabled = !state.autoStopEnabled;
 
@@ -633,6 +767,7 @@
     updatePlatformButtons();
     updateFlagsHint();
     updateAutoStopButton();
+    syncInlineGuide();
     track("platform_select", {
       platform: platformKey,
       platform_count: platformKeys.length
@@ -668,6 +803,7 @@
     updatePlatformButtons();
     updateFlagsHint();
     updateAutoStopButton();
+    syncInlineGuide();
   }
 
   function setPlatformTheme(meta) {
@@ -753,6 +889,7 @@
     state.pdfNeedsAttention = state.flags.length > 0;
     state.lastTrackedMediaKey = "";
     state.currentProjectId = "";
+    state.hasPlaybackStarted = false;
     state.objectUrl = URL.createObjectURL(file);
 
     els.video.src = state.objectUrl;
@@ -815,6 +952,7 @@
     renderFlags();
     renderCommentEditor();
     updateAutoStopButton();
+    syncInlineGuide();
   }
 
   function onVideoSeeked() {
@@ -872,6 +1010,7 @@
     state.pendingInitialFrame = false;
     state.isPreviewSeeking = false;
     state.pdfNeedsAttention = false;
+    state.hasPlaybackStarted = false;
   }
 
   function updateSourceLoadButton() {
@@ -1196,6 +1335,7 @@
     els.autoStopToggle.disabled = !enabled || !state.flags.length;
     els.clearFlagsButton.title = state.flags.length ? "今のチェック記録をすべて削除します。" : HINT_NEEDS_RECORDS;
     updatePdfButtons();
+    syncInlineGuide();
   }
 
   function updatePdfButtons() {
@@ -1237,7 +1377,7 @@
     }
 
     if (!hasActiveSelection()) {
-      showToast("表示設定を1つ以上選んでください。", "warning");
+      showToast("確認するSNSを1つ以上選んでください。", "warning");
       return;
     }
 
@@ -1310,15 +1450,21 @@
   function updateTransportState() {
     var isPlaying = !els.video.paused;
 
+    if (isPlaying) {
+      state.hasPlaybackStarted = true;
+    }
+
     els.playToggle.classList.toggle("is-playing", isPlaying);
     els.playToggleLabel.textContent = isPlaying ? "停止" : "再生";
 
     if (isPlaying) {
       armAutoStopTarget();
+      syncInlineGuide();
       return;
     }
 
     state.autoStopTargetTime = null;
+    syncInlineGuide();
   }
 
   function updateActiveButtons(container, selector, activeValue, attrName) {
@@ -1430,7 +1576,7 @@
     }
 
     if (!hasActiveSelection()) {
-      showToast("表示設定を1つ以上選んでください。", "warning");
+      showToast("確認するSNSを1つ以上選んでください。", "warning");
       return;
     }
 
@@ -1822,11 +1968,13 @@
     state.freshFlagId = flagId;
     renderFlags();
     renderCommentEditor();
+    syncInlineGuide();
     state.freshFlagTimer = window.setTimeout(function () {
       state.freshFlagId = "";
       state.freshFlagTimer = 0;
       renderFlags();
       renderCommentEditor();
+      syncInlineGuide();
     }, 4000);
   }
 
@@ -2032,6 +2180,7 @@
     renderFlags();
     syncTimeline();
     renderCommentEditor();
+    syncInlineGuide();
     showToast("チェック記録をすべてクリアしました。", "info");
   }
 
@@ -2051,6 +2200,7 @@
       els.flagMarkers.innerHTML = "";
       els.flagPins.innerHTML = "";
       renderCommentEditor();
+      syncInlineGuide();
       return;
     }
 
@@ -2078,6 +2228,7 @@
     renderFlagPins(activeFlagId);
     updateFlagHighlights();
     renderCommentEditor();
+    syncInlineGuide();
   }
 
   function renderFlagMarkers(activeFlagId) {

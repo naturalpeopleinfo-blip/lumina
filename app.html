@@ -8,7 +8,7 @@
     name="description"
     content="映像制作会社向けの完全ローカル動作セーフゾーン確認SPAツール Lumina Zone"
   >
-  <link rel="stylesheet" href="style.css?v=20260410-billing-alignment-1">
+  <link rel="stylesheet" href="style.css?v=20260410-step-guide-1">
 </head>
 <body class="app-page">
   <div class="app-shell">
@@ -112,10 +112,10 @@
             <div class="card-header">
               <div>
                 <p class="eyebrow step-label">STEP 2</p>
-                <h3>表示設定</h3>
+                <h3>確認するSNSを選ぶ</h3>
               </div>
             </div>
-            <p id="modeDescription" class="mode-note">1つ以上選ぶと、セーフゾーンの枠が表示されます。</p>
+            <p id="modeDescription" class="mode-note">確認したいSNSを選ぶと、その表示領域が出ます。</p>
             <div id="modeButtons" class="platform-dock" aria-label="プラットフォーム選択"></div>
 
             <div class="setting-block">
@@ -134,14 +134,15 @@
                 <video id="previewVideo" playsinline preload="auto"></video>
 
                 <div id="placeholder" class="empty-state">
-                <div class="empty-state-card">
-                  <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="empty-logo" width="90" height="90">
-                  <strong>動画を読み込む</strong>
-                  <ul class="empty-state-list" aria-hidden="true">
-                      <li>このボタンから始めます。</li>
-                      <li>読み込んだあとに表示設定を選ぶと、セーフゾーンが表示されます。</li>
+                  <div class="empty-state-card">
+                    <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="empty-logo" width="90" height="90">
+                    <span class="empty-kicker">Local Ready</span>
+                    <strong>アップロード不要</strong>
+                    <p>動画はこの端末内で読み込まれます。</p>
+                    <ul class="empty-state-list" aria-hidden="true">
+                      <li>通信環境が弱い場所でも、そのまま確認できます。</li>
+                      <li>まずは STEP 1 の「素材を読み込む」から始めます。</li>
                     </ul>
-                    <label for="fileInput" class="action-button action-button-primary empty-state-action">素材を読み込む</label>
                   </div>
                 </div>
 
@@ -182,6 +183,10 @@
                     <span class="ghost-pill ghost-short"></span>
                     <span class="ghost-block"></span>
                   </div>
+                </div>
+
+                <div id="guideStageHint" class="stage-guide-hint" hidden>
+                  <span id="guideStageHintCopy" class="stage-guide-hint-copy">画面内の気になる位置をクリック</span>
                 </div>
 
                 <div id="flagPins" class="flag-pin-layer" aria-label="チェックピン"></div>
@@ -358,9 +363,9 @@
 
   <script src="config.js"></script>
   <script src="analytics.js"></script>
-  <script src="auth.js?v=20260410-billing-alignment-1"></script>
+  <script src="auth.js?v=20260410-step-guide-1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="db.js"></script>
-  <script src="app.js?v=20260410-billing-alignment-1"></script>
+  <script src="app.js?v=20260410-step-guide-1"></script>
 </body>
 </html>
