@@ -3,6 +3,7 @@
 
   var SPEED_OPTIONS = [1, 1.5, 2, 3];
   var DEFAULT_RATIO = 9 / 16;
+  var IPHONE_TALL_RATIO = 430 / 932;
   var DEFAULT_FRAME_RATE = 30;
   var FLAG_STORAGE_PREFIX = "lumina-boundary-pro::flags::";
   var HISTORY_INDEX_KEY = "lumina-boundary-pro::history-index";
@@ -10,18 +11,51 @@
   var FIRST_FRAME_TIME = 0.04;
   var ACTIVE_FLAG_TOLERANCE = 0.45;
   var PLATFORM_ORDER = ["tiktok", "reels", "shorts"];
+  var DISPLAY_PROFILES = {
+    standard: {
+      key: "standard",
+      label: "標準 9:16",
+      caption: "編集時の基準",
+      ratio: DEFAULT_RATIO
+    },
+    iphoneTall: {
+      key: "iphoneTall",
+      label: "iPhone実機イメージ",
+      caption: "iPhone 16 / 15 Pro Max など",
+      ratio: IPHONE_TALL_RATIO
+    }
+  };
   var DEFAULT_PLATFORM_SETTINGS = {
     tiktok: {
-      left: "11.111%",
-      top: "12.5%",
-      right: "27.778%",
-      rightUpper: "11.111%",
-      stepY: "43.75%",
-      bottom: "34.375%",
-      mask: "tiktok-step"
+      standard: {
+        highRisk: { left: "6%", top: "7%", right: "18%", rightUpper: "8%", stepY: "42%", bottom: "24%" },
+        caution: { left: "11.111%", top: "12.5%", right: "27.778%", rightUpper: "11.111%", stepY: "43.75%", bottom: "34.375%" }
+      },
+      iphoneTall: {
+        highRisk: { left: "9%", top: "7%", right: "21%", rightUpper: "9%", stepY: "42%", bottom: "24%" },
+        caution: { left: "15%", top: "12.5%", right: "31%", rightUpper: "14%", stepY: "43.75%", bottom: "34.375%" }
+      }
     },
-    reels: { left: "6%", right: "12%", bottom: "22%", top: "0%" },
-    shorts: { left: "6%", right: "15%", bottom: "20%", top: "10%" }
+    reels: {
+      standard: {
+        highRisk: { left: "3%", top: "0%", right: "8%", rightUpper: "8%", stepY: "48%", bottom: "15%" },
+        caution: { left: "6%", top: "0%", right: "12%", rightUpper: "12%", stepY: "48%", bottom: "22%" }
+      },
+      iphoneTall: {
+        highRisk: { left: "6%", top: "0%", right: "10%", rightUpper: "10%", stepY: "48%", bottom: "16%" },
+        caution: { left: "10%", top: "0%", right: "16%", rightUpper: "16%", stepY: "48%", bottom: "24%" }
+      }
+    },
+    shorts: {
+      standard: {
+        highRisk: { left: "3%", top: "7%", right: "10%", rightUpper: "10%", stepY: "46%", bottom: "15%" },
+        caution: { left: "6%", top: "10%", right: "15%", rightUpper: "15%", stepY: "46%", bottom: "20%" }
+      },
+      iphoneTall: {
+        highRisk: { left: "6%", top: "7%", right: "12%", rightUpper: "12%", stepY: "46%", bottom: "16%" },
+        caution: { left: "10%", top: "10%", right: "18%", rightUpper: "18%", stepY: "46%", bottom: "22%" }
+      }
+    }
   };
   var COMPOSITE_PLATFORM_META = {
     accent: "#0a84ff",
@@ -46,7 +80,7 @@
     info: "Lumina Zone"
   };
   var EMPTY_MODE_LABEL = "縦動画セーフゾーンチェッカー";
-  var EMPTY_MODE_DESCRIPTION = "確認したいSNSを選ぶと、その表示領域が出ます。";
+  var EMPTY_MODE_DESCRIPTION = "確認したいSNSを選ぶと、その表示領域が出ます。標準表示と iPhone 実機イメージを並べて確認できます。";
   var HINT_NEEDS_RECORDS = "記録すると使えます。";
   var HINT_NEEDS_HISTORY = "履歴がたまると使えます。";
   var FREE_DAILY_PDF_LIMIT = 2;
@@ -189,7 +223,7 @@
   function init() {
     var configSource = typeof AppConfig !== "undefined" && AppConfig ? AppConfig : {};
 
-    platforms = buildPlatformMap(configSource.platforms || DEFAULT_PLATFORM_SETTINGS);
+    platforms = buildPlatformProfiles(configSource.platforms || DEFAULT_PLATFORM_SETTINGS);
     platformMeta = buildPlatformMeta(configSource.platformMeta || {});
 
     cacheElements();
@@ -245,8 +279,12 @@
     els.dropZone = document.getElementById("dropZone");
     els.stageFrame = document.getElementById("stageFrame");
     els.stageSurface = document.getElementById("stageSurface");
+    els.stageFrameDevice = document.getElementById("stageFrameDevice");
+    els.stageSurfaceDevice = document.getElementById("stageSurfaceDevice");
     els.flagPins = document.getElementById("flagPins");
+    els.flagPinsDevice = document.getElementById("flagPinsDevice");
     els.video = document.getElementById("previewVideo");
+    els.videoDevice = document.getElementById("previewVideoDevice");
     els.modeLabel = document.getElementById("modeLabel");
     els.modeDescription = document.getElementById("modeDescription");
     els.modeButtons = document.getElementById("modeButtons");
@@ -402,41 +440,94 @@
     window.addEventListener("beforeunload", releaseObjectUrl);
   }
 
-  function buildPlatformMap(platformMap) {
-    var leftMax = 0;
-    var topMax = 0;
-    var rightMax = 0;
-    var bottomMax = 0;
+  function normalizeRiskSettings(base, override) {
+    var merged = mergeObjects(base, override || {});
+
+    if (!merged.rightUpper) {
+      merged.rightUpper = merged.right;
+    }
+
+    if (!merged.stepY) {
+      merged.stepY = "48%";
+    }
+
+    return merged;
+  }
+
+  function buildProfileSettings(baseProfile, overrideProfile) {
+    var standardSource = overrideProfile || {};
+
+    return {
+      highRisk: normalizeRiskSettings(baseProfile.highRisk, standardSource.highRisk),
+      caution: normalizeRiskSettings(baseProfile.caution, standardSource.caution)
+    };
+  }
+
+  function buildPlatformProfiles(platformMap) {
     var result = {};
 
-    Object.keys(platformMap).forEach(function (key) {
-      result[key] = {
-        left: platformMap[key].left || "6%",
-        top: platformMap[key].top,
-        right: platformMap[key].right,
-        bottom: platformMap[key].bottom,
-        rightUpper: platformMap[key].rightUpper || platformMap[key].right,
-        stepY: platformMap[key].stepY || platformMap[key].top,
-        mask: platformMap[key].mask || ""
-      };
+    PLATFORM_ORDER.forEach(function (key) {
+      var source = platformMap[key] || {};
+      var standardSource = source.standard ? source.standard : source;
+      var iphoneSource = source.iphoneTall || {};
 
-      leftMax = Math.max(leftMax, percentToNumber(platformMap[key].left || "6%"));
-      topMax = Math.max(topMax, percentToNumber(platformMap[key].top));
-      rightMax = Math.max(rightMax, percentToNumber(platformMap[key].right));
-      bottomMax = Math.max(bottomMax, percentToNumber(platformMap[key].bottom));
+      result[key] = {
+        standard: buildProfileSettings(DEFAULT_PLATFORM_SETTINGS[key].standard, standardSource),
+        iphoneTall: buildProfileSettings(DEFAULT_PLATFORM_SETTINGS[key].iphoneTall, iphoneSource)
+      };
     });
 
     result.all = {
-      left: leftMax + "%",
-      top: topMax + "%",
-      right: rightMax + "%",
-      bottom: bottomMax + "%",
-      rightUpper: rightMax + "%",
-      stepY: topMax + "%",
-      mask: ""
+      standard: buildCompositeProfileSettings(PLATFORM_ORDER, "standard", result),
+      iphoneTall: buildCompositeProfileSettings(PLATFORM_ORDER, "iphoneTall", result)
     };
 
     return result;
+  }
+
+  function buildCompositeProfileSettings(platformKeys, profileKey, profileMap) {
+    return platformKeys.reduce(function (accumulator, key) {
+      return mergeRiskProfile(accumulator, profileMap[key][profileKey]);
+    }, createEmptyRiskProfile());
+  }
+
+  function createEmptyRiskProfile() {
+    return {
+      highRisk: {
+        left: "0%",
+        top: "0%",
+        right: "0%",
+        rightUpper: "0%",
+        stepY: "48%",
+        bottom: "0%"
+      },
+      caution: {
+        left: "0%",
+        top: "0%",
+        right: "0%",
+        rightUpper: "0%",
+        stepY: "48%",
+        bottom: "0%"
+      }
+    };
+  }
+
+  function mergeRiskProfile(leftProfile, rightProfile) {
+    return {
+      highRisk: mergeRiskLevel(leftProfile.highRisk, rightProfile.highRisk),
+      caution: mergeRiskLevel(leftProfile.caution, rightProfile.caution)
+    };
+  }
+
+  function mergeRiskLevel(leftRisk, rightRisk) {
+    return {
+      left: Math.max(percentToNumber(leftRisk.left), percentToNumber(rightRisk.left)) + "%",
+      top: Math.max(percentToNumber(leftRisk.top), percentToNumber(rightRisk.top)) + "%",
+      right: Math.max(percentToNumber(leftRisk.right), percentToNumber(rightRisk.right)) + "%",
+      rightUpper: Math.max(percentToNumber(leftRisk.rightUpper), percentToNumber(rightRisk.rightUpper)) + "%",
+      stepY: Math.max(percentToNumber(leftRisk.stepY), percentToNumber(rightRisk.stepY)) + "%",
+      bottom: Math.max(percentToNumber(leftRisk.bottom), percentToNumber(rightRisk.bottom)) + "%"
+    };
   }
 
   function buildPlatformMeta(metaMap) {
@@ -660,7 +751,7 @@
 
     if (els.modeDescription) {
       els.modeDescription.textContent = step === "platform"
-        ? "確認したいSNSを選ぶと、その表示領域が出ます。"
+        ? "確認したいSNSを選ぶと、その表示領域が出ます。標準表示と iPhone 実機イメージを並べて確認できます。"
         : EMPTY_MODE_DESCRIPTION;
     }
 
@@ -674,7 +765,7 @@
     }
 
     if (step === "platform") {
-      els.flagsHint.textContent = "確認するSNSを選ぶと、ここに記録できます。";
+      els.flagsHint.textContent = "確認するSNSを選ぶと、標準表示と iPhone 実機イメージに枠が出ます。";
       return;
     }
 
@@ -724,6 +815,54 @@
     updatePdfButtons();
   }
 
+  function applyProfileToSurface(surfaceEl, settings, platformSelection, profileKey) {
+    var platformKey = normalizePlatformKey(platformSelection);
+    var platformKeys = getPlatformKeys(platformKey);
+
+    if (!surfaceEl || !settings) {
+      return;
+    }
+
+    surfaceEl.dataset.platform =
+      platformKey === "all" ? "all" : (platformKeys.length === 1 ? platformKeys[0] : "combo");
+    surfaceEl.dataset.profile = profileKey || "standard";
+    surfaceEl.classList.add("has-selection");
+    surfaceEl.style.setProperty("--risk-high-top", settings.highRisk.top);
+    surfaceEl.style.setProperty("--risk-high-right", settings.highRisk.right);
+    surfaceEl.style.setProperty("--risk-high-bottom", settings.highRisk.bottom);
+    surfaceEl.style.setProperty("--risk-high-left", settings.highRisk.left);
+    surfaceEl.style.setProperty("--risk-high-right-upper", settings.highRisk.rightUpper);
+    surfaceEl.style.setProperty("--risk-high-step-y", settings.highRisk.stepY);
+    surfaceEl.style.setProperty("--risk-caution-top", settings.caution.top);
+    surfaceEl.style.setProperty("--risk-caution-right", settings.caution.right);
+    surfaceEl.style.setProperty("--risk-caution-bottom", settings.caution.bottom);
+    surfaceEl.style.setProperty("--risk-caution-left", settings.caution.left);
+    surfaceEl.style.setProperty("--risk-caution-right-upper", settings.caution.rightUpper);
+    surfaceEl.style.setProperty("--risk-caution-step-y", settings.caution.stepY);
+  }
+
+  function clearProfileSurface(surfaceEl, settings, profileKey) {
+    if (!surfaceEl || !settings) {
+      return;
+    }
+
+    surfaceEl.dataset.platform = "none";
+    surfaceEl.dataset.profile = profileKey || "standard";
+    surfaceEl.classList.remove("has-selection");
+    surfaceEl.style.setProperty("--risk-high-top", settings.highRisk.top);
+    surfaceEl.style.setProperty("--risk-high-right", settings.highRisk.right);
+    surfaceEl.style.setProperty("--risk-high-bottom", settings.highRisk.bottom);
+    surfaceEl.style.setProperty("--risk-high-left", settings.highRisk.left);
+    surfaceEl.style.setProperty("--risk-high-right-upper", settings.highRisk.rightUpper);
+    surfaceEl.style.setProperty("--risk-high-step-y", settings.highRisk.stepY);
+    surfaceEl.style.setProperty("--risk-caution-top", settings.caution.top);
+    surfaceEl.style.setProperty("--risk-caution-right", settings.caution.right);
+    surfaceEl.style.setProperty("--risk-caution-bottom", settings.caution.bottom);
+    surfaceEl.style.setProperty("--risk-caution-left", settings.caution.left);
+    surfaceEl.style.setProperty("--risk-caution-right-upper", settings.caution.rightUpper);
+    surfaceEl.style.setProperty("--risk-caution-step-y", settings.caution.stepY);
+  }
+
   function applyPlatform(platformSelection) {
     if (Array.isArray(platformSelection) && !platformSelection.length) {
       clearPlatformSelection();
@@ -736,25 +875,19 @@
     }
 
     var platformKey = normalizePlatformKey(platformSelection);
-    var selected = getPlatformSettings(platformKey);
+    var selectedStandard = getPlatformProfileSettings(platformKey, "standard");
+    var selectedDevice = getPlatformProfileSettings(platformKey, "iphoneTall");
     var meta = getPlatformMeta(platformKey);
     var platformKeys = getPlatformKeys(platformKey);
 
-    if (!selected || !meta) {
+    if (!selectedStandard || !selectedDevice || !meta) {
       return;
     }
 
     state.activePlatform = platformKey;
     state.activePlatforms = platformKeys;
-    els.stageSurface.dataset.platform =
-      platformKey === "all" ? "all" : (platformKeys.length === 1 ? platformKeys[0] : "combo");
-    els.stageSurface.classList.add("has-selection");
-    els.stageSurface.style.setProperty("--overlay-top", selected.top);
-    els.stageSurface.style.setProperty("--overlay-right", selected.right);
-    els.stageSurface.style.setProperty("--overlay-bottom", selected.bottom);
-    els.stageSurface.style.setProperty("--overlay-left", selected.left);
-    els.stageSurface.style.setProperty("--overlay-right-upper", selected.rightUpper || selected.right);
-    els.stageSurface.style.setProperty("--overlay-step-y", selected.stepY || selected.top);
+    applyProfileToSurface(els.stageSurface, selectedStandard, platformKey, "standard");
+    applyProfileToSurface(els.stageSurfaceDevice, selectedDevice, platformKey, "iphoneTall");
 
     if (els.modeLabel) {
       els.modeLabel.textContent = EMPTY_MODE_LABEL;
@@ -776,7 +909,8 @@
 
   function clearPlatformSelection() {
     var fallbackMeta = getPlatformMeta("all");
-    var fallbackSettings = getPlatformSettings("all");
+    var fallbackStandard = getPlatformProfileSettings("all", "standard");
+    var fallbackDevice = getPlatformProfileSettings("all", "iphoneTall");
 
     if (hasMediaLoaded() && !els.video.paused) {
       els.video.pause();
@@ -785,14 +919,8 @@
 
     state.activePlatform = "";
     state.activePlatforms = [];
-    els.stageSurface.dataset.platform = "none";
-    els.stageSurface.classList.remove("has-selection");
-    els.stageSurface.style.setProperty("--overlay-top", fallbackSettings.top);
-    els.stageSurface.style.setProperty("--overlay-right", fallbackSettings.right);
-    els.stageSurface.style.setProperty("--overlay-bottom", fallbackSettings.bottom);
-    els.stageSurface.style.setProperty("--overlay-left", fallbackSettings.left);
-    els.stageSurface.style.setProperty("--overlay-right-upper", fallbackSettings.rightUpper || fallbackSettings.right);
-    els.stageSurface.style.setProperty("--overlay-step-y", fallbackSettings.stepY || fallbackSettings.top);
+    clearProfileSurface(els.stageSurface, fallbackStandard, "standard");
+    clearProfileSurface(els.stageSurfaceDevice, fallbackDevice, "iphoneTall");
     if (els.modeLabel) {
       els.modeLabel.textContent = EMPTY_MODE_LABEL;
     }
@@ -894,7 +1022,14 @@
 
     els.video.src = state.objectUrl;
     els.video.playbackRate = state.playbackRate;
+    if (els.videoDevice) {
+      els.videoDevice.src = state.objectUrl;
+      els.videoDevice.playbackRate = state.playbackRate;
+    }
     els.stageSurface.classList.add("has-media");
+    if (els.stageSurfaceDevice) {
+      els.stageSurfaceDevice.classList.add("has-media");
+    }
 
     els.metaName.textContent = file.name;
     els.metaName.title = file.name;
@@ -938,6 +1073,8 @@
     }
     persistHistorySnapshot();
     setControlsEnabled(true);
+    syncComparisonVideo();
+    requestStageFit();
     updateTransportState();
     requestStageFit();
 
@@ -974,6 +1111,9 @@
     clearMediaStatus();
     clearPlatformSelection();
     els.stageSurface.classList.remove("has-media");
+    if (els.stageSurfaceDevice) {
+      els.stageSurfaceDevice.classList.remove("has-media");
+    }
     state.stageRatio = DEFAULT_RATIO;
     els.stageSurface.style.aspectRatio = "9 / 16";
     setControlsEnabled(false);
@@ -1429,6 +1569,7 @@
     var currentTime = duration ? clamp(els.video.currentTime, 0, duration) : 0;
     var progress = duration ? (currentTime / duration) * 100 : 0;
 
+    syncComparisonVideo(currentTime);
     els.currentTime.textContent = formatDuration(currentTime);
     els.totalTime.textContent = formatDuration(duration);
     els.timeline.max = duration || 1000;
@@ -1444,6 +1585,9 @@
 
   function syncPlaybackRate() {
     els.video.playbackRate = state.playbackRate;
+    if (els.videoDevice) {
+      els.videoDevice.playbackRate = state.playbackRate;
+    }
     updateActiveButtons(els.speedButtons, "[data-speed]", String(state.playbackRate), "data-speed");
   }
 
@@ -1457,6 +1601,8 @@
     els.playToggle.classList.toggle("is-playing", isPlaying);
     els.playToggleLabel.textContent = isPlaying ? "停止" : "再生";
 
+    syncComparisonPlayback(isPlaying);
+
     if (isPlaying) {
       armAutoStopTarget();
       syncInlineGuide();
@@ -1465,6 +1611,35 @@
 
     state.autoStopTargetTime = null;
     syncInlineGuide();
+  }
+
+  function syncComparisonVideo(targetTime) {
+    if (!els.videoDevice || !hasMediaLoaded()) {
+      return;
+    }
+
+    if (typeof targetTime === "number" && isFinite(targetTime) && Math.abs((els.videoDevice.currentTime || 0) - targetTime) > 0.05) {
+      els.videoDevice.currentTime = targetTime;
+    }
+  }
+
+  function syncComparisonPlayback(isPlaying) {
+    if (!els.videoDevice || !hasMediaLoaded()) {
+      return;
+    }
+
+    if (!isPlaying) {
+      els.videoDevice.pause();
+      return;
+    }
+
+    if (Math.abs((els.videoDevice.currentTime || 0) - (els.video.currentTime || 0)) > 0.05) {
+      els.videoDevice.currentTime = els.video.currentTime || 0;
+    }
+
+    els.videoDevice.play().catch(function () {
+      return null;
+    });
   }
 
   function updateActiveButtons(container, selector, activeValue, attrName) {
@@ -1893,38 +2068,32 @@
   }
 
   function detectZone(xRatio, yRatio) {
-    var metrics = getPlatformSettings(state.activePlatform);
-    var topBound = percentToNumber(metrics.top);
-    var rightBound = 100 - percentToNumber(metrics.right);
-    var bottomBound = 100 - percentToNumber(metrics.bottom);
-    var leftBound = percentToNumber(metrics.left || "6%");
-    var upperRightBound = 100 - percentToNumber(metrics.rightUpper || metrics.right);
-    var stepY = percentToNumber(metrics.stepY || metrics.top);
+    var metrics = getPlatformProfileSettings(state.activePlatform, "standard");
+    var caution = metrics.caution;
+    var topBound = percentToNumber(caution.top);
+    var rightBound = 100 - percentToNumber(caution.right);
+    var bottomBound = 100 - percentToNumber(caution.bottom);
+    var leftBound = percentToNumber(caution.left || "6%");
+    var upperRightBound = 100 - percentToNumber(caution.rightUpper || caution.right);
+    var stepY = percentToNumber(caution.stepY || caution.top);
     var x = xRatio * 100;
     var y = yRatio * 100;
     var violations = [];
 
-    if (metrics.mask === "tiktok-step") {
-      if (
-        (y >= topBound && y < stepY && x >= leftBound && x <= upperRightBound) ||
-        (y >= stepY && y <= bottomBound && x >= leftBound && x <= rightBound)
-      ) {
-        return "center";
-      }
-    } else if (x >= leftBound && x <= rightBound && y >= topBound && y <= bottomBound) {
+    if (
+      (y >= topBound && y < stepY && x >= leftBound && x <= upperRightBound) ||
+      (y >= stepY && y <= bottomBound && x >= leftBound && x <= rightBound)
+    ) {
       return "center";
     }
 
     if (y < topBound) {
       violations.push({ zone: "top", delta: topBound - y });
     }
-    if (metrics.mask === "tiktok-step") {
-      if (y < stepY && x > upperRightBound) {
-        violations.push({ zone: "right", delta: x - upperRightBound });
-      } else if (y >= stepY && x > rightBound) {
-        violations.push({ zone: "right", delta: x - rightBound });
-      }
-    } else if (x > rightBound) {
+
+    if (y < stepY && x > upperRightBound) {
+      violations.push({ zone: "right", delta: x - upperRightBound });
+    } else if (y >= stepY && x > rightBound) {
       violations.push({ zone: "right", delta: x - rightBound });
     }
     if (x < leftBound) {
@@ -2199,6 +2368,9 @@
       els.flagsList.innerHTML = "";
       els.flagMarkers.innerHTML = "";
       els.flagPins.innerHTML = "";
+      if (els.flagPinsDevice) {
+        els.flagPinsDevice.innerHTML = "";
+      }
       renderCommentEditor();
       syncInlineGuide();
       return;
@@ -2259,6 +2431,9 @@
   function renderFlagPins(activeFlagId) {
     if (!state.flags.length) {
       els.flagPins.innerHTML = "";
+      if (els.flagPinsDevice) {
+        els.flagPinsDevice.innerHTML = "";
+      }
       return;
     }
 
@@ -2277,6 +2452,23 @@
         "</button>"
       );
     }).join("");
+
+    if (els.flagPinsDevice) {
+      els.flagPinsDevice.innerHTML = state.flags.map(function (flag) {
+        var isActive = flag.id === activeFlagId;
+        var mappedPoint = mapFlagPointForProfile(flag, "iphoneTall");
+        var title = getFlagTitle(flag) + " / " + FLAG_LABELS[flag.zone];
+
+        return (
+          '<button class="flag-pin flag-pin-device' + (isActive ? " is-active" : "") + '" type="button"' +
+          ' data-flag-id="' + escapeHtml(flag.id) + '"' +
+          ' data-zone="' + escapeHtml(flag.zone) + '"' +
+          ' style="left:' + (mappedPoint.x * 100) + "%;top:" + (mappedPoint.y * 100) + '%;"' +
+          ' title="' + escapeHtml(title) + '">' +
+          "</button>"
+        );
+      }).join("");
+    }
   }
 
   function updateFlagHighlights() {
@@ -2284,6 +2476,7 @@
     var listItems = els.flagsList.querySelectorAll("[data-flag-id]");
     var markerItems = els.flagMarkers.querySelectorAll("[data-flag-id]");
     var pinItems = els.flagPins.querySelectorAll("[data-flag-id]");
+    var devicePinItems = els.flagPinsDevice ? els.flagPinsDevice.querySelectorAll("[data-flag-id]") : [];
 
     Array.prototype.forEach.call(listItems, function (item) {
       item.classList.toggle("is-active", item.getAttribute("data-flag-id") === activeFlagId);
@@ -2296,6 +2489,31 @@
     Array.prototype.forEach.call(pinItems, function (item) {
       item.classList.toggle("is-active", item.getAttribute("data-flag-id") === activeFlagId);
     });
+
+    Array.prototype.forEach.call(devicePinItems, function (item) {
+      item.classList.toggle("is-active", item.getAttribute("data-flag-id") === activeFlagId);
+    });
+  }
+
+  function mapFlagPointForProfile(flag, profileKey) {
+    var x = clamp(flag.x, 0, 1);
+    var y = clamp(flag.y, 0, 1);
+    var targetRatio = 0;
+    var visibleFraction = 0;
+    var cropInset = 0;
+
+    if (profileKey !== "iphoneTall") {
+      return { x: x, y: y };
+    }
+
+    targetRatio = DISPLAY_PROFILES.iphoneTall.ratio;
+    visibleFraction = clamp(targetRatio / (state.stageRatio || DEFAULT_RATIO), 0, 1);
+    cropInset = (1 - visibleFraction) / 2;
+
+    return {
+      x: clamp((x - cropInset) / visibleFraction, 0, 1),
+      y: y
+    };
   }
 
   function getActiveFlagId(currentTime) {
@@ -3127,46 +3345,46 @@
 
   function drawExportOverlay(ctx, width, height, platformSelection) {
     var platformKey = normalizePlatformKey(platformSelection || state.activePlatform || "all");
-    var meta = getPlatformMeta(platformKey);
-    var metrics = getPlatformSettings(platformKey);
-    var left = width * (percentToNumber(metrics.left || "6%") / 100);
-    var top = height * (percentToNumber(metrics.top) / 100);
-    var rightWidth = width * (percentToNumber(metrics.right) / 100);
-    var bottomHeight = height * (percentToNumber(metrics.bottom) / 100);
-    var safeTop = top;
-    var safeLeft = left;
-    var safeRight = width - rightWidth;
-    var safeBottom = height - bottomHeight;
+    var metrics = getPlatformProfileSettings(platformKey, "standard");
+    var highRisk = metrics.highRisk;
+    var caution = metrics.caution;
+    var highLeft = width * (percentToNumber(highRisk.left || "0%") / 100);
+    var highTop = height * (percentToNumber(highRisk.top || "0%") / 100);
+    var highRightWidth = width * (percentToNumber(highRisk.right || "0%") / 100);
+    var highBottomHeight = height * (percentToNumber(highRisk.bottom || "0%") / 100);
+    var highUpperRightWidth = width * (percentToNumber(highRisk.rightUpper || highRisk.right || "0%") / 100);
+    var highStepY = height * (percentToNumber(highRisk.stepY || "48%") / 100);
+    var cautionLeft = width * (percentToNumber(caution.left || "0%") / 100);
+    var cautionTop = height * (percentToNumber(caution.top || "0%") / 100);
+    var cautionRightWidth = width * (percentToNumber(caution.right || "0%") / 100);
+    var cautionBottomHeight = height * (percentToNumber(caution.bottom || "0%") / 100);
+    var cautionUpperRightWidth = width * (percentToNumber(caution.rightUpper || caution.right || "0%") / 100);
+    var cautionStepY = height * (percentToNumber(caution.stepY || "48%") / 100);
+    var safeTop = cautionTop;
+    var safeLeft = cautionLeft;
+    var safeRight = width - cautionRightWidth;
+    var safeBottom = height - cautionBottomHeight;
     var lineWidth = Math.max(4, Math.round(width * 0.0038));
 
     ctx.save();
-    ctx.fillStyle = meta.dangerStrong;
+    ctx.fillStyle = "rgba(226, 79, 79, 0.54)";
+    ctx.fillRect(0, 0, width, highTop);
+    ctx.fillRect(0, highTop, highLeft, height - highTop - highBottomHeight);
+    ctx.fillRect(width - highUpperRightWidth, highTop, highUpperRightWidth, Math.max(0, highStepY - highTop));
+    ctx.fillRect(width - highRightWidth, highStepY, highRightWidth, Math.max(0, height - highStepY - highBottomHeight));
+    ctx.fillRect(0, height - highBottomHeight, width, highBottomHeight);
 
-    if (metrics.mask === "tiktok-step") {
-      var upperRightWidth = width * (percentToNumber(metrics.rightUpper || metrics.right) / 100);
-      var stepY = height * (percentToNumber(metrics.stepY || metrics.top) / 100);
-      var safeUpperRight = width - upperRightWidth;
+    ctx.fillStyle = "rgba(255, 171, 72, 0.28)";
+    ctx.fillRect(cautionLeft, highTop, Math.max(0, width - cautionLeft - cautionUpperRightWidth), Math.max(0, cautionTop - highTop));
+    ctx.fillRect(highLeft, cautionTop, Math.max(0, cautionLeft - highLeft), Math.max(0, height - cautionTop - cautionBottomHeight));
+    ctx.fillRect(width - cautionUpperRightWidth, cautionTop, Math.max(0, cautionUpperRightWidth - highUpperRightWidth), Math.max(0, cautionStepY - cautionTop));
+    ctx.fillRect(width - cautionRightWidth, cautionStepY, Math.max(0, cautionRightWidth - highRightWidth), Math.max(0, height - cautionStepY - cautionBottomHeight));
+    ctx.fillRect(cautionLeft, height - cautionBottomHeight, Math.max(0, width - cautionLeft - cautionRightWidth), Math.max(0, cautionBottomHeight - highBottomHeight));
 
-      ctx.fillRect(0, 0, width, top);
-      ctx.fillRect(0, top, left, safeBottom - top);
-      ctx.fillRect(safeUpperRight, top, upperRightWidth, stepY - top);
-      ctx.fillRect(safeRight, stepY, width - safeRight, safeBottom - stepY);
-      ctx.fillRect(0, safeBottom, width, height - safeBottom);
-
-      ctx.strokeStyle = meta.accentStrong;
-      ctx.lineWidth = lineWidth;
-      ctx.strokeRect(safeLeft, safeTop, safeUpperRight - safeLeft, stepY - safeTop);
-      ctx.strokeRect(safeLeft, stepY, safeRight - safeLeft, safeBottom - stepY);
-    } else {
-      ctx.fillRect(0, 0, width, top);
-      ctx.fillRect(0, 0, left, height);
-      ctx.fillRect(width - rightWidth, 0, rightWidth, height);
-      ctx.fillRect(0, height - bottomHeight, width, bottomHeight);
-
-      ctx.strokeStyle = meta.accentStrong;
-      ctx.lineWidth = lineWidth;
-      ctx.strokeRect(safeLeft, safeTop, safeRight - safeLeft, safeBottom - safeTop);
-    }
+    ctx.strokeStyle = "rgba(120, 240, 212, 0.92)";
+    ctx.lineWidth = lineWidth;
+    ctx.strokeRect(safeLeft, safeTop, Math.max(0, width - cautionUpperRightWidth - safeLeft), Math.max(0, cautionStepY - safeTop));
+    ctx.strokeRect(safeLeft, cautionStepY, Math.max(0, safeRight - safeLeft), Math.max(0, safeBottom - cautionStepY));
 
     ctx.restore();
   }
@@ -3390,6 +3608,9 @@
     }
 
     els.video.currentTime = clamp(seconds, 0, els.video.duration || 0);
+    if (els.videoDevice) {
+      els.videoDevice.currentTime = els.video.currentTime;
+    }
     if (!pauseVideo) {
       armAutoStopTarget();
     }
@@ -3407,6 +3628,11 @@
     els.video.pause();
     els.video.removeAttribute("src");
     els.video.load();
+    if (els.videoDevice) {
+      els.videoDevice.pause();
+      els.videoDevice.removeAttribute("src");
+      els.videoDevice.load();
+    }
   }
 
   function hasMediaLoaded() {
@@ -3418,23 +3644,36 @@
   }
 
   function fitStageSurface() {
-    var availableWidth = Math.max(els.stageFrame.clientWidth, 220);
-    var availableHeight = Math.max(els.stageFrame.clientHeight, 300);
-    var ratio = state.stageRatio || DEFAULT_RATIO;
-    var width = Math.min(availableWidth, availableHeight * ratio);
-    var height = width / ratio;
+    fitSingleStage(els.stageFrame, els.stageSurface, state.stageRatio || DEFAULT_RATIO);
+    fitSingleStage(els.stageFrameDevice, els.stageSurfaceDevice, DISPLAY_PROFILES.iphoneTall.ratio);
+
+    if (state.isOnboardingOpen) {
+      renderOnboardingStep();
+    }
+  }
+
+  function fitSingleStage(frameEl, surfaceEl, ratio) {
+    var availableWidth = 0;
+    var availableHeight = 0;
+    var width = 0;
+    var height = 0;
+
+    if (!frameEl || !surfaceEl) {
+      return;
+    }
+
+    availableWidth = Math.max(frameEl.clientWidth, 220);
+    availableHeight = Math.max(frameEl.clientHeight, 300);
+    width = Math.min(availableWidth, availableHeight * ratio);
+    height = width / ratio;
 
     if (height > availableHeight) {
       height = availableHeight;
       width = height * ratio;
     }
 
-    els.stageSurface.style.width = Math.floor(width) + "px";
-    els.stageSurface.style.height = Math.floor(height) + "px";
-
-    if (state.isOnboardingOpen) {
-      renderOnboardingStep();
-    }
+    surfaceEl.style.width = Math.floor(width) + "px";
+    surfaceEl.style.height = Math.floor(height) + "px";
   }
 
   function looksLikeVideo(file) {
@@ -3563,43 +3802,19 @@
     return buildPlatformKey(platformSelection);
   }
 
-  function getPlatformSettings(platformSelection) {
+  function getPlatformProfileSettings(platformSelection, profileKey) {
     var platformKeys = getPlatformKeys(platformSelection);
-    var leftMax = 0;
-    var topMax = 0;
-    var rightMax = 0;
-    var bottomMax = 0;
+    var normalizedProfileKey = DISPLAY_PROFILES[profileKey] ? profileKey : "standard";
 
     if (platformKeys.length === PLATFORM_ORDER.length) {
-      return platforms.all;
+      return platforms.all[normalizedProfileKey];
     }
 
-    if (platformKeys.length === 1 && platforms[platformKeys[0]]) {
-      return platforms[platformKeys[0]];
+    if (platformKeys.length === 1 && platforms[platformKeys[0]] && platforms[platformKeys[0]][normalizedProfileKey]) {
+      return platforms[platformKeys[0]][normalizedProfileKey];
     }
 
-    platformKeys.forEach(function (key) {
-      var current = platforms[key];
-
-      if (!current) {
-        return;
-      }
-
-      leftMax = Math.max(leftMax, percentToNumber(current.left || "6%"));
-      topMax = Math.max(topMax, percentToNumber(current.top));
-      rightMax = Math.max(rightMax, percentToNumber(current.right));
-      bottomMax = Math.max(bottomMax, percentToNumber(current.bottom));
-    });
-
-    return {
-      left: leftMax + "%",
-      top: topMax + "%",
-      right: rightMax + "%",
-      bottom: bottomMax + "%",
-      rightUpper: rightMax + "%",
-      stepY: topMax + "%",
-      mask: ""
-    };
+    return buildCompositeProfileSettings(platformKeys, normalizedProfileKey, platforms);
   }
 
   function buildCompositePlatformMeta(platformKeys) {
