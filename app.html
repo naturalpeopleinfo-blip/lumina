@@ -8,12 +8,12 @@
     name="description"
     content="映像制作会社向けの完全ローカル動作セーフゾーン確認SPAツール Lumina Zone"
   >
-  <link rel="stylesheet" href="style.css?v=20260410-step-guide-1">
+  <link rel="stylesheet" href="style.css?v=20260418-pin-layer-1">
 </head>
 <body class="app-page">
   <div class="app-shell">
     <main class="workspace-shell panel">
-      <input id="fileInput" type="file" accept="video/*">
+      <input id="fileInput" type="file" accept="video/*,image/*">
 
       <header class="workspace-utility-bar" aria-label="ワークスペースヘッダー">
         <div class="workspace-utility-brand">
@@ -104,18 +104,32 @@
             </div>
 
             <div class="source-action-row source-action-row-single">
-              <label id="sourceLoadButton" for="fileInput" class="action-button action-button-primary">素材を読み込む</label>
+              <label id="sourceLoadButton" for="fileInput" class="action-button action-button-primary source-load-button">
+                <span class="source-load-button-label">素材を読み込む</span>
+              </label>
             </div>
           </section>
 
           <section id="guideStepModes" class="control-card setup-card">
             <div class="card-header">
-              <div>
-                <p class="eyebrow step-label">STEP 2</p>
+              <div class="card-header-copy">
+                <div class="step-label-row">
+                  <p class="eyebrow step-label">STEP 2</p>
+                  <button
+                    id="platformInfoButton"
+                    class="mode-info-button"
+                    type="button"
+                    aria-haspopup="dialog"
+                    aria-controls="platformInfoModal"
+                    aria-label="表示基準について"
+                  >
+                    表示基準
+                  </button>
+                </div>
                 <h3>確認するSNSを選ぶ</h3>
               </div>
             </div>
-            <p id="modeDescription" class="mode-note">確認したいSNSを選ぶと、その表示領域が出ます。標準表示と iPhone 実機イメージを並べて確認できます。</p>
+            <p id="modeDescription" class="mode-note" hidden></p>
             <div id="modeButtons" class="platform-dock" aria-label="プラットフォーム選択"></div>
 
             <div class="setting-block">
@@ -125,143 +139,71 @@
           </section>
         </aside>
 
-        <section class="preview-column">
+        <section id="previewColumn" class="preview-column">
           <div id="toastRoot" class="toast-root" aria-live="polite" aria-atomic="true"></div>
 
           <div id="dropZone" class="viewer-stage">
-            <div class="stage-compare">
-              <section class="stage-preview-panel stage-preview-panel-primary" aria-label="標準 9:16 プレビュー">
-                <div class="stage-preview-heading">
-                  <p class="stage-preview-label">標準 9:16</p>
-                  <p class="stage-preview-copy">編集時の基準</p>
+            <div id="stageFrame" class="stage-surface-wrap">
+              <div id="stageSurface" class="stage-surface" data-platform="none" data-profile="standard">
+                <div class="stage-preview-toolbar" aria-hidden="true">
+                  <span class="stage-inline-legend-item stage-inline-legend-item-high"><i></i>完全NG</span>
+                  <span class="stage-inline-legend-item stage-inline-legend-item-caution"><i></i>危険</span>
                 </div>
+                <video id="previewVideo" playsinline preload="auto"></video>
+                <img id="previewImage" alt="" decoding="async">
 
-                <div id="stageFrame" class="stage-surface-wrap">
-                  <div id="stageSurface" class="stage-surface" data-platform="none" data-profile="standard">
-                    <video id="previewVideo" playsinline preload="auto"></video>
-
-                    <div id="placeholder" class="empty-state">
-                      <div class="empty-state-card">
-                        <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="empty-logo" width="90" height="90">
-                        <span class="empty-kicker">Local Ready</span>
-                        <strong>アップロード不要</strong>
-                        <p>動画はこの端末内で読み込まれます。</p>
-                        <ul class="empty-state-list" aria-hidden="true">
-                          <li>通信環境が弱い場所でも、そのまま確認できます。</li>
-                          <li>まずは STEP 1 の「素材を読み込む」から始めます。</li>
-                        </ul>
-                      </div>
-                    </div>
-
-                    <div id="boundaryOverlay" class="boundary-overlay" aria-hidden="true">
-                      <div class="risk-zone risk-zone-high risk-zone-top"></div>
-                      <div class="risk-zone risk-zone-high risk-zone-left"></div>
-                      <div class="risk-zone risk-zone-high risk-zone-right-upper"></div>
-                      <div class="risk-zone risk-zone-high risk-zone-right-lower"></div>
-                      <div class="risk-zone risk-zone-high risk-zone-bottom"></div>
-
-                      <div class="risk-zone risk-zone-caution risk-zone-top"></div>
-                      <div class="risk-zone risk-zone-caution risk-zone-left"></div>
-                      <div class="risk-zone risk-zone-caution risk-zone-right-upper"></div>
-                      <div class="risk-zone risk-zone-caution risk-zone-right-lower"></div>
-                      <div class="risk-zone risk-zone-caution risk-zone-bottom"></div>
-
-                      <div class="safe-frame safe-frame-upper"></div>
-                      <div class="safe-frame safe-frame-lower"></div>
-
-                      <div class="dummy-ui dummy-ui-top">
-                        <span class="ghost-pill ghost-wide"></span>
-                        <span class="ghost-pill ghost-short"></span>
-                        <span class="ghost-dot"></span>
-                      </div>
-
-                      <div class="dummy-ui dummy-ui-right">
-                        <span class="ghost-ring"></span>
-                        <span class="ghost-ring"></span>
-                        <span class="ghost-ring"></span>
-                        <span class="ghost-ring"></span>
-                        <span class="ghost-pill ghost-tall"></span>
-                        <span class="ghost-pill ghost-tiny"></span>
-                      </div>
-
-                      <div class="dummy-ui dummy-ui-bottom">
-                        <span class="ghost-pill ghost-headline"></span>
-                        <span class="ghost-pill ghost-medium"></span>
-                        <span class="ghost-pill ghost-short"></span>
-                        <span class="ghost-block"></span>
-                      </div>
-                    </div>
-
-                    <div id="guideStageHint" class="stage-guide-hint" hidden>
-                      <span id="guideStageHintCopy" class="stage-guide-hint-copy">画面内の気になる位置をクリック</span>
-                    </div>
-
-                    <div id="flagPins" class="flag-pin-layer" aria-label="チェックピン"></div>
+                <div id="placeholder" class="empty-state">
+                  <div class="empty-state-card">
+                    <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="empty-logo" width="90" height="90">
+                    <span class="empty-kicker">Local Ready</span>
+                    <strong>アップロード不要</strong>
+                    <p>この端末内で、そのまま確認できます。</p>
                   </div>
                 </div>
-              </section>
 
-              <section class="stage-preview-panel stage-preview-panel-device" aria-label="iPhone 実機イメージ">
-                <div class="stage-preview-heading">
-                  <p class="stage-preview-label">iPhone実機イメージ</p>
-                  <p class="stage-preview-copy">iPhone 16 / 15 Pro Max など</p>
-                </div>
+                <div id="boundaryOverlay" class="boundary-overlay" aria-hidden="true">
+                  <div id="riskAreaBlocks" class="risk-area-blocks" aria-hidden="true"></div>
+                  <div class="risk-zone risk-zone-caution risk-zone-top"></div>
+                  <div class="risk-zone risk-zone-caution risk-zone-left"></div>
+                  <div class="risk-zone risk-zone-caution risk-zone-right-upper"></div>
+                  <div class="risk-zone risk-zone-caution risk-zone-right-lower"></div>
+                  <div class="risk-zone risk-zone-caution risk-zone-bottom"></div>
 
-                <div id="stageFrameDevice" class="stage-surface-wrap stage-surface-wrap-device">
-                  <div id="stageSurfaceDevice" class="stage-surface stage-surface-device" data-platform="none" data-profile="iphoneTall">
-                    <video id="previewVideoDevice" playsinline preload="auto" muted aria-hidden="true"></video>
+                  <div class="risk-zone risk-zone-high risk-zone-top"></div>
+                  <div class="risk-zone risk-zone-high risk-zone-left"></div>
+                  <div class="risk-zone risk-zone-high risk-zone-right-upper"></div>
+                  <div class="risk-zone risk-zone-high risk-zone-right-lower"></div>
+                  <div class="risk-zone risk-zone-high risk-zone-bottom"></div>
 
-                    <div id="placeholderDevice" class="empty-state empty-state-compare">
-                      <div class="empty-state-card empty-state-card-compare">
-                        <span class="empty-kicker">iPhone Preview</span>
-                        <strong>iPhone実機イメージ</strong>
-                        <p>読み込み後、標準 9:16 と iPhone 実機寄りの見え方を並べて確認できます。</p>
-                      </div>
-                    </div>
+                  <div class="dummy-ui dummy-ui-top">
+                    <span class="ghost-pill ghost-wide"></span>
+                    <span class="ghost-pill ghost-short"></span>
+                    <span class="ghost-dot"></span>
+                  </div>
 
-                    <div id="boundaryOverlayDevice" class="boundary-overlay" aria-hidden="true">
-                      <div class="risk-zone risk-zone-high risk-zone-top"></div>
-                      <div class="risk-zone risk-zone-high risk-zone-left"></div>
-                      <div class="risk-zone risk-zone-high risk-zone-right-upper"></div>
-                      <div class="risk-zone risk-zone-high risk-zone-right-lower"></div>
-                      <div class="risk-zone risk-zone-high risk-zone-bottom"></div>
+                  <div class="dummy-ui dummy-ui-right">
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-ring"></span>
+                    <span class="ghost-pill ghost-tall"></span>
+                    <span class="ghost-pill ghost-tiny"></span>
+                  </div>
 
-                      <div class="risk-zone risk-zone-caution risk-zone-top"></div>
-                      <div class="risk-zone risk-zone-caution risk-zone-left"></div>
-                      <div class="risk-zone risk-zone-caution risk-zone-right-upper"></div>
-                      <div class="risk-zone risk-zone-caution risk-zone-right-lower"></div>
-                      <div class="risk-zone risk-zone-caution risk-zone-bottom"></div>
-
-                      <div class="safe-frame safe-frame-upper"></div>
-                      <div class="safe-frame safe-frame-lower"></div>
-
-                      <div class="dummy-ui dummy-ui-top">
-                        <span class="ghost-pill ghost-wide"></span>
-                        <span class="ghost-pill ghost-short"></span>
-                        <span class="ghost-dot"></span>
-                      </div>
-
-                      <div class="dummy-ui dummy-ui-right">
-                        <span class="ghost-ring"></span>
-                        <span class="ghost-ring"></span>
-                        <span class="ghost-ring"></span>
-                        <span class="ghost-ring"></span>
-                        <span class="ghost-pill ghost-tall"></span>
-                        <span class="ghost-pill ghost-tiny"></span>
-                      </div>
-
-                      <div class="dummy-ui dummy-ui-bottom">
-                        <span class="ghost-pill ghost-headline"></span>
-                        <span class="ghost-pill ghost-medium"></span>
-                        <span class="ghost-pill ghost-short"></span>
-                        <span class="ghost-block"></span>
-                      </div>
-                    </div>
-
-                    <div id="flagPinsDevice" class="flag-pin-layer flag-pin-layer-device" aria-hidden="true"></div>
+                  <div class="dummy-ui dummy-ui-bottom">
+                    <span class="ghost-pill ghost-headline"></span>
+                    <span class="ghost-pill ghost-medium"></span>
+                    <span class="ghost-pill ghost-short"></span>
+                    <span class="ghost-block"></span>
                   </div>
                 </div>
-              </section>
+
+                <div id="guideStageHint" class="stage-guide-hint" hidden>
+                  <span id="guideStageHintCopy" class="stage-guide-hint-copy">画面内の気になる位置をクリック</span>
+                </div>
+
+                <div id="flagPins" class="flag-pin-layer" aria-label="チェックピン"></div>
+              </div>
             </div>
           </div>
 
@@ -289,24 +231,30 @@
         </section>
 
         <aside class="sidebar-column sidebar-right">
-          <section class="control-card flags-card">
+          <section class="control-card review-card">
             <div class="flags-header-row">
-              <div class="flags-title-chip"><span class="step-label-inline">STEP 3</span><span>気になる場所を記録</span></div>
-              <span id="flagsCount" class="card-pill">0件</span>
+              <div class="flags-title-chip"><span class="step-label-inline">STEP 3</span><span>動画チェック</span></div>
             </div>
 
             <div class="flags-hint-card">
-              <p id="flagsHint">プレビュー画面内をクリックすると、右に記録されます。</p>
+              <p id="flagsHint">中央のプレビューをクリックすると、ここに記録されます。</p>
             </div>
 
-            <div id="guideStepShare" class="review-utility-stack">
+            <div id="guideStepShare" class="review-utility-stack review-utility-stack-secondary">
               <button id="autoStopToggle" class="segment-button review-toggle-button" type="button" aria-pressed="false">自動停止 OFF</button>
-              <button id="exportCurrentPdfButton" class="action-button action-button-ghost review-primary-button" type="button">チェック内容をPDF化</button>
+            </div>
+          </section>
+
+          <section class="control-card results-card">
+            <div class="flags-header-row">
+              <div class="flags-title-chip"><span>チェック一覧</span></div>
+              <span id="flagsCount" class="card-pill">0件</span>
             </div>
 
             <div class="flags-thread">
               <div id="flagsEmpty" class="flags-empty">
                 <span class="flags-empty-label">表示例</span>
+                <p class="flags-empty-copy">ここにチェックした箇所が並びます。</p>
                 <article class="flag-item flag-item-sample" aria-hidden="true">
                   <span class="flag-time-button">00:00</span>
                   <div class="flag-meta">
@@ -339,8 +287,9 @@
             <div id="commentEditor" class="comment-editor">
               <div class="comment-editor-header">
                 <div>
-                  <p class="eyebrow">共有メモ</p>
-                  <h4 id="commentEditorTitle">記録を選ぶと、共有メモを残せます</h4>
+                  <p class="eyebrow">選択中のメモ</p>
+                  <h4 id="commentEditorTitle">チェック箇所にメモを記述。</h4>
+                  <p id="commentEditorLead" class="comment-editor-lead">上の一覧を選ぶと、ここでメモを確認できます。</p>
                 </div>
                 <span id="commentTargetTime" class="timestamp-pill">--:--</span>
               </div>
@@ -359,9 +308,12 @@
               </div>
             </div>
 
+            <div class="results-export-row">
+              <button id="exportCurrentPdfButton" class="action-button action-button-ghost review-primary-button" type="button">チェック内容をPDF化</button>
+            </div>
+
             <div class="flags-toolbar">
-              <span class="flags-toolbar-copy">一覧や下のバーから、その位置に戻れます。</span>
-              <button id="clearFlagsButton" class="action-button action-button-ghost" type="button">リセット</button>
+              <button id="clearFlagsButton" class="action-button action-button-ghost" type="button">記録をリセット</button>
             </div>
           </section>
         </aside>
@@ -412,6 +364,24 @@
     </section>
   </div>
 
+  <div id="platformInfoModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-platform-info="true"></div>
+    <section class="modal-panel modal-panel-compact modal-panel-info" role="dialog" aria-modal="true" aria-labelledby="platformInfoTitle">
+      <div class="modal-header modal-header-compact">
+        <div>
+          <p class="eyebrow">表示基準</p>
+          <h3 id="platformInfoTitle">iPhone を基準にしています</h3>
+        </div>
+        <button id="platformInfoClose" class="action-button action-button-ghost" type="button">閉じる</button>
+      </div>
+
+      <div class="modal-body platform-info-body">
+        <p class="platform-info-copy">日本では iPhone のシェアが 60% を超えているため、LUMINA ZONE では iPhone の投稿画面を基準に表示を設計しています。</p>
+        <p class="platform-info-copy">やや縦長な iPhone の表示に合わせることで、実際の投稿時に起こりやすい見切れを確認しやすくしています。</p>
+      </div>
+    </section>
+  </div>
+
   <div id="confirmModal" class="modal" hidden>
     <div class="modal-backdrop" data-close-confirm="cancel"></div>
     <section class="modal-panel modal-panel-compact" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
@@ -434,9 +404,9 @@
 
   <script src="config.js"></script>
   <script src="analytics.js"></script>
-  <script src="auth.js?v=20260410-phase1-1"></script>
+  <script src="auth.js?v=20260410-preview-mode-1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="db.js"></script>
-  <script src="app.js?v=20260410-phase1-1"></script>
+  <script src="app.js?v=20260418-pin-layer-1"></script>
 </body>
 </html>

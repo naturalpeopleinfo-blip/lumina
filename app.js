@@ -27,16 +27,54 @@
   };
   var DEFAULT_PLATFORM_SETTINGS = {
     tiktok: {
+      effective: {
+        areaModel: "blocks",
+        highRisk: { left: "10%", top: "13%", right: "12%", rightUpper: "12%", stepY: "52%", bottom: "20%" },
+        caution: { left: "16%", top: "18%", right: "18%", rightUpper: "18%", stepY: "52%", bottom: "29%" },
+        highRiskAreas: [
+          { key: "topBand", zone: "top", top: "0%", left: "0%", width: "100%", height: "13%" },
+          { key: "leftRail", zone: "left", top: "13%", left: "0%", width: "10%", height: "67%" },
+          { key: "rightRail", zone: "right", top: "18%", right: "0%", width: "12%", height: "62%" },
+          { key: "leftLowerUi", zone: "left", left: "0%", bottom: "18%", width: "74%", height: "8%", radius: "8px 8px 0 0" },
+          { key: "bottomBand", zone: "bottom", bottom: "0%", left: "0%", width: "100%", height: "20%" }
+        ],
+        cautionAreas: [
+          { key: "topBuffer", zone: "top", top: "13%", left: "0%", width: "100%", height: "5%" },
+          { key: "leftBuffer", zone: "left", top: "13%", left: "10%", width: "6%", height: "57%" },
+          { key: "rightBuffer", zone: "right", top: "18%", right: "12%", width: "6%", height: "62%" },
+          { key: "leftLowerBuffer", zone: "left", left: "0%", bottom: "18%", width: "80%", height: "10%", radius: "10px 10px 0 0" },
+          { key: "bottomCaptionBuffer", zone: "bottom", left: "0%", right: "0%", bottom: "20%", height: "9%" }
+        ]
+      },
       standard: {
-        highRisk: { left: "6%", top: "7%", right: "18%", rightUpper: "8%", stepY: "42%", bottom: "24%" },
-        caution: { left: "11.111%", top: "12.5%", right: "27.778%", rightUpper: "11.111%", stepY: "43.75%", bottom: "34.375%" }
+        highRisk: { left: "4%", top: "6%", right: "12%", rightUpper: "6%", stepY: "42%", bottom: "17%" },
+        caution: { left: "8%", top: "10%", right: "20%", rightUpper: "10%", stepY: "43.5%", bottom: "25%" }
       },
       iphoneTall: {
-        highRisk: { left: "9%", top: "7%", right: "21%", rightUpper: "9%", stepY: "42%", bottom: "24%" },
-        caution: { left: "15%", top: "12.5%", right: "31%", rightUpper: "14%", stepY: "43.75%", bottom: "34.375%" }
+        highRisk: { left: "5%", top: "6%", right: "14%", rightUpper: "7%", stepY: "42%", bottom: "18%" },
+        caution: { left: "9%", top: "10%", right: "23%", rightUpper: "11%", stepY: "43.5%", bottom: "27%" }
       }
     },
     reels: {
+      effective: {
+        areaModel: "blocks",
+        highRisk: { left: "4%", top: "11%", right: "11%", rightUpper: "11%", stepY: "53%", bottom: "19%" },
+        caution: { left: "8%", top: "16%", right: "18%", rightUpper: "18%", stepY: "53%", bottom: "29%" },
+        highRiskAreas: [
+          { key: "topBand", zone: "top", top: "0%", left: "0%", width: "100%", height: "11%" },
+          { key: "leftRail", zone: "left", top: "11%", left: "0%", width: "5%", height: "70%" },
+          { key: "rightRail", zone: "right", top: "11%", right: "0%", width: "11%", height: "70%" },
+          { key: "leftLowerUi", zone: "left", left: "0%", bottom: "17%", width: "58%", height: "9%", radius: "8px 8px 0 0" },
+          { key: "bottomBand", zone: "bottom", bottom: "0%", left: "0%", width: "100%", height: "19%" }
+        ],
+        cautionAreas: [
+          { key: "topBuffer", zone: "top", top: "11%", left: "0%", width: "100%", height: "5%" },
+          { key: "leftBuffer", zone: "left", top: "11%", left: "5%", width: "4%", height: "60%" },
+          { key: "rightBuffer", zone: "right", top: "11%", right: "11%", width: "7%", height: "70%" },
+          { key: "leftLowerBuffer", zone: "left", left: "0%", bottom: "17%", width: "66%", height: "10%", radius: "10px 10px 0 0" },
+          { key: "bottomCaptionBuffer", zone: "bottom", left: "0%", right: "0%", bottom: "19%", height: "10%" }
+        ]
+      },
       standard: {
         highRisk: { left: "3%", top: "0%", right: "8%", rightUpper: "8%", stepY: "48%", bottom: "15%" },
         caution: { left: "6%", top: "0%", right: "12%", rightUpper: "12%", stepY: "48%", bottom: "22%" }
@@ -47,6 +85,25 @@
       }
     },
     shorts: {
+      effective: {
+        areaModel: "blocks",
+        highRisk: { left: "5%", top: "11%", right: "12%", rightUpper: "12%", stepY: "54%", bottom: "18%" },
+        caution: { left: "8%", top: "16%", right: "18%", rightUpper: "18%", stepY: "54%", bottom: "27%" },
+        highRiskAreas: [
+          { key: "topBand", zone: "top", top: "0%", left: "0%", width: "100%", height: "11%" },
+          { key: "leftRail", zone: "left", top: "11%", left: "0%", width: "7%", height: "71%" },
+          { key: "rightRail", zone: "right", top: "17%", right: "0%", width: "12%", height: "65%" },
+          { key: "leftLowerUi", zone: "left", left: "0%", bottom: "16%", width: "58%", height: "7%", radius: "6px 6px 0 0" },
+          { key: "bottomBand", zone: "bottom", bottom: "0%", left: "0%", width: "100%", height: "18%" }
+        ],
+        cautionAreas: [
+          { key: "topBuffer", zone: "top", top: "11%", left: "0%", width: "100%", height: "5%" },
+          { key: "leftBuffer", zone: "left", top: "11%", left: "7%", width: "3%", height: "60%" },
+          { key: "rightBuffer", zone: "right", top: "17%", right: "12%", width: "6%", height: "65%" },
+          { key: "leftLowerBuffer", zone: "left", left: "0%", bottom: "16%", width: "64%", height: "8%", radius: "8px 8px 0 0" },
+          { key: "bottomCaptionBuffer", zone: "bottom", left: "0%", right: "0%", bottom: "18%", height: "9%" }
+        ]
+      },
       standard: {
         highRisk: { left: "3%", top: "7%", right: "10%", rightUpper: "10%", stepY: "46%", bottom: "15%" },
         caution: { left: "6%", top: "10%", right: "15%", rightUpper: "15%", stepY: "46%", bottom: "20%" }
@@ -80,12 +137,13 @@
     info: "Lumina Zone"
   };
   var EMPTY_MODE_LABEL = "縦動画セーフゾーンチェッカー";
-  var EMPTY_MODE_DESCRIPTION = "確認したいSNSを選ぶと、その表示領域が出ます。標準表示と iPhone 実機イメージを並べて確認できます。";
+  var EMPTY_MODE_DESCRIPTION = "";
   var HINT_NEEDS_RECORDS = "記録すると使えます。";
   var HINT_NEEDS_HISTORY = "履歴がたまると使えます。";
   var FREE_DAILY_PDF_LIMIT = 2;
   var PDF_LIMIT_REACHED_MESSAGE = "本日の無料枠を使い切りました。PROなら無制限でPDF化できます。";
   var BOOKMARK_HINT_DISMISSED_KEY = "lumina-boundary-pro::bookmark-hint-dismissed";
+  var stageResizeObserver = null;
   var ONBOARDING_STEPS = [
     {
       selector: "#guideStepSource",
@@ -97,7 +155,7 @@
       selector: "#guideStepModes",
       label: "使い方ガイド 2 / 4",
       title: "確認するSNSを選びます",
-      body: "確認したいSNSを選ぶと、その表示領域が出ます。1つでも、複数でも選べます。"
+      body: "SNSを選ぶと、危険エリアが表示されます。1つでも、複数でも選べます。"
     },
     {
       selector: "#stageSurface",
@@ -170,6 +228,8 @@
     playbackRate: 1,
     frameRate: DEFAULT_FRAME_RATE,
     objectUrl: null,
+    mediaType: "",
+    mediaLoaded: false,
     fileName: "",
     fileSize: 0,
     mediaKey: "",
@@ -180,6 +240,7 @@
     isScrubbing: false,
     stageRatio: DEFAULT_RATIO,
     isHistoryOpen: false,
+    isPlatformInfoOpen: false,
     isConfirmOpen: false,
     isOnboardingOpen: false,
     confirmIntent: "",
@@ -275,18 +336,21 @@
   }
 
   function cacheElements() {
+    els.previewColumn = document.getElementById("previewColumn");
+    els.viewerDock = document.getElementById("viewerDock");
     els.fileInput = document.getElementById("fileInput");
     els.dropZone = document.getElementById("dropZone");
     els.stageFrame = document.getElementById("stageFrame");
     els.stageSurface = document.getElementById("stageSurface");
-    els.stageFrameDevice = document.getElementById("stageFrameDevice");
-    els.stageSurfaceDevice = document.getElementById("stageSurfaceDevice");
+    els.riskAreaBlocks = document.getElementById("riskAreaBlocks");
     els.flagPins = document.getElementById("flagPins");
-    els.flagPinsDevice = document.getElementById("flagPinsDevice");
     els.video = document.getElementById("previewVideo");
-    els.videoDevice = document.getElementById("previewVideoDevice");
+    els.previewImage = document.getElementById("previewImage");
     els.modeLabel = document.getElementById("modeLabel");
     els.modeDescription = document.getElementById("modeDescription");
+    els.platformInfoButton = document.getElementById("platformInfoButton");
+    els.platformInfoModal = document.getElementById("platformInfoModal");
+    els.platformInfoClose = document.getElementById("platformInfoClose");
     els.modeButtons = document.getElementById("modeButtons");
     els.speedButtons = document.getElementById("speedButtons");
     els.playToggle = document.getElementById("playToggle");
@@ -312,6 +376,7 @@
     els.flagsHint = document.getElementById("flagsHint");
     els.autoStopToggle = document.getElementById("autoStopToggle");
     els.commentEditorTitle = document.getElementById("commentEditorTitle");
+    els.commentEditorLead = document.getElementById("commentEditorLead");
     els.commentTargetTime = document.getElementById("commentTargetTime");
     els.flagCommentInput = document.getElementById("flagCommentInput");
     els.saveCommentButton = document.getElementById("saveCommentButton");
@@ -362,7 +427,6 @@
     els.dropZone.addEventListener("drop", onDrop);
     els.stageSurface.addEventListener("click", onStageSurfaceClick);
     els.flagPins.addEventListener("click", onFlagPinsClick);
-
     els.playToggle.addEventListener("click", togglePlayback);
     els.jumpBack.addEventListener("click", function () {
       skipBy(-3);
@@ -406,13 +470,21 @@
     els.video.addEventListener("pause", updateTransportState);
     els.video.addEventListener("ended", updateTransportState);
     els.video.addEventListener("error", onVideoError);
+    els.previewImage.addEventListener("load", onImageLoaded);
+    els.previewImage.addEventListener("error", onImageError);
 
     els.helpToggle.addEventListener("click", function () {
       track("guide_open");
       openOnboarding(0);
     });
+    if (els.platformInfoButton) {
+      els.platformInfoButton.addEventListener("click", openPlatformInfoModal);
+    }
     if (els.historyToggle) {
       els.historyToggle.addEventListener("click", openHistoryModal);
+    }
+    if (els.platformInfoClose) {
+      els.platformInfoClose.addEventListener("click", closePlatformInfoModal);
     }
     if (els.historyClose) {
       els.historyClose.addEventListener("click", closeHistoryModal);
@@ -422,6 +494,9 @@
     }
     if (els.historyExportAllButton) {
       els.historyExportAllButton.addEventListener("click", exportAllHistoryPdf);
+    }
+    if (els.platformInfoModal) {
+      els.platformInfoModal.addEventListener("click", onPlatformInfoModalClick);
     }
     if (els.historyModal) {
       els.historyModal.addEventListener("click", onHistoryModalClick);
@@ -437,6 +512,7 @@
 
     document.addEventListener("keydown", onKeydown);
     window.addEventListener("resize", requestStageFit);
+    initStageResizeObserver();
     window.addEventListener("beforeunload", releaseObjectUrl);
   }
 
@@ -458,9 +534,20 @@
     var standardSource = overrideProfile || {};
 
     return {
+      areaModel: standardSource.areaModel || baseProfile.areaModel || "bands",
       highRisk: normalizeRiskSettings(baseProfile.highRisk, standardSource.highRisk),
-      caution: normalizeRiskSettings(baseProfile.caution, standardSource.caution)
+      caution: normalizeRiskSettings(baseProfile.caution, standardSource.caution),
+      highRiskAreas: cloneRiskAreas(standardSource.highRiskAreas || baseProfile.highRiskAreas),
+      cautionAreas: cloneRiskAreas(standardSource.cautionAreas || baseProfile.cautionAreas)
     };
+  }
+
+  function cloneRiskAreas(areas) {
+    return Array.isArray(areas)
+      ? areas.map(function (area) {
+          return mergeObjects({}, area);
+        })
+      : [];
   }
 
   function buildPlatformProfiles(platformMap) {
@@ -475,11 +562,19 @@
         standard: buildProfileSettings(DEFAULT_PLATFORM_SETTINGS[key].standard, standardSource),
         iphoneTall: buildProfileSettings(DEFAULT_PLATFORM_SETTINGS[key].iphoneTall, iphoneSource)
       };
+
+      if (source.effective || DEFAULT_PLATFORM_SETTINGS[key].effective) {
+        result[key].effective = buildProfileSettings(
+          DEFAULT_PLATFORM_SETTINGS[key].effective || createEmptyRiskProfile(),
+          source.effective || {}
+        );
+      }
     });
 
     result.all = {
       standard: buildCompositeProfileSettings(PLATFORM_ORDER, "standard", result),
-      iphoneTall: buildCompositeProfileSettings(PLATFORM_ORDER, "iphoneTall", result)
+      iphoneTall: buildCompositeProfileSettings(PLATFORM_ORDER, "iphoneTall", result),
+      effective: buildCompositeEffectiveProfileSettings(PLATFORM_ORDER, result)
     };
 
     return result;
@@ -491,8 +586,38 @@
     }, createEmptyRiskProfile());
   }
 
+  function buildCompositeEffectiveProfileSettings(platformKeys, profileMap) {
+    return platformKeys.reduce(function (accumulator, key) {
+      var sourceProfile = getEffectiveBaseProfile(key, profileMap);
+      return mergeResolvedRiskProfile(accumulator, sourceProfile);
+    }, createEmptyRiskProfile());
+  }
+
+  function getEffectivePlatformSettings(platformSelection) {
+    var platformKeys = getPlatformKeys(platformSelection);
+    var standardProfile = getPlatformProfileSettings(platformSelection, "standard");
+    var iphoneProfile = getPlatformProfileSettings(platformSelection, "iphoneTall");
+    var hasAllEffectiveProfiles = platformKeys.length > 0 && platformKeys.every(function (key) {
+      return !!(platforms[key] && platforms[key].effective);
+    });
+
+    if (hasAllEffectiveProfiles) {
+      return buildCompositeEffectiveProfileSettings(platformKeys, platforms);
+    }
+
+    if (platformKeys.length === 1) {
+      var singleKey = platformKeys[0];
+      if (platforms[singleKey] && platforms[singleKey].effective) {
+        return platforms[singleKey].effective;
+      }
+    }
+
+    return mergeRiskProfile(standardProfile, iphoneProfile);
+  }
+
   function createEmptyRiskProfile() {
     return {
+      areaModel: "bands",
       highRisk: {
         left: "0%",
         top: "0%",
@@ -508,14 +633,144 @@
         rightUpper: "0%",
         stepY: "48%",
         bottom: "0%"
-      }
+      },
+      highRiskAreas: [],
+      cautionAreas: []
     };
   }
 
   function mergeRiskProfile(leftProfile, rightProfile) {
     return {
+      areaModel: "bands",
       highRisk: mergeRiskLevel(leftProfile.highRisk, rightProfile.highRisk),
-      caution: mergeRiskLevel(leftProfile.caution, rightProfile.caution)
+      caution: mergeRiskLevel(leftProfile.caution, rightProfile.caution),
+      highRiskAreas: [],
+      cautionAreas: []
+    };
+  }
+
+  function getEffectiveBaseProfile(platformKey, profileMap) {
+    var platformProfile = profileMap[platformKey] || {};
+
+    if (platformProfile.effective) {
+      return cloneRiskProfile(platformProfile.effective);
+    }
+
+    return mergeRiskProfile(
+      cloneRiskProfile(platformProfile.standard || createEmptyRiskProfile()),
+      cloneRiskProfile(platformProfile.iphoneTall || createEmptyRiskProfile())
+    );
+  }
+
+  function mergeResolvedRiskProfile(leftProfile, rightProfile) {
+    var left = leftProfile || createEmptyRiskProfile();
+    var right = rightProfile || createEmptyRiskProfile();
+    var leftUsesBlocks = left.areaModel === "blocks";
+    var rightUsesBlocks = right.areaModel === "blocks";
+
+    if (!leftUsesBlocks && !rightUsesBlocks) {
+      return mergeRiskProfile(left, right);
+    }
+
+    return {
+      areaModel: "blocks",
+      highRisk: mergeRiskLevel(left.highRisk, right.highRisk),
+      caution: mergeRiskLevel(left.caution, right.caution),
+      highRiskAreas: mergeRiskAreasByKey(left.highRiskAreas, right.highRiskAreas),
+      cautionAreas: mergeRiskAreasByKey(left.cautionAreas, right.cautionAreas)
+    };
+  }
+
+  function cloneRiskProfile(profile) {
+    var source = profile || createEmptyRiskProfile();
+    return {
+      areaModel: source.areaModel || "bands",
+      highRisk: mergeObjects(createEmptyRiskProfile().highRisk, source.highRisk || {}),
+      caution: mergeObjects(createEmptyRiskProfile().caution, source.caution || {}),
+      highRiskAreas: cloneRiskAreas(source.highRiskAreas),
+      cautionAreas: cloneRiskAreas(source.cautionAreas)
+    };
+  }
+
+  function mergeRiskAreasByKey(leftAreas, rightAreas) {
+    var mergedMap = {};
+    var orderedKeys = [];
+
+    function upsert(area) {
+      var key = String((area && area.key) || "");
+
+      if (!key) {
+        return;
+      }
+
+      if (!mergedMap[key]) {
+        mergedMap[key] = normalizeRiskAreaRect(area);
+        orderedKeys.push(key);
+        return;
+      }
+
+      mergedMap[key] = mergeRiskAreaRect(mergedMap[key], normalizeRiskAreaRect(area));
+    }
+
+    cloneRiskAreas(leftAreas).forEach(upsert);
+    cloneRiskAreas(rightAreas).forEach(upsert);
+
+    return orderedKeys.map(function (key) {
+      return denormalizeRiskAreaRect(mergedMap[key]);
+    });
+  }
+
+  function normalizeRiskAreaRect(area) {
+    var width = percentToNumber(area.width || "0%");
+    var height = percentToNumber(area.height || "0%");
+    var left = area.left !== undefined
+      ? percentToNumber(area.left)
+      : 100 - percentToNumber(area.right || "0%") - width;
+    var top = area.top !== undefined
+      ? percentToNumber(area.top)
+      : 100 - percentToNumber(area.bottom || "0%") - height;
+
+    return {
+      key: area.key,
+      zone: area.zone || "center",
+      left: left,
+      top: top,
+      right: Math.max(0, 100 - left - width),
+      bottom: Math.max(0, 100 - top - height),
+      width: width,
+      height: height,
+      radius: area.radius || ""
+    };
+  }
+
+  function mergeRiskAreaRect(leftArea, rightArea) {
+    var left = Math.min(leftArea.left, rightArea.left);
+    var top = Math.min(leftArea.top, rightArea.top);
+    var right = Math.min(leftArea.right, rightArea.right);
+    var bottom = Math.min(leftArea.bottom, rightArea.bottom);
+
+    return {
+      key: leftArea.key,
+      zone: leftArea.zone || rightArea.zone || "center",
+      left: left,
+      top: top,
+      right: right,
+      bottom: bottom,
+      width: Math.max(0, 100 - left - right),
+      height: Math.max(0, 100 - top - bottom),
+      radius: leftArea.radius || rightArea.radius || ""
+    };
+  }
+
+  function denormalizeRiskAreaRect(area) {
+    return {
+      key: area.key,
+      zone: area.zone,
+      left: area.left + "%",
+      top: area.top + "%",
+      width: area.width + "%",
+      height: area.height + "%",
+      radius: area.radius
     };
   }
 
@@ -647,9 +902,7 @@
       button.setAttribute("data-selected", isActive ? "true" : "false");
     });
 
-    if (els.modeDescription) {
-      els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
-    }
+    setModeDescription(EMPTY_MODE_DESCRIPTION);
   }
 
   function hasActiveSelection() {
@@ -657,7 +910,16 @@
   }
 
   function updateFlagsHint() {
-    els.flagsHint.textContent = "プレビュー画面内をクリックすると、右に記録されます。";
+    els.flagsHint.textContent = "中央のプレビューをクリックすると、ここに記録されます。";
+  }
+
+  function setModeDescription(text) {
+    if (!els.modeDescription) {
+      return;
+    }
+
+    els.modeDescription.textContent = text || "";
+    els.modeDescription.hidden = !text;
   }
 
   function getInlineGuideStep() {
@@ -667,6 +929,18 @@
 
     if (!hasActiveSelection()) {
       return "platform";
+    }
+
+    if (state.mediaType === "image") {
+      if (!state.flags.length) {
+        return "click";
+      }
+
+      if (state.freshFlagId) {
+        return "memo";
+      }
+
+      return "";
     }
 
     if (!state.hasPlaybackStarted && !state.flags.length) {
@@ -690,55 +964,43 @@
     var modesHeader = els.guideStepModes ? els.guideStepModes.querySelector(".card-header") : null;
 
     if (sourceHeader) {
-      if (step === "source") {
-        sourceHeader.setAttribute("data-guide-tag", "まずはここ");
-      } else {
-        sourceHeader.removeAttribute("data-guide-tag");
-      }
+      sourceHeader.removeAttribute("data-guide-tag");
     }
 
     if (modesHeader) {
-      if (step === "platform") {
-        modesHeader.setAttribute("data-guide-tag", "次はここ");
-      } else {
-        modesHeader.removeAttribute("data-guide-tag");
-      }
+      modesHeader.removeAttribute("data-guide-tag");
     }
 
     if (els.guideStepShare) {
-      if (step === "memo") {
-        els.guideStepShare.setAttribute("data-guide-tag", "最後にここ");
-      } else {
-        els.guideStepShare.removeAttribute("data-guide-tag");
-      }
+      els.guideStepShare.removeAttribute("data-guide-tag");
     }
 
     if (els.playToggle) {
-      if (step === "play") {
-        els.playToggle.setAttribute("data-guide-tag", "次はここ");
-      } else {
-        els.playToggle.removeAttribute("data-guide-tag");
-      }
+      els.playToggle.removeAttribute("data-guide-tag");
     }
 
     if (els.guideStepSource) {
-      els.guideStepSource.classList.toggle("is-guide-active", step === "source");
+      els.guideStepSource.classList.remove("is-guide-active");
     }
 
     if (els.guideStepModes) {
-      els.guideStepModes.classList.toggle("is-guide-active", step === "platform");
+      els.guideStepModes.classList.remove("is-guide-active");
     }
 
     if (els.guideStepShare) {
-      els.guideStepShare.classList.toggle("is-guide-active", step === "memo");
+      els.guideStepShare.classList.remove("is-guide-active");
     }
 
     if (els.playToggle) {
-      els.playToggle.classList.toggle("is-guide-active", step === "play");
+      els.playToggle.classList.remove("is-guide-active");
     }
 
     if (els.stageSurface) {
-      els.stageSurface.classList.toggle("is-guide-click", step === "click");
+      els.stageSurface.classList.remove("is-guide-click");
+    }
+
+    if (els.sourceLoadButton) {
+      els.sourceLoadButton.classList.toggle("is-guide-active", step === "source");
     }
 
     if (els.guideStageHint) {
@@ -749,23 +1011,19 @@
       els.guideStageHintCopy.textContent = "画面内の気になる位置をクリック";
     }
 
-    if (els.modeDescription) {
-      els.modeDescription.textContent = step === "platform"
-        ? "確認したいSNSを選ぶと、その表示領域が出ます。標準表示と iPhone 実機イメージを並べて確認できます。"
-        : EMPTY_MODE_DESCRIPTION;
-    }
+    setModeDescription(EMPTY_MODE_DESCRIPTION);
 
     if (!els.flagsHint) {
       return;
     }
 
     if (step === "source") {
-      els.flagsHint.textContent = "まずは素材を読み込むと、ここに記録が並びます。";
+      els.flagsHint.textContent = "気になるシーンで停止して下さい。";
       return;
     }
 
     if (step === "platform") {
-      els.flagsHint.textContent = "確認するSNSを選ぶと、標準表示と iPhone 実機イメージに枠が出ます。";
+      els.flagsHint.textContent = "中央プレビューをクリックして、チェックとメモを残せます。";
       return;
     }
 
@@ -775,7 +1033,7 @@
     }
 
     if (step === "click") {
-      els.flagsHint.textContent = "画面内の気になる位置をクリックすると、右に記録されます。";
+      els.flagsHint.textContent = "中央のプレビューで気になる位置をクリックすると、ここに記録されます。";
       return;
     }
 
@@ -826,6 +1084,7 @@
     surfaceEl.dataset.platform =
       platformKey === "all" ? "all" : (platformKeys.length === 1 ? platformKeys[0] : "combo");
     surfaceEl.dataset.profile = profileKey || "standard";
+    surfaceEl.dataset.overlayModel = settings.areaModel || "bands";
     surfaceEl.classList.add("has-selection");
     surfaceEl.style.setProperty("--risk-high-top", settings.highRisk.top);
     surfaceEl.style.setProperty("--risk-high-right", settings.highRisk.right);
@@ -839,6 +1098,8 @@
     surfaceEl.style.setProperty("--risk-caution-left", settings.caution.left);
     surfaceEl.style.setProperty("--risk-caution-right-upper", settings.caution.rightUpper);
     surfaceEl.style.setProperty("--risk-caution-step-y", settings.caution.stepY);
+    renderRiskAreaBlocks(settings);
+    triggerOverlayWipe();
   }
 
   function clearProfileSurface(surfaceEl, settings, profileKey) {
@@ -848,6 +1109,7 @@
 
     surfaceEl.dataset.platform = "none";
     surfaceEl.dataset.profile = profileKey || "standard";
+    surfaceEl.dataset.overlayModel = settings.areaModel || "bands";
     surfaceEl.classList.remove("has-selection");
     surfaceEl.style.setProperty("--risk-high-top", settings.highRisk.top);
     surfaceEl.style.setProperty("--risk-high-right", settings.highRisk.right);
@@ -861,6 +1123,55 @@
     surfaceEl.style.setProperty("--risk-caution-left", settings.caution.left);
     surfaceEl.style.setProperty("--risk-caution-right-upper", settings.caution.rightUpper);
     surfaceEl.style.setProperty("--risk-caution-step-y", settings.caution.stepY);
+    renderRiskAreaBlocks(settings);
+  }
+
+  function renderRiskAreaBlocks(settings) {
+    if (!els.riskAreaBlocks) {
+      return;
+    }
+
+    if (!settings || settings.areaModel !== "blocks") {
+      els.riskAreaBlocks.innerHTML = "";
+      return;
+    }
+
+    els.riskAreaBlocks.innerHTML = renderRiskAreaGroup("caution", settings.cautionAreas || []) +
+      renderRiskAreaGroup("high", settings.highRiskAreas || []);
+  }
+
+  function renderRiskAreaGroup(level, areas) {
+    return areas.map(function (area) {
+      var style = buildAreaStyle(area);
+      var radius = area.radius ? " style=\"" + style + "border-radius:" + area.radius + ";\"" : " style=\"" + style + "\"";
+      return '<div class="risk-area-block risk-area-block-' + level + ' risk-area-block-' + area.key + '"' +
+        ' data-zone="' + area.zone + '"' + radius + "></div>";
+    }).join("");
+  }
+
+  function buildAreaStyle(area) {
+    var style = "";
+    ["top", "right", "bottom", "left", "width", "height"].forEach(function (key) {
+      if (area[key] !== undefined) {
+        style += key + ":" + area[key] + ";";
+      }
+    });
+    return style;
+  }
+
+  function triggerOverlayWipe() {
+    if (!els.boundaryOverlay) {
+      return;
+    }
+
+    els.boundaryOverlay.classList.remove("is-wiping-in");
+    void els.boundaryOverlay.offsetWidth;
+    els.boundaryOverlay.classList.add("is-wiping-in");
+    window.setTimeout(function () {
+      if (els.boundaryOverlay) {
+        els.boundaryOverlay.classList.remove("is-wiping-in");
+      }
+    }, 460);
   }
 
   function applyPlatform(platformSelection) {
@@ -875,26 +1186,22 @@
     }
 
     var platformKey = normalizePlatformKey(platformSelection);
-    var selectedStandard = getPlatformProfileSettings(platformKey, "standard");
-    var selectedDevice = getPlatformProfileSettings(platformKey, "iphoneTall");
+    var selectedProfile = getEffectivePlatformSettings(platformKey);
     var meta = getPlatformMeta(platformKey);
     var platformKeys = getPlatformKeys(platformKey);
 
-    if (!selectedStandard || !selectedDevice || !meta) {
+    if (!selectedProfile || !meta) {
       return;
     }
 
     state.activePlatform = platformKey;
     state.activePlatforms = platformKeys;
-    applyProfileToSurface(els.stageSurface, selectedStandard, platformKey, "standard");
-    applyProfileToSurface(els.stageSurfaceDevice, selectedDevice, platformKey, "iphoneTall");
+    applyProfileToSurface(els.stageSurface, selectedProfile, platformKey, "standard");
 
     if (els.modeLabel) {
       els.modeLabel.textContent = EMPTY_MODE_LABEL;
     }
-    if (els.modeDescription) {
-      els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
-    }
+    setModeDescription(EMPTY_MODE_DESCRIPTION);
 
     setPlatformTheme(meta);
     updatePlatformButtons();
@@ -909,9 +1216,7 @@
 
   function clearPlatformSelection() {
     var fallbackMeta = getPlatformMeta("all");
-    var fallbackStandard = getPlatformProfileSettings("all", "standard");
-    var fallbackDevice = getPlatformProfileSettings("all", "iphoneTall");
-
+    var fallbackProfile = getEffectivePlatformSettings("all");
     if (hasMediaLoaded() && !els.video.paused) {
       els.video.pause();
       updateTransportState();
@@ -919,14 +1224,11 @@
 
     state.activePlatform = "";
     state.activePlatforms = [];
-    clearProfileSurface(els.stageSurface, fallbackStandard, "standard");
-    clearProfileSurface(els.stageSurfaceDevice, fallbackDevice, "iphoneTall");
+    clearProfileSurface(els.stageSurface, fallbackProfile, "standard");
     if (els.modeLabel) {
       els.modeLabel.textContent = EMPTY_MODE_LABEL;
     }
-    if (els.modeDescription) {
-      els.modeDescription.textContent = EMPTY_MODE_DESCRIPTION;
-    }
+    setModeDescription(EMPTY_MODE_DESCRIPTION);
     setPlatformTheme(fallbackMeta);
     updatePlatformButtons();
     updateFlagsHint();
@@ -986,8 +1288,8 @@
   function ingestFile(file) {
     var reader = null;
 
-    if (!looksLikeVideo(file)) {
-      showToast("動画ファイルを選んでください。", "error");
+    if (!looksLikeVideo(file) && !looksLikeImage(file)) {
+      showToast("動画または画像ファイルを選んでください。", "error");
       return;
     }
 
@@ -996,18 +1298,25 @@
       showToast("ファイルのローカル読込に失敗しました。", "error");
     };
     reader.onload = function () {
-      loadVideoFromFile(file);
+      if (looksLikeVideo(file)) {
+        loadVideoFromFile(file);
+        return;
+      }
+
+      loadImageFromFile(file);
     };
     reader.readAsArrayBuffer(file.slice(0, 65536));
   }
 
   function loadVideoFromFile(file) {
     releaseObjectUrl();
-    resetVideoElement();
+    resetPreviewMediaElement();
 
     state.fileName = file.name;
     state.fileSize = file.size;
     state.mediaKey = buildMediaKey(file);
+    state.mediaType = "video";
+    state.mediaLoaded = false;
     state.flags = readFlagsFromStorage(state.mediaKey);
     state.selectedFlagId = "";
     state.autoStopTargetTime = null;
@@ -1020,22 +1329,61 @@
     state.hasPlaybackStarted = false;
     state.objectUrl = URL.createObjectURL(file);
 
+    els.stageSurface.dataset.mediaType = "video";
     els.video.src = state.objectUrl;
     els.video.playbackRate = state.playbackRate;
-    if (els.videoDevice) {
-      els.videoDevice.src = state.objectUrl;
-      els.videoDevice.playbackRate = state.playbackRate;
-    }
     els.stageSurface.classList.add("has-media");
-    if (els.stageSurfaceDevice) {
-      els.stageSurfaceDevice.classList.add("has-media");
-    }
 
     els.metaName.textContent = file.name;
     els.metaName.title = file.name;
     els.metaSize.textContent = formatBytes(file.size);
     els.metaSize.title = formatBytes(file.size);
     els.metaDuration.textContent = "--:--";
+    els.metaResolution.textContent = "-- × --";
+    updateSourceLoadButton();
+
+    clearPlatformSelection();
+    closeConfirmModal();
+    setControlsEnabled(false);
+    syncTimeline();
+    renderFlags();
+    renderCommentEditor();
+    updateAutoStopButton();
+    requestStageFit();
+    maybeLoadRemoteProjectSnapshot(state.mediaKey);
+    showToast(file.name + " を読み込みました。", "success");
+  }
+
+  function loadImageFromFile(file) {
+    releaseObjectUrl();
+    resetPreviewMediaElement();
+
+    state.fileName = file.name;
+    state.fileSize = file.size;
+    state.mediaKey = buildMediaKey(file);
+    state.mediaType = "image";
+    state.mediaLoaded = false;
+    state.flags = readFlagsFromStorage(state.mediaKey);
+    state.selectedFlagId = "";
+    state.autoStopTargetTime = null;
+    state.pendingFile = null;
+    state.pendingInitialFrame = false;
+    state.isPreviewSeeking = false;
+    state.pdfNeedsAttention = state.flags.length > 0;
+    state.lastTrackedMediaKey = "";
+    state.currentProjectId = "";
+    state.hasPlaybackStarted = true;
+    state.objectUrl = URL.createObjectURL(file);
+
+    els.stageSurface.dataset.mediaType = "image";
+    els.previewImage.src = state.objectUrl;
+    els.stageSurface.classList.add("has-media");
+
+    els.metaName.textContent = file.name;
+    els.metaName.title = file.name;
+    els.metaSize.textContent = formatBytes(file.size);
+    els.metaSize.title = formatBytes(file.size);
+    els.metaDuration.textContent = "静止画";
     els.metaResolution.textContent = "-- × --";
     updateSourceLoadButton();
 
@@ -1062,6 +1410,7 @@
       els.metaResolution.textContent = width + " × " + height;
     }
 
+    state.mediaLoaded = true;
     els.metaDuration.textContent = formatDuration(duration);
     els.totalTime.textContent = formatDuration(duration);
     if (state.mediaKey && state.mediaKey !== state.lastTrackedMediaKey) {
@@ -1073,7 +1422,6 @@
     }
     persistHistorySnapshot();
     setControlsEnabled(true);
-    syncComparisonVideo();
     requestStageFit();
     updateTransportState();
     requestStageFit();
@@ -1086,6 +1434,41 @@
     }
 
     syncTimeline();
+    renderFlags();
+    renderCommentEditor();
+    updateAutoStopButton();
+    syncInlineGuide();
+  }
+
+  function onImageLoaded() {
+    var width = els.previewImage.naturalWidth;
+    var height = els.previewImage.naturalHeight;
+
+    if (width > 0 && height > 0) {
+      state.stageRatio = width / height;
+      els.stageSurface.style.aspectRatio = width + " / " + height;
+      els.metaResolution.textContent = width + " × " + height;
+    }
+
+    state.mediaLoaded = true;
+    els.metaDuration.textContent = "静止画";
+    els.currentTime.textContent = "00:00";
+    els.totalTime.textContent = "00:00";
+    els.timeline.value = 0;
+    els.timeline.max = 1000;
+    els.timeline.style.setProperty("--range-progress", "0%");
+
+    if (state.mediaKey && state.mediaKey !== state.lastTrackedMediaKey) {
+      state.lastTrackedMediaKey = state.mediaKey;
+      track("image_load_success", {
+        resolution: width > 0 && height > 0 ? width + "x" + height : "unknown"
+      });
+    }
+
+    persistHistorySnapshot();
+    setControlsEnabled(true);
+    requestStageFit();
+    updateTransportState();
     renderFlags();
     renderCommentEditor();
     updateAutoStopButton();
@@ -1106,15 +1489,13 @@
 
   function onVideoError() {
     releaseObjectUrl();
-    resetVideoElement();
+    resetPreviewMediaElement();
     resetReviewState();
     clearMediaStatus();
     clearPlatformSelection();
     els.stageSurface.classList.remove("has-media");
-    if (els.stageSurfaceDevice) {
-      els.stageSurfaceDevice.classList.remove("has-media");
-    }
     state.stageRatio = DEFAULT_RATIO;
+    els.stageSurface.dataset.mediaType = "video";
     els.stageSurface.style.aspectRatio = "9 / 16";
     setControlsEnabled(false);
     updateTransportState();
@@ -1123,6 +1504,25 @@
     updateAutoStopButton();
     requestStageFit();
     showToast("動画プレビューの初期化に失敗しました。別の形式をお試しください。", "error");
+  }
+
+  function onImageError() {
+    releaseObjectUrl();
+    resetPreviewMediaElement();
+    resetReviewState();
+    clearMediaStatus();
+    clearPlatformSelection();
+    els.stageSurface.classList.remove("has-media");
+    state.stageRatio = DEFAULT_RATIO;
+    els.stageSurface.dataset.mediaType = "video";
+    els.stageSurface.style.aspectRatio = "9 / 16";
+    setControlsEnabled(false);
+    updateTransportState();
+    renderFlags();
+    renderCommentEditor();
+    updateAutoStopButton();
+    requestStageFit();
+    showToast("画像プレビューの初期化に失敗しました。別の形式をお試しください。", "error");
   }
 
   function clearMediaStatus() {
@@ -1141,6 +1541,8 @@
   }
 
   function resetReviewState() {
+    state.mediaType = "";
+    state.mediaLoaded = false;
     state.fileName = "";
     state.fileSize = 0;
     state.mediaKey = "";
@@ -1154,7 +1556,16 @@
   }
 
   function updateSourceLoadButton() {
+    var label;
+
     if (!els.sourceLoadButton) {
+      return;
+    }
+
+    label = els.sourceLoadButton.querySelector(".source-load-button-label");
+
+    if (label) {
+      label.textContent = state.fileName ? "別素材を読み込む" : "素材を読み込む";
       return;
     }
 
@@ -1465,14 +1876,16 @@
   }
 
   function setControlsEnabled(enabled) {
-    els.playToggle.disabled = !enabled;
-    els.jumpBack.disabled = !enabled;
-    els.jumpForward.disabled = !enabled;
-    els.frameBack.disabled = !enabled;
-    els.frameForward.disabled = !enabled;
-    els.timeline.disabled = !enabled;
+    var playbackEnabled = enabled && state.mediaType === "video";
+
+    els.playToggle.disabled = !playbackEnabled;
+    els.jumpBack.disabled = !playbackEnabled;
+    els.jumpForward.disabled = !playbackEnabled;
+    els.frameBack.disabled = !playbackEnabled;
+    els.frameForward.disabled = !playbackEnabled;
+    els.timeline.disabled = !playbackEnabled;
     els.clearFlagsButton.disabled = !enabled || !state.flags.length;
-    els.autoStopToggle.disabled = !enabled || !state.flags.length;
+    els.autoStopToggle.disabled = !playbackEnabled || !state.flags.length;
     els.clearFlagsButton.title = state.flags.length ? "今のチェック記録をすべて削除します。" : HINT_NEEDS_RECORDS;
     updatePdfButtons();
     syncInlineGuide();
@@ -1512,12 +1925,17 @@
 
   function togglePlayback() {
     if (!hasMediaLoaded()) {
-      showToast("先に動画を読み込んでください。", "warning");
+      showToast("先に素材を読み込んでください。", "warning");
       return;
     }
 
     if (!hasActiveSelection()) {
       showToast("確認するSNSを1つ以上選んでください。", "warning");
+      return;
+    }
+
+    if (state.mediaType !== "video") {
+      showToast("静止画では再生できません。画面をクリックして記録できます。", "info");
       return;
     }
 
@@ -1532,7 +1950,7 @@
   }
 
   function skipBy(seconds) {
-    if (!hasMediaLoaded()) {
+    if (!hasMediaLoaded() || state.mediaType !== "video") {
       return;
     }
 
@@ -1540,7 +1958,7 @@
   }
 
   function stepFrame(direction) {
-    if (!hasMediaLoaded()) {
+    if (!hasMediaLoaded() || state.mediaType !== "video") {
       return;
     }
 
@@ -1550,7 +1968,7 @@
   }
 
   function onTimelineInput(event) {
-    if (!hasMediaLoaded()) {
+    if (!hasMediaLoaded() || state.mediaType !== "video") {
       return;
     }
 
@@ -1565,11 +1983,10 @@
   }
 
   function syncTimeline() {
-    var duration = isFinite(els.video.duration) ? els.video.duration : 0;
-    var currentTime = duration ? clamp(els.video.currentTime, 0, duration) : 0;
+    var duration = state.mediaType === "video" && isFinite(els.video.duration) ? els.video.duration : 0;
+    var currentTime = state.mediaType === "video" && duration ? clamp(els.video.currentTime, 0, duration) : 0;
     var progress = duration ? (currentTime / duration) * 100 : 0;
 
-    syncComparisonVideo(currentTime);
     els.currentTime.textContent = formatDuration(currentTime);
     els.totalTime.textContent = formatDuration(duration);
     els.timeline.max = duration || 1000;
@@ -1585,23 +2002,18 @@
 
   function syncPlaybackRate() {
     els.video.playbackRate = state.playbackRate;
-    if (els.videoDevice) {
-      els.videoDevice.playbackRate = state.playbackRate;
-    }
     updateActiveButtons(els.speedButtons, "[data-speed]", String(state.playbackRate), "data-speed");
   }
 
   function updateTransportState() {
-    var isPlaying = !els.video.paused;
+    var isPlaying = state.mediaType === "video" && !els.video.paused;
 
     if (isPlaying) {
       state.hasPlaybackStarted = true;
     }
 
     els.playToggle.classList.toggle("is-playing", isPlaying);
-    els.playToggleLabel.textContent = isPlaying ? "停止" : "再生";
-
-    syncComparisonPlayback(isPlaying);
+    els.playToggleLabel.textContent = state.mediaType === "image" ? "静止画" : (isPlaying ? "停止" : "再生");
 
     if (isPlaying) {
       armAutoStopTarget();
@@ -1611,35 +2023,6 @@
 
     state.autoStopTargetTime = null;
     syncInlineGuide();
-  }
-
-  function syncComparisonVideo(targetTime) {
-    if (!els.videoDevice || !hasMediaLoaded()) {
-      return;
-    }
-
-    if (typeof targetTime === "number" && isFinite(targetTime) && Math.abs((els.videoDevice.currentTime || 0) - targetTime) > 0.05) {
-      els.videoDevice.currentTime = targetTime;
-    }
-  }
-
-  function syncComparisonPlayback(isPlaying) {
-    if (!els.videoDevice || !hasMediaLoaded()) {
-      return;
-    }
-
-    if (!isPlaying) {
-      els.videoDevice.pause();
-      return;
-    }
-
-    if (Math.abs((els.videoDevice.currentTime || 0) - (els.video.currentTime || 0)) > 0.05) {
-      els.videoDevice.currentTime = els.video.currentTime || 0;
-    }
-
-    els.videoDevice.play().catch(function () {
-      return null;
-    });
   }
 
   function updateActiveButtons(container, selector, activeValue, attrName) {
@@ -1657,7 +2040,7 @@
     var currentTime = 0;
     var candidates = [];
 
-    if (!state.autoStopEnabled || !hasMediaLoaded() || els.video.paused) {
+    if (!state.autoStopEnabled || !hasMediaLoaded() || state.mediaType !== "video" || els.video.paused) {
       state.autoStopTargetTime = null;
       return;
     }
@@ -1673,7 +2056,7 @@
   function handleAutoStop(currentTime) {
     var stopTime = 0;
 
-    if (!state.autoStopEnabled || els.video.paused || state.autoStopTargetTime === null) {
+    if (!state.autoStopEnabled || state.mediaType !== "video" || els.video.paused || state.autoStopTargetTime === null) {
       return;
     }
 
@@ -1763,7 +2146,9 @@
     xRatio = clamp((event.clientX - rect.left) / rect.width, 0, 1);
     yRatio = clamp((event.clientY - rect.top) / rect.height, 0, 1);
 
-    els.video.pause();
+    if (state.mediaType === "video") {
+      els.video.pause();
+    }
 
     savePointRecord(xRatio, yRatio);
     updateTransportState();
@@ -1779,7 +2164,9 @@
     event.stopPropagation();
     selectFlag(pin.getAttribute("data-flag-id"));
     jumpToTime(parseFloat(pin.getAttribute("data-time")) || 0, true);
-    els.video.pause();
+    if (state.mediaType === "video") {
+      els.video.pause();
+    }
     updateTransportState();
   }
 
@@ -1811,13 +2198,19 @@
       return;
     }
 
+    if (state.isPlatformInfoOpen && event.key === "Escape") {
+      event.preventDefault();
+      closePlatformInfoModal();
+      return;
+    }
+
     if (state.isConfirmOpen && event.key === "Escape") {
       event.preventDefault();
       closeConfirmModal();
       return;
     }
 
-    if (state.isHistoryOpen || state.isConfirmOpen) {
+    if (state.isHistoryOpen || state.isPlatformInfoOpen || state.isConfirmOpen) {
       return;
     }
 
@@ -1984,6 +2377,31 @@
     state.selectedHistoryKeys = {};
   }
 
+  function openPlatformInfoModal() {
+    if (!els.platformInfoModal) {
+      return;
+    }
+
+    els.platformInfoModal.hidden = false;
+    state.isPlatformInfoOpen = true;
+    track("platform_info_open");
+  }
+
+  function closePlatformInfoModal() {
+    if (!els.platformInfoModal) {
+      return;
+    }
+
+    els.platformInfoModal.hidden = true;
+    state.isPlatformInfoOpen = false;
+  }
+
+  function onPlatformInfoModalClick(event) {
+    if (event.target && event.target.getAttribute("data-close-platform-info") === "true") {
+      closePlatformInfoModal();
+    }
+  }
+
   function onHistoryModalClick(event) {
     if (event.target && event.target.getAttribute("data-close-history") === "true") {
       closeHistoryModal();
@@ -2057,7 +2475,7 @@
     return {
       id: createFlagId(),
       kind: "point",
-      time: roundToHundredths(els.video.currentTime || 0),
+      time: roundToHundredths(state.mediaType === "video" ? (els.video.currentTime || 0) : 0),
       zone: detectZone(xRatio, yRatio),
       x: roundToThousandths(xRatio),
       y: roundToThousandths(yRatio),
@@ -2068,7 +2486,8 @@
   }
 
   function detectZone(xRatio, yRatio) {
-    var metrics = getPlatformProfileSettings(state.activePlatform, "standard");
+    var metrics = getEffectivePlatformSettings(state.activePlatform || "all");
+    var areaZone = "";
     var caution = metrics.caution;
     var topBound = percentToNumber(caution.top);
     var rightBound = 100 - percentToNumber(caution.right);
@@ -2079,6 +2498,11 @@
     var x = xRatio * 100;
     var y = yRatio * 100;
     var violations = [];
+
+    if (metrics.areaModel === "blocks") {
+      areaZone = detectZoneFromAreas(metrics, x, y);
+      return areaZone || "center";
+    }
 
     if (
       (y >= topBound && y < stepY && x >= leftBound && x <= upperRightBound) ||
@@ -2108,6 +2532,33 @@
     });
 
     return violations.length ? violations[0].zone : "center";
+  }
+
+  function detectZoneFromAreas(metrics, x, y) {
+    var highZone = findMatchingAreaZone(metrics.highRiskAreas || [], x, y);
+    if (highZone) {
+      return highZone;
+    }
+    return findMatchingAreaZone(metrics.cautionAreas || [], x, y);
+  }
+
+  function findMatchingAreaZone(areas, x, y) {
+    var index = 0;
+    for (index = 0; index < areas.length; index += 1) {
+      if (isPointInsideArea(areas[index], x, y)) {
+        return areas[index].zone || "center";
+      }
+    }
+    return "";
+  }
+
+  function isPointInsideArea(area, x, y) {
+    var left = area.left !== undefined ? percentToNumber(area.left) : 100 - percentToNumber(area.right || "0%") - percentToNumber(area.width || "0%");
+    var top = area.top !== undefined ? percentToNumber(area.top) : 100 - percentToNumber(area.bottom || "0%") - percentToNumber(area.height || "0%");
+    var width = percentToNumber(area.width || "0%");
+    var height = percentToNumber(area.height || "0%");
+
+    return x >= left && x <= left + width && y >= top && y <= top + height;
   }
 
   function getFlagStartTime(flag) {
@@ -2194,8 +2645,11 @@
     els.commentEditor.classList.toggle("is-guided", !!flag && flag.id === state.freshFlagId);
 
     if (!flag) {
-      els.commentEditorTitle.textContent = "記録を選ぶと、共有メモを残せます。";
-      els.commentTargetTime.textContent = "--:--";
+      els.commentEditorTitle.textContent = "チェック箇所にメモを記述。";
+      if (els.commentEditorLead) {
+        els.commentEditorLead.textContent = "上の一覧を選ぶと、ここでメモを確認できます。";
+      }
+      els.commentTargetTime.textContent = "一覧から選択";
       els.flagCommentInput.value = "";
       els.flagCommentInput.disabled = true;
       els.saveCommentButton.disabled = true;
@@ -2204,6 +2658,9 @@
     }
 
     els.commentEditorTitle.textContent = FLAG_LABELS[flag.zone] + " / " + getPlatformMeta(flag.platform).label;
+    if (els.commentEditorLead) {
+      els.commentEditorLead.textContent = "メモを確認・編集できます。";
+    }
     els.commentTargetTime.textContent = getFlagTitle(flag);
     els.flagCommentInput.value = flag.comment || "";
     els.flagCommentInput.disabled = false;
@@ -2368,9 +2825,6 @@
       els.flagsList.innerHTML = "";
       els.flagMarkers.innerHTML = "";
       els.flagPins.innerHTML = "";
-      if (els.flagPinsDevice) {
-        els.flagPinsDevice.innerHTML = "";
-      }
       renderCommentEditor();
       syncInlineGuide();
       return;
@@ -2431,9 +2885,6 @@
   function renderFlagPins(activeFlagId) {
     if (!state.flags.length) {
       els.flagPins.innerHTML = "";
-      if (els.flagPinsDevice) {
-        els.flagPinsDevice.innerHTML = "";
-      }
       return;
     }
 
@@ -2452,23 +2903,6 @@
         "</button>"
       );
     }).join("");
-
-    if (els.flagPinsDevice) {
-      els.flagPinsDevice.innerHTML = state.flags.map(function (flag) {
-        var isActive = flag.id === activeFlagId;
-        var mappedPoint = mapFlagPointForProfile(flag, "iphoneTall");
-        var title = getFlagTitle(flag) + " / " + FLAG_LABELS[flag.zone];
-
-        return (
-          '<button class="flag-pin flag-pin-device' + (isActive ? " is-active" : "") + '" type="button"' +
-          ' data-flag-id="' + escapeHtml(flag.id) + '"' +
-          ' data-zone="' + escapeHtml(flag.zone) + '"' +
-          ' style="left:' + (mappedPoint.x * 100) + "%;top:" + (mappedPoint.y * 100) + '%;"' +
-          ' title="' + escapeHtml(title) + '">' +
-          "</button>"
-        );
-      }).join("");
-    }
   }
 
   function updateFlagHighlights() {
@@ -2476,7 +2910,6 @@
     var listItems = els.flagsList.querySelectorAll("[data-flag-id]");
     var markerItems = els.flagMarkers.querySelectorAll("[data-flag-id]");
     var pinItems = els.flagPins.querySelectorAll("[data-flag-id]");
-    var devicePinItems = els.flagPinsDevice ? els.flagPinsDevice.querySelectorAll("[data-flag-id]") : [];
 
     Array.prototype.forEach.call(listItems, function (item) {
       item.classList.toggle("is-active", item.getAttribute("data-flag-id") === activeFlagId);
@@ -2490,9 +2923,6 @@
       item.classList.toggle("is-active", item.getAttribute("data-flag-id") === activeFlagId);
     });
 
-    Array.prototype.forEach.call(devicePinItems, function (item) {
-      item.classList.toggle("is-active", item.getAttribute("data-flag-id") === activeFlagId);
-    });
   }
 
   function mapFlagPointForProfile(flag, profileKey) {
@@ -3081,8 +3511,13 @@
       return "";
     }
 
-    width = els.video.videoWidth || Math.round(els.stageSurface.clientWidth);
-    height = els.video.videoHeight || Math.round(els.stageSurface.clientHeight);
+    if (state.mediaType === "image") {
+      width = els.previewImage.naturalWidth || Math.round(els.stageSurface.clientWidth);
+      height = els.previewImage.naturalHeight || Math.round(els.stageSurface.clientHeight);
+    } else {
+      width = els.video.videoWidth || Math.round(els.stageSurface.clientWidth);
+      height = els.video.videoHeight || Math.round(els.stageSurface.clientHeight);
+    }
 
     if (!width || !height) {
       return "";
@@ -3093,7 +3528,11 @@
     canvas.height = height;
     ctx = canvas.getContext("2d");
 
-    ctx.drawImage(els.video, 0, 0, width, height);
+    if (state.mediaType === "image") {
+      ctx.drawImage(els.previewImage, 0, 0, width, height);
+    } else {
+      ctx.drawImage(els.video, 0, 0, width, height);
+    }
     drawExportOverlay(ctx, width, height, platformKey);
     drawExportFlags(ctx, sortFlagsForReport(flags), width, height, state.selectedFlagId || "");
 
@@ -3345,7 +3784,7 @@
 
   function drawExportOverlay(ctx, width, height, platformSelection) {
     var platformKey = normalizePlatformKey(platformSelection || state.activePlatform || "all");
-    var metrics = getPlatformProfileSettings(platformKey, "standard");
+    var metrics = getEffectivePlatformSettings(platformKey);
     var highRisk = metrics.highRisk;
     var caution = metrics.caution;
     var highLeft = width * (percentToNumber(highRisk.left || "0%") / 100);
@@ -3367,6 +3806,13 @@
     var lineWidth = Math.max(4, Math.round(width * 0.0038));
 
     ctx.save();
+    if (metrics.areaModel === "blocks") {
+      drawExportOverlayAreas(ctx, width, height, metrics.highRiskAreas || [], "rgba(226, 79, 79, 0.54)");
+      drawExportOverlayAreas(ctx, width, height, metrics.cautionAreas || [], "rgba(77, 201, 255, 0.32)");
+      ctx.restore();
+      return;
+    }
+
     ctx.fillStyle = "rgba(226, 79, 79, 0.54)";
     ctx.fillRect(0, 0, width, highTop);
     ctx.fillRect(0, highTop, highLeft, height - highTop - highBottomHeight);
@@ -3387,6 +3833,53 @@
     ctx.strokeRect(safeLeft, cautionStepY, Math.max(0, safeRight - safeLeft), Math.max(0, safeBottom - cautionStepY));
 
     ctx.restore();
+  }
+
+  function drawExportOverlayAreas(ctx, width, height, areas, fillStyle) {
+    areas.forEach(function (area) {
+      var left = area.left !== undefined
+        ? width * (percentToNumber(area.left) / 100)
+        : width - width * (percentToNumber(area.right || "0%") / 100) - width * (percentToNumber(area.width || "0%") / 100);
+      var top = area.top !== undefined
+        ? height * (percentToNumber(area.top) / 100)
+        : height - height * (percentToNumber(area.bottom || "0%") / 100) - height * (percentToNumber(area.height || "0%") / 100);
+      var areaWidth = width * (percentToNumber(area.width || "0%") / 100);
+      var areaHeight = height * (percentToNumber(area.height || "0%") / 100);
+      var radius = parseAreaRadius(area.radius, areaWidth, areaHeight);
+
+      ctx.fillStyle = fillStyle;
+      drawRoundedRect(ctx, left, top, areaWidth, areaHeight, radius);
+      ctx.fill();
+    });
+  }
+
+  function parseAreaRadius(radiusValue, width, height) {
+    if (!radiusValue) {
+      return 0;
+    }
+
+    if (radiusValue.indexOf("%") !== -1) {
+      return Math.min(width, height) * (percentToNumber(radiusValue) / 100);
+    }
+
+    return parseFloat(radiusValue) || 0;
+  }
+
+  function drawRoundedRect(ctx, x, y, width, height, radius) {
+    var safeRadius = Math.max(0, Math.min(radius || 0, width / 2, height / 2));
+
+    ctx.beginPath();
+    if (!safeRadius) {
+      ctx.rect(x, y, width, height);
+      return;
+    }
+
+    ctx.moveTo(x + safeRadius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, safeRadius);
+    ctx.arcTo(x + width, y + height, x, y + height, safeRadius);
+    ctx.arcTo(x, y + height, x, y, safeRadius);
+    ctx.arcTo(x, y, x + width, y, safeRadius);
+    ctx.closePath();
   }
 
   function drawExportFlags(ctx, flags, width, height, activeFlagId) {
@@ -3603,14 +4096,16 @@
       return;
     }
 
+    if (state.mediaType !== "video") {
+      syncTimeline();
+      return;
+    }
+
     if (pauseVideo) {
       els.video.pause();
     }
 
     els.video.currentTime = clamp(seconds, 0, els.video.duration || 0);
-    if (els.videoDevice) {
-      els.videoDevice.currentTime = els.video.currentTime;
-    }
     if (!pauseVideo) {
       armAutoStopTarget();
     }
@@ -3624,28 +4119,39 @@
     }
   }
 
-  function resetVideoElement() {
+  function resetPreviewMediaElement() {
     els.video.pause();
     els.video.removeAttribute("src");
     els.video.load();
-    if (els.videoDevice) {
-      els.videoDevice.pause();
-      els.videoDevice.removeAttribute("src");
-      els.videoDevice.load();
-    }
+    els.previewImage.removeAttribute("src");
   }
 
   function hasMediaLoaded() {
-    return !!state.objectUrl && isFinite(els.video.duration);
+    return !!state.objectUrl && !!state.mediaLoaded;
   }
 
   function requestStageFit() {
     window.requestAnimationFrame(fitStageSurface);
   }
 
+  function initStageResizeObserver() {
+    if (!window.ResizeObserver) {
+      return;
+    }
+
+    stageResizeObserver = new ResizeObserver(function () {
+      requestStageFit();
+    });
+
+    [els.previewColumn, els.viewerDock, els.stageFrame].forEach(function (element) {
+      if (element) {
+        stageResizeObserver.observe(element);
+      }
+    });
+  }
+
   function fitStageSurface() {
     fitSingleStage(els.stageFrame, els.stageSurface, state.stageRatio || DEFAULT_RATIO);
-    fitSingleStage(els.stageFrameDevice, els.stageSurfaceDevice, DISPLAY_PROFILES.iphoneTall.ratio);
 
     if (state.isOnboardingOpen) {
       renderOnboardingStep();
@@ -3657,13 +4163,37 @@
     var availableHeight = 0;
     var width = 0;
     var height = 0;
+    var columnHeight = 0;
+    var headingHeight = 0;
+    var dockHeight = 0;
+    var columnAvailableHeight = 0;
+    var frameHeight = 0;
+    var stageChromeReserve = 26;
 
     if (!frameEl || !surfaceEl) {
       return;
     }
 
-    availableWidth = Math.max(frameEl.clientWidth, 220);
-    availableHeight = Math.max(frameEl.clientHeight, 300);
+    availableWidth = Math.max(frameEl.clientWidth, 240);
+    frameHeight = frameEl.clientHeight;
+    availableHeight = frameHeight;
+    columnHeight = els.previewColumn ? els.previewColumn.clientHeight : 0;
+    dockHeight = els.viewerDock ? els.viewerDock.offsetHeight : 0;
+    headingHeight = frameEl.previousElementSibling ? frameEl.previousElementSibling.offsetHeight : 0;
+
+    if (columnHeight > 0) {
+      columnAvailableHeight = columnHeight - dockHeight - headingHeight - stageChromeReserve;
+    }
+
+    if (frameHeight > 0 && columnAvailableHeight > 0) {
+      availableHeight = Math.min(frameHeight, columnAvailableHeight);
+    } else if (columnAvailableHeight > 0) {
+      availableHeight = columnAvailableHeight;
+    } else if (frameHeight > 0) {
+      availableHeight = frameHeight;
+    }
+
+    availableHeight = Math.max(availableHeight - 2, 280);
     width = Math.min(availableWidth, availableHeight * ratio);
     height = width / ratio;
 
@@ -3682,6 +4212,14 @@
     }
 
     return /\.(mp4|mov|m4v|webm|ogv)$/i.test(file.name);
+  }
+
+  function looksLikeImage(file) {
+    if (file.type && file.type.indexOf("image/") === 0) {
+      return true;
+    }
+
+    return /\.(png|jpe?g|webp|gif|bmp|avif|heic|heif)$/i.test(file.name);
   }
 
   function formatDuration(totalSeconds) {
