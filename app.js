@@ -141,7 +141,7 @@
   var HINT_NEEDS_RECORDS = "記録すると使えます。";
   var HINT_NEEDS_HISTORY = "履歴がたまると使えます。";
   var FREE_DAILY_PDF_LIMIT = 2;
-  var PDF_LIMIT_REACHED_MESSAGE = "本日の無料枠を使い切りました。PROなら無制限でPDF化できます。";
+  var PDF_LIMIT_REACHED_MESSAGE = "本日の無料枠を使い切りました。PROなら無制限で共有できます。";
   var BOOKMARK_HINT_DISMISSED_KEY = "lumina-boundary-pro::bookmark-hint-dismissed";
   var stageResizeObserver = null;
   var ONBOARDING_STEPS = [
@@ -166,8 +166,8 @@
     {
       selector: "#guideStepShare",
       label: "使い方ガイド 4 / 4",
-      title: "必要ならPDF化して共有します",
-      body: "チェック内容をPDF化すると、確認レポートとしてそのまま共有できます。"
+      title: "必要なら共有ページで共有します",
+      body: "チェック内容を共有ページにすると、そのまま修正指示として共有できます。"
     }
   ];
 
@@ -1685,8 +1685,8 @@
     if (isPdfExportLocked()) {
       els.workspaceBillingAction.textContent = state.hasCampaignCheckout ? "特別プランで無制限にする" : "PROで無制限にする";
       els.workspaceBillingAction.title = state.hasCampaignCheckout
-        ? "本日の無料枠を使い切っています。特別プランなら無制限でPDF化できます。"
-        : "本日の無料枠を使い切っています。PROなら無制限でPDF化できます。";
+        ? "本日の無料枠を使い切っています。特別プランなら無制限で共有できます。"
+        : "本日の無料枠を使い切っています。PROなら無制限で共有できます。";
       els.workspaceBillingAction.classList.add("is-urgent");
       return;
     }
@@ -1886,7 +1886,7 @@
     var hasCurrentPdf = hasMediaLoaded() && state.flags.length > 0;
     var shouldSuggestCurrentPdf = hasCurrentPdf && state.pdfNeedsAttention;
     var isLocked = isPdfExportLocked();
-    var currentTitle = hasCurrentPdf ? "今のチェック内容をPDFレポートで開きます。" : HINT_NEEDS_RECORDS;
+    var currentTitle = hasCurrentPdf ? "今のチェック内容を共有ページで開きます。" : HINT_NEEDS_RECORDS;
 
     if (els.exportCurrentPdfButton) {
       els.exportCurrentPdfButton.disabled = !hasCurrentPdf || isLocked;
@@ -3123,7 +3123,7 @@
             "</div>" +
             '<div class="history-item-actions">' +
               '<span class="history-date">' + escapeHtml(formatHistoryDate(entry.lastOpened)) + "</span>" +
-              '<button class="action-button action-button-ghost history-item-export' + (isLocked ? " is-locked" : "") + '" type="button" data-history-export-entry="' + escapeHtml(entry.mediaKey) + '"' + exportDisabledMarkup + '>この素材をPDF化</button>' +
+              '<button class="action-button action-button-ghost history-item-export' + (isLocked ? " is-locked" : "") + '" type="button" data-history-export-entry="' + escapeHtml(entry.mediaKey) + '"' + exportDisabledMarkup + '>この素材を共有</button>' +
             "</div>" +
           "</div>" +
           '<div class="history-chip-row">' +
@@ -3242,7 +3242,7 @@
     }
 
     if (!state.flags.length) {
-      showToast("PDFにまとめる記録がありません。", "warning");
+      showToast("共有する記録がありません。", "warning");
       return;
     }
 
@@ -3281,7 +3281,7 @@
         report_type: "current",
         marker_count: state.flags.length
       });
-      showToast("PDF画面を開きました。", "success");
+      showToast("共有ページを開きました。", "success");
     }
   }
 
@@ -3291,7 +3291,7 @@
     var settings = options || {};
 
     if (!entries.length) {
-      showToast("PDFにまとめる履歴がありません。", "warning");
+      showToast("共有する履歴がありません。", "warning");
       return;
     }
 
@@ -3333,7 +3333,7 @@
         item_count: entries.length,
         marker_count: totalFlags
       });
-      showToast(settings.toastMessage || "PDF画面を開きました。", "success");
+      showToast(settings.toastMessage || "共有ページを開きました。", "success");
     }
   }
 
@@ -3351,7 +3351,7 @@
       return exportHistoryReport([reportEntry], {
         reportType: "history_entry",
         reportTitle: "修正指示書",
-        toastMessage: "この素材のPDF画面を開きました。"
+        toastMessage: "この素材の共有ページを開きました。"
       });
     });
   }
@@ -3815,7 +3815,7 @@
       "</div>",
       '<div class="report-actions">',
       '<button id="reportCopyLink" type="button">共有URLをコピー</button>',
-      '<button id="reportDownload" type="button">PDFをダウンロード</button>',
+      '<button id="reportDownload" type="button">共有ページを保存</button>',
       '<button id="reportClose" type="button">閉じる</button>',
       "</div>",
       "</div>",
@@ -3879,7 +3879,7 @@
       'async function copyShareUrl(){if(!copyButton){return;}var originalLabel=copyButton.textContent;copyButton.disabled=true;copyButton.textContent="発行中...";try{var sharePayload=await buildSharePayload();var response=await fetch(String(shareApiBase||"").replace(/\\/+$/,"")+"/api/share-create",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(sharePayload)});var payload=await safeFetchJson(response);if(!response.ok||!payload||!payload.url){var detail=(payload&&payload.detail)||(payload&&payload.error)||(payload&&payload.raw)||("HTTP "+response.status);var detailText=(typeof detail==="string")?detail:function(){try{return JSON.stringify(detail);}catch(_error){return String(detail);}}();throw new Error(detailText);}var copied=await copyText(payload.url);copyButton.textContent=copied?"コピーしました":"URLを表示しました";setTimeout(function(){copyButton.textContent=originalLabel;copyButton.disabled=false;},1800);return;}catch(error){console.error("Failed to create share report",error);var rawMessage=(error&&error.message)?error.message:error;var message=(typeof rawMessage==="string")?rawMessage:function(){try{return JSON.stringify(rawMessage);}catch(_error){return String(rawMessage);}}();window.alert("共有URLの発行に失敗しました。\\n\\n原因: "+message);copyButton.textContent=originalLabel;copyButton.disabled=false;}}',
       'function renderInstructionItem(ctx,flag,index,x,y,w){var itemH=flag.comment?156:92;var statusLabel=flag.reportStatus==="done"?"対応済み":"未対応";var statusFill=flag.reportStatus==="done"?"#dcfce7":"#eef2f7";var statusText=flag.reportStatus==="done"?"#166534":"#475569";drawCard(ctx,x,y,w,itemH,22,"#ffffff","rgba(15,23,42,0.08)");ctx.save();ctx.fillStyle=flag.reportSeverityColor||"#64748b";roundRect(ctx,x+18,y+18,66,44,22);ctx.fill();ctx.restore();drawText(ctx,String(flag.reportNo||index+1),x+51,y+41,"800 30px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#ffffff","middle","center");drawText(ctx,flag.reportTitle||"",x+104,y+48,"700 36px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#0f172a","middle","left");drawText(ctx,"（"+(flag.reportPositionShort||"中央")+"）",x+220,y+49,"600 22px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#64748b","middle","left");ctx.save();ctx.fillStyle=statusFill;roundRect(ctx,x+w-138,y+18,120,40,20);ctx.fill();ctx.restore();drawText(ctx,statusLabel,x+w-78,y+39,"800 18px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif",statusText,"middle","center");if(flag.comment){drawCard(ctx,x+18,y+78,w-36,60,16,(flag.reportSeverity==="high"?"rgba(239,68,68,0.06)":flag.reportSeverity==="medium"?"rgba(245,158,11,0.08)":"rgba(100,116,139,0.08)"),null);drawText(ctx,"修正内容",x+34,y+99,"700 16px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#64748b","middle","left");drawWrappedText(ctx,flag.comment,x+34,y+112,w-68,24,2,"600 22px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#1f2937");}return y+itemH+16;}',
       'async function renderPdfPage(page){var canvas=document.createElement("canvas");canvas.width=pageWidthPx;canvas.height=pageHeightPx;var ctx=canvas.getContext("2d");ctx.fillStyle="#f3f7fc";ctx.fillRect(0,0,canvas.width,canvas.height);drawCard(ctx,24,24,1632,148,28,"#ffffff","rgba(15,23,42,0.08)");drawText(ctx,"Lumina Zone",58,66,"700 24px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#2563eb");drawText(ctx,reportTitle,58,122,"800 56px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#0f172a");drawWrappedText(ctx,page.fileName||documentTitle,372,44,1220,46,1,"700 44px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#0f172a");drawText(ctx,headerMetaLine,372,118,"600 24px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#64748b");drawCard(ctx,24,194,1632,930,28,"#ffffff","rgba(15,23,42,0.08)");drawCard(ctx,48,220,712,878,24,"#f8fbff","rgba(37,99,235,0.1)");var previewImage=await loadImage(page.previewImageDataUrl);var fitted=fitSize(previewImage.width,previewImage.height,640,804);var previewX=48+((712-fitted.width)/2);var previewY=252+((804-fitted.height)/2);ctx.save();ctx.shadowColor="rgba(15,23,42,0.13)";ctx.shadowBlur=28;ctx.shadowOffsetY=12;roundRect(ctx,previewX,previewY,fitted.width,fitted.height,24);ctx.clip();ctx.drawImage(previewImage,previewX,previewY,fitted.width,fitted.height);ctx.restore();ctx.save();ctx.translate(previewX,previewY);drawExportFlags(ctx,page.flags||[],fitted.width,fitted.height,"");ctx.restore();drawCard(ctx,792,220,840,878,22,"#f8fafc","rgba(15,23,42,0.08)");drawText(ctx,"修正指示",820,268,"800 24px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#0f172a");if(page.pageCount>1){drawCard(ctx,1502,240,96,38,19,"rgba(37,99,235,0.12)",null);drawText(ctx,(page.pageIndex+1)+"/"+page.pageCount,1550,259,"800 18px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#2563eb","middle","center");}var itemY=300;(page.flags||[]).forEach(function(flag,index){itemY=renderInstructionItem(ctx,flag,index,820,itemY,784);});drawText(ctx,"このレポートは Lumina Zone で作成されました。",1320,1142,"500 16px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#64748b","alphabetic","left");return {dataUrl:canvas.toDataURL("image/jpeg",0.94),width:canvas.width,height:canvas.height};}',
-      'async function downloadPdf(){if(!downloadButton){return;}var originalLabel=downloadButton.textContent;downloadButton.disabled=true;downloadButton.textContent="生成中...";try{var rendered=await Promise.all(reportPages.map(renderPdfPage));var images=rendered.map(function(page){return {bytes:dataUrlToBytes(page.dataUrl),width:page.width,height:page.height};});var pdfBlob=buildPdfBlob(images);var link=document.createElement("a");var safeTitle=(documentTitle||"lumina-zone-report").replace(/\\.pdf$/i,"");link.href=URL.createObjectURL(pdfBlob);link.download=safeTitle+".pdf";document.body.appendChild(link);link.click();setTimeout(function(){URL.revokeObjectURL(link.href);link.remove();},1000);}catch(error){console.error("Failed to generate PDF",error);window.alert("PDFのダウンロードに失敗しました。");}finally{downloadButton.disabled=false;downloadButton.textContent=originalLabel;}}',
+      'async function downloadPdf(){if(!downloadButton){return;}var originalLabel=downloadButton.textContent;downloadButton.disabled=true;downloadButton.textContent="生成中...";try{var rendered=await Promise.all(reportPages.map(renderPdfPage));var images=rendered.map(function(page){return {bytes:dataUrlToBytes(page.dataUrl),width:page.width,height:page.height};});var pdfBlob=buildPdfBlob(images);var link=document.createElement("a");var safeTitle=(documentTitle||"lumina-zone-share").replace(/\\.pdf$/i,"");link.href=URL.createObjectURL(pdfBlob);link.download=safeTitle+".pdf";document.body.appendChild(link);link.click();setTimeout(function(){URL.revokeObjectURL(link.href);link.remove();},1000);}catch(error){console.error("Failed to generate PDF",error);window.alert("共有ページの保存に失敗しました。");}finally{downloadButton.disabled=false;downloadButton.textContent=originalLabel;}}',
       'if(copyButton){copyButton.addEventListener("click",function(){copyShareUrl();});}',
       'if(downloadButton){downloadButton.addEventListener("click",function(){downloadPdf();});}',
       'if(closeButton){closeButton.addEventListener("click",function(){window.close();});}',
