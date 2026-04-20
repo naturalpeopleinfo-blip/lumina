@@ -9,6 +9,24 @@ function json(res, statusCode, payload) {
   res.end(JSON.stringify(payload));
 }
 
+function applyCors(req, res) {
+  const origin = req.headers.origin || "*";
+  res.setHeader("Access-Control-Allow-Origin", origin === "null" ? "*" : origin);
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept");
+  res.setHeader("Access-Control-Max-Age", "86400");
+}
+
+function handleCors(req, res) {
+  applyCors(req, res);
+  if (req.method === "OPTIONS") {
+    res.statusCode = 204;
+    res.end();
+    return true;
+  }
+  return false;
+}
+
 async function readJsonBody(req) {
   if (req.body && typeof req.body === "object") {
     return req.body;
@@ -171,6 +189,8 @@ async function removeStorageObjects(paths) {
 
 module.exports = {
   json,
+  applyCors,
+  handleCors,
   readJsonBody,
   getSupabaseConfig,
   getBaseUrl,

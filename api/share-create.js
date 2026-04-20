@@ -1,5 +1,6 @@
 const {
   json,
+  handleCors,
   readJsonBody,
   getBaseUrl,
   supabaseRest,
@@ -25,6 +26,10 @@ function sanitizeFlag(flag) {
 }
 
 module.exports = async function handler(req, res) {
+  if (handleCors(req, res)) {
+    return;
+  }
+
   if (req.method !== "POST") {
     return json(res, 405, { error: "Method not allowed" });
   }

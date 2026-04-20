@@ -1,10 +1,15 @@
 const {
   json,
+  handleCors,
   removeStorageObjects,
   supabaseRest
 } = require("./_share-utils");
 
 module.exports = async function handler(req, res) {
+  if (handleCors(req, res)) {
+    return;
+  }
+
   if (req.method !== "POST" && req.method !== "GET") {
     return json(res, 405, { error: "Method not allowed" });
   }
