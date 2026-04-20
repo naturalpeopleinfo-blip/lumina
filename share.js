@@ -312,9 +312,11 @@
       copyCurrentUrl();
     });
 
-    els.closeButton.addEventListener("click", function () {
-      window.close();
-    });
+    if (els.closeButton) {
+      els.closeButton.addEventListener("click", function () {
+        window.close();
+      });
+    }
 
     els.prevButton.addEventListener("click", function () {
       state.activeFlagIndex = Math.max(0, state.activeFlagIndex - 1);
