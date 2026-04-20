@@ -8035,11 +8035,25 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   height: 12px;
   border-radius: 999px;
   background:
-    linear-gradient(90deg, #79b8ff 0%, #0a84ff 52%, #5e5ce6 var(--range-progress), rgba(255, 255, 255, 0.1) var(--range-progress), rgba(255, 255, 255, 0.1) 100%);
+    linear-gradient(
+      90deg,
+      #79b8ff 0%,
+      #0a84ff min(var(--range-progress), 100%),
+      rgba(255, 255, 255, 0.1) min(var(--range-progress), 100%),
+      rgba(255, 255, 255, 0.1) 100%
+    );
   outline: none;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.timeline-range:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 0 rgba(255, 255, 255, 0.02);
+  cursor: default;
 }
 
 .timeline-range::-webkit-slider-thumb {
@@ -8053,6 +8067,10 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   box-shadow: 0 0 0 6px rgba(10, 132, 255, 0.16);
 }
 
+.timeline-range:disabled::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.1);
+}
+
 .timeline-range::-moz-range-thumb {
   width: 20px;
   height: 20px;
@@ -8061,6 +8079,10 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   background:
     radial-gradient(circle at 32% 30%, #ffffff 0 36%, #c7e0ff 37% 100%);
   box-shadow: 0 0 0 6px rgba(10, 132, 255, 0.16);
+}
+
+.timeline-range:disabled::-moz-range-thumb {
+  box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.1);
 }
 
 .onboarding[hidden] {
