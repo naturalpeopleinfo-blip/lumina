@@ -3126,32 +3126,36 @@
     renderHistoryList();
   }
 
-  function buildHistoryReportEntry(entry, flags) {
-    var sortedFlags = sortFlagsForReport(flags || []);
-    var reportPlatformKey = buildReportPlatformKey(sortedFlags, "");
+  async function buildHistoryReportEntry(entry, flags) {
+    var reportFlags = buildReportFlags(flags || []);
+    var reportPlatformKey = buildReportPlatformKey(reportFlags, "");
     var canPreviewCurrentMedia = entry.mediaKey === state.mediaKey && hasMediaLoaded();
+    var previewImageDataUrl = canPreviewCurrentMedia ? createReportPreviewImageDataUrl(reportPlatformKey, reportFlags) : "";
+    var previewFrames = canPreviewCurrentMedia ? await createReportPreviewFrames(reportPlatformKey, reportFlags) : [];
 
     return {
       mediaKey: entry.mediaKey,
       fileName: entry.fileName,
       durationText: entry.durationText,
       resolutionText: entry.resolutionText,
-      settingsLabel: buildReportSettingsLabel(sortedFlags, reportPlatformKey),
+      settingsKey: reportPlatformKey,
+      settingsLabel: buildReportSettingsLabel(reportFlags, reportPlatformKey),
       lastOpened: entry.lastOpened,
-      flags: sortedFlags,
-      previewImageDataUrl: canPreviewCurrentMedia ? createReportPreviewImageDataUrl(reportPlatformKey, sortedFlags) : "",
+      flags: reportFlags,
+      previewImageDataUrl: previewImageDataUrl,
+      previewFrames: previewFrames,
       previewCaption: canPreviewCurrentMedia ? "現在開いている素材の表示イメージ" : "保存された確認履歴"
     };
   }
 
-  function getSelectedHistoryEntries(entries) {
-    return (entries || []).reduce(function (result, entry) {
-      if (isHistoryEntrySelected(entry.mediaKey)) {
-        result.push(buildHistoryReportEntry(entry, entry.flags));
-      }
+  async function getSelectedHistoryEntries(entries) {
+    var selectedEntries = (entries || []).filter(function (entry) {
+      return isHistoryEntrySelected(entry.mediaKey);
+    });
 
-      return result;
-    }, []);
+    return Promise.all(selectedEntries.map(function (entry) {
+      return buildHistoryReportEntry(entry, entry.flags);
+    }));
   }
 
   function renderHistoryList() {
@@ -3314,11 +3318,11 @@
       return;
     }
 
-    reportEntry = buildCurrentReportEntry();
+    reportEntry = await buildCurrentReportEntry();
     report = {
       documentTitle: buildReportFileName(reportEntry.fileName, false),
       exportDateText: formatReportDateTime(Date.now()),
-      reportTitle: "セーフゾーン確認レポート",
+      reportTitle: "修正指示書",
       summary:
         '<section class="report-summary">' +
           '<div class="report-summary-item"><span>出力日</span><strong>' + escapeHtml(formatReportDateLabel(Date.now())) + "</strong></div>" +
@@ -3345,7 +3349,7 @@
         report_type: "current",
         marker_count: state.flags.length
       });
-      showToast("PDFレポートを開きました。", "success");
+      showToast("PDF画面を開きました。", "success");
     }
   }
 
@@ -3397,34 +3401,34 @@
         item_count: entries.length,
         marker_count: totalFlags
       });
-      showToast(settings.toastMessage || "履歴レポートを開きました。", "success");
+      showToast(settings.toastMessage || "PDF画面を開きました。", "success");
     }
   }
 
   function exportAllHistoryPdf() {
-    var entries = readHistoryEntries().map(function (entry) {
+    Promise.all(readHistoryEntries().map(function (entry) {
       return buildHistoryReportEntry(entry, entry.flags);
-    });
-
-    exportHistoryReport(entries, {
-      reportType: "history_all",
-      reportTitle: "アカウント履歴レポート",
-      toastMessage: "履歴をまとめてPDF化しました。"
+    })).then(function (entries) {
+      return exportHistoryReport(entries, {
+        reportType: "history_all",
+        reportTitle: "修正指示書",
+        toastMessage: "履歴のPDF画面を開きました。"
+      });
     });
   }
 
   function exportSelectedHistoryPdf() {
-    var entries = getSelectedHistoryEntries(readHistoryEntries());
+    getSelectedHistoryEntries(readHistoryEntries()).then(function (entries) {
+      if (!entries.length) {
+        showToast("PDFに含める素材を選んでください。", "warning");
+        return;
+      }
 
-    if (!entries.length) {
-      showToast("PDFに含める素材を選んでください。", "warning");
-      return;
-    }
-
-    exportHistoryReport(entries, {
-      reportType: "history_selected",
-      reportTitle: "選択した素材のレポート",
-      toastMessage: "選択した素材をPDF化しました。"
+      return exportHistoryReport(entries, {
+        reportType: "history_selected",
+        reportTitle: "修正指示書",
+        toastMessage: "選択した素材のPDF画面を開きました。"
+      });
     });
   }
 
@@ -3438,24 +3442,31 @@
       return;
     }
 
-    exportHistoryReport([buildHistoryReportEntry(entry, entry.flags)], {
-      reportType: "history_entry",
-      reportTitle: "素材別チェックレポート",
-      toastMessage: "この素材の履歴をPDF化しました。"
+    buildHistoryReportEntry(entry, entry.flags).then(function (reportEntry) {
+      return exportHistoryReport([reportEntry], {
+        reportType: "history_entry",
+        reportTitle: "修正指示書",
+        toastMessage: "この素材のPDF画面を開きました。"
+      });
     });
   }
 
-  function buildCurrentReportEntry() {
+  async function buildCurrentReportEntry() {
     var platformKey = buildReportPlatformKey(state.flags, state.activePlatform);
+    var reportFlags = buildReportFlags(state.flags);
+    var previewImageDataUrl = createReportPreviewImageDataUrl(platformKey, reportFlags);
+    var previewFrames = await createReportPreviewFrames(platformKey, reportFlags);
 
     return {
       fileName: state.fileName || "未命名素材",
       durationText: els.metaDuration.textContent || "00:00",
       resolutionText: els.metaResolution.textContent || "-- × --",
+      settingsKey: platformKey,
       settingsLabel: buildReportSettingsLabel(state.flags, platformKey),
-      flags: sortFlagsForReport(state.flags),
-      previewImageDataUrl: createReportPreviewImageDataUrl(platformKey, state.flags),
-      previewCaption: "確認時の表示イメージ"
+      flags: reportFlags,
+      previewImageDataUrl: previewImageDataUrl,
+      previewFrames: previewFrames,
+      previewCaption: ""
     };
   }
 
@@ -3497,8 +3508,189 @@
 
   function sortFlagsForReport(flags) {
     return (flags || []).slice().sort(function (left, right) {
-      return getFlagStartTime(left) - getFlagStartTime(right);
+      var timeDelta = getFlagStartTime(left) - getFlagStartTime(right);
+      if (timeDelta !== 0) {
+        return timeDelta;
+      }
+
+      var createdAtDelta = (left.createdAt || 0) - (right.createdAt || 0);
+      if (createdAtDelta !== 0) {
+        return createdAtDelta;
+      }
+
+      return String(left.id || "").localeCompare(String(right.id || ""));
     });
+  }
+
+  function buildReportFlags(flags) {
+    return sortFlagsForReport(flags).map(function (flag, index) {
+      var severity = getReportSeverityMeta(flag);
+      var status = getReportStatusMeta(flag.reportStatus);
+      return Object.assign({}, flag, {
+        reportNo: index + 1,
+        reportTitle: getFlagTitle(flag),
+        reportPositionLabel: getReportPositionLabel(flag),
+        reportPositionShort: getReportPositionBaseLabel(flag),
+        reportPlatformLabel: getPlatformMeta(flag.platform).label,
+        reportSeverity: severity.key,
+        reportSeverityLabel: severity.label,
+        reportSeverityColor: severity.color,
+        reportSeverityTextColor: severity.textColor,
+        reportStatus: status.key,
+        reportStatusLabel: status.label,
+        reportStatusColor: status.color,
+        reportStatusTextColor: status.textColor,
+        reportStatusBackground: status.background,
+        reportStatusBorder: status.border
+      });
+    });
+  }
+
+  function getReportSeverityMeta(flag) {
+    var metrics = getEffectivePlatformSettings(flag.platform || "all");
+    var x = (flag.x || 0) * 100;
+    var y = (flag.y || 0) * 100;
+
+    if (isPointInsideRiskLevel(metrics, "highRisk", x, y)) {
+      return {
+        key: "high",
+        label: "高",
+        color: "#ef4444",
+        textColor: "#ffffff"
+      };
+    }
+
+    if (isPointInsideRiskLevel(metrics, "caution", x, y)) {
+      return {
+        key: "medium",
+        label: "中",
+        color: "#f59e0b",
+        textColor: "#ffffff"
+      };
+    }
+
+    return {
+      key: "low",
+      label: "低",
+      color: "#64748b",
+      textColor: "#ffffff"
+    };
+  }
+
+  function normalizeReportStatus(status) {
+    return status === "done" ? "done" : "pending";
+  }
+
+  function getReportStatusMeta(status) {
+    if (normalizeReportStatus(status) === "done") {
+      return {
+        key: "done",
+        label: "対応済み",
+        color: "#16a34a",
+        textColor: "#ffffff",
+        background: "rgba(22, 163, 74, 0.14)",
+        border: "rgba(22, 163, 74, 0.24)"
+      };
+    }
+
+    return {
+      key: "pending",
+      label: "未対応",
+      color: "#475569",
+      textColor: "#ffffff",
+      background: "rgba(71, 85, 105, 0.12)",
+      border: "rgba(71, 85, 105, 0.2)"
+    };
+  }
+
+  function isPointInsideRiskLevel(metrics, levelKey, x, y) {
+    var areasKey = levelKey + "Areas";
+    if ((metrics.areaModel || "bands") === "blocks") {
+      return (metrics[areasKey] || []).some(function (area) {
+        return isPointInsideArea(area, x, y);
+      });
+    }
+
+    return isPointInsideRiskBands(metrics[levelKey] || createEmptyRiskProfile()[levelKey], x, y);
+  }
+
+  function isPointInsideRiskBands(level, x, y) {
+    var topBound = percentToNumber(level.top || "0%");
+    var rightBound = 100 - percentToNumber(level.right || "0%");
+    var bottomBound = 100 - percentToNumber(level.bottom || "0%");
+    var leftBound = percentToNumber(level.left || "0%");
+    var upperRightBound = 100 - percentToNumber(level.rightUpper || level.right || "0%");
+    var stepY = percentToNumber(level.stepY || level.top || "48%");
+
+    return (
+      y < topBound ||
+      x < leftBound ||
+      y > bottomBound ||
+      (y < stepY && x > upperRightBound) ||
+      (y >= stepY && x > rightBound)
+    );
+  }
+
+  function getReportPositionLabel(flag) {
+    var baseLabel = getReportPositionBaseLabel(flag);
+    var zoneHint = "";
+
+    if (flag.zone === "right") {
+      zoneHint = "UI上";
+    } else if (flag.zone === "bottom") {
+      zoneHint = "CTA付近";
+    } else if (flag.zone === "top") {
+      zoneHint = "上部UI付近";
+    } else if (flag.zone === "left") {
+      zoneHint = "左UI付近";
+    }
+
+    return zoneHint ? (baseLabel + "（" + zoneHint + "）") : baseLabel;
+  }
+
+  function getReportPositionBaseLabel(flag) {
+    var xBucket = "center";
+    var yBucket = "center";
+    var x = flag.x || 0;
+    var y = flag.y || 0;
+
+    if (x < 1 / 3) {
+      xBucket = "left";
+    } else if (x > 2 / 3) {
+      xBucket = "right";
+    }
+
+    if (y < 1 / 3) {
+      yBucket = "top";
+    } else if (y > 2 / 3) {
+      yBucket = "bottom";
+    }
+
+    if (yBucket === "top" && xBucket === "left") {
+      return "左上";
+    }
+    if (yBucket === "top" && xBucket === "center") {
+      return "上中央";
+    }
+    if (yBucket === "top" && xBucket === "right") {
+      return "右上";
+    }
+    if (yBucket === "center" && xBucket === "left") {
+      return "左中央";
+    }
+    if (yBucket === "center" && xBucket === "center") {
+      return "中央";
+    }
+    if (yBucket === "center" && xBucket === "right") {
+      return "右中央";
+    }
+    if (yBucket === "bottom" && xBucket === "left") {
+      return "左下";
+    }
+    if (yBucket === "bottom" && xBucket === "center") {
+      return "下中央";
+    }
+    return "右下";
   }
 
   function createReportPreviewImageDataUrl(platformKey, flags) {
@@ -3506,6 +3698,7 @@
     var height = 0;
     var canvas = null;
     var ctx = null;
+    var reportFlags = flags && flags.length && flags[0].reportNo ? flags : buildReportFlags(flags);
 
     if (!hasMediaLoaded()) {
       return "";
@@ -3534,9 +3727,89 @@
       ctx.drawImage(els.video, 0, 0, width, height);
     }
     drawExportOverlay(ctx, width, height, platformKey);
-    drawExportFlags(ctx, sortFlagsForReport(flags), width, height, state.selectedFlagId || "");
 
     return canvas.toDataURL("image/png");
+  }
+
+  function seekVideoForReportCapture(seconds) {
+    var targetTime = 0;
+
+    if (state.mediaType !== "video" || !hasMediaLoaded()) {
+      return Promise.resolve();
+    }
+
+    targetTime = clamp(seconds, 0, els.video.duration || 0);
+
+    if (Math.abs((els.video.currentTime || 0) - targetTime) < 0.02) {
+      return new Promise(function (resolve) {
+        window.requestAnimationFrame(resolve);
+      });
+    }
+
+    return new Promise(function (resolve) {
+      var handled = false;
+
+      function finish() {
+        if (handled) {
+          return;
+        }
+        handled = true;
+        els.video.removeEventListener("seeked", finish);
+        resolve();
+      }
+
+      els.video.addEventListener("seeked", finish, { once: true });
+      els.video.currentTime = targetTime;
+    });
+  }
+
+  async function createReportPreviewFrames(platformKey, flags) {
+    var reportFlags = flags && flags.length && flags[0].reportNo ? flags : buildReportFlags(flags);
+    var fallbackImage = createReportPreviewImageDataUrl(platformKey, reportFlags);
+    var previousTime = 0;
+    var wasPaused = true;
+    var frames = [];
+
+    if (!hasMediaLoaded() || !reportFlags.length) {
+      return [];
+    }
+
+    if (state.mediaType === "image") {
+      return reportFlags.map(function (flag) {
+        return {
+          id: String(flag.id || ""),
+          previewImageDataUrl: fallbackImage
+        };
+      });
+    }
+
+    previousTime = clamp(els.video.currentTime || 0, 0, els.video.duration || 0);
+    wasPaused = els.video.paused;
+    els.video.pause();
+
+    try {
+      for (var index = 0; index < reportFlags.length; index += 1) {
+        var flag = reportFlags[index];
+        await seekVideoForReportCapture(getFlagStartTime(flag));
+        frames.push({
+          id: String(flag.id || ""),
+          previewImageDataUrl: createReportPreviewImageDataUrl(platformKey, reportFlags)
+        });
+      }
+    } finally {
+      await seekVideoForReportCapture(previousTime);
+      if (!wasPaused) {
+        els.video.play().catch(function () {
+          return null;
+        });
+      }
+      syncTimeline();
+      renderFlags();
+      renderCommentEditor();
+      updateTransportState();
+    }
+
+    return frames;
   }
 
   function getTodayHistoryEntries() {
@@ -3551,7 +3824,7 @@
         resolutionText: entry.resolutionText,
         settingsLabel: buildReportSettingsLabel(entry.flags, ""),
         lastOpened: entry.lastOpened,
-        flags: sortFlagsForReport(entry.flags)
+        flags: buildReportFlags(entry.flags)
       };
     });
   }
@@ -3567,8 +3840,9 @@
     );
   }
 
-  function openReportWindow(report) {
+  function openReportWindow(report, options) {
     var reportWindow = window.open("", "_blank", "width=1080,height=900");
+    var settings = options || {};
 
     if (!reportWindow) {
       showToast("レポート画面を開けませんでした。ポップアップ設定をご確認ください。", "warning");
@@ -3576,15 +3850,47 @@
     }
 
     reportWindow.document.open();
-    reportWindow.document.write(buildReportDocumentHtml(report));
+    reportWindow.document.write(buildReportDocumentHtml(report, settings));
     reportWindow.document.close();
     return true;
   }
 
-  function buildReportDocumentHtml(report) {
-    var summaryHtml = report.summary || "";
-    var sectionsHtml = report.sections.map(function (entry, index) {
-      return buildReportSectionHtml(entry, index, report.sections.length);
+  function buildReportDocumentHtml(report, options) {
+    var reportPages = buildReportPages(report.sections || []);
+    var headerEntry = reportPages[0] || {};
+    var logoSrc = new URL("./assets/logo_new_blue.PNG", window.location.href).href;
+    var shareApiBase = "https://luminazone.jp";
+    if (window.location && /^https?:$/i.test(window.location.protocol || "")) {
+      shareApiBase = window.location.origin;
+    }
+    var totalInstructionCount = reportPages.reduce(function (sum, entry) {
+      return sum + (((entry && entry.flags) || []).length);
+    }, 0);
+    var platformLabels = [];
+    reportPages.forEach(function (entry) {
+      var label = String(entry.settingsLabel || "").trim();
+      if (label && platformLabels.indexOf(label) === -1) {
+        platformLabels.push(label);
+      }
+    });
+    var headerMetaLine = [
+      "長さ " + (headerEntry.durationText || "00:00"),
+      "サイズ " + (headerEntry.resolutionText || "-- × --"),
+      "対象SNS " + (platformLabels.join(" / ") || headerEntry.settingsLabel || "未選択"),
+      "修正指示 " + (totalInstructionCount + "件")
+    ].join(" / ");
+    var headerMetaHtml =
+      '<div class="report-header-meta-row">' +
+        '<span class="report-header-meta-item"><span class="report-header-meta-label">長さ</span><span class="report-header-meta-value">' + escapeHtml(headerEntry.durationText || "00:00") + '</span></span>' +
+        '<span class="report-header-meta-divider" aria-hidden="true">/</span>' +
+        '<span class="report-header-meta-item"><span class="report-header-meta-label">サイズ</span><span class="report-header-meta-value">' + escapeHtml(headerEntry.resolutionText || "-- × --") + '</span></span>' +
+        '<span class="report-header-meta-divider" aria-hidden="true">/</span>' +
+        '<span class="report-header-meta-item"><span class="report-header-meta-label">対象SNS</span>' + getPlatformInlineMarkup(headerEntry.settingsKey || "all", "report-header-platform-icons") + '</span>' +
+        '<span class="report-header-meta-divider" aria-hidden="true">/</span>' +
+        '<span class="report-header-meta-item"><span class="report-header-meta-label">修正指示</span><span class="report-header-meta-value">' + escapeHtml(String(totalInstructionCount) + "件") + '</span></span>' +
+      '</div>';
+    var sectionsHtml = reportPages.map(function (entry, index) {
+      return buildReportSectionHtml(entry, index, reportPages.length);
     }).join("");
 
     return [
@@ -3598,128 +3904,304 @@
       "</head>",
       '<body class="report-body">',
       '<div class="report-shell">',
-      '<div class="report-actions" data-print-hide="true">',
-      '<button id="reportPrint" type="button">PDFで保存</button>',
+      '<div class="report-topbar" data-print-hide="true">',
+      '<div class="report-page-brand">' +
+      '<img src="' + escapeHtml(logoSrc) + '" alt="Lumina Zone" class="report-page-brand-mark" width="90" height="90">' +
+      "</div>",
+      '<div class="report-actions">',
+      '<button id="reportCopyLink" type="button">共有URLをコピー</button>',
+      '<button id="reportDownload" type="button">PDFをダウンロード</button>',
       '<button id="reportClose" type="button">閉じる</button>',
       "</div>",
+      "</div>",
       '<header class="report-header">',
-      '<p class="report-brand">Lumina Zone</p>',
-      "<h1>" + escapeHtml(report.reportTitle) + "</h1>",
-      '<p class="report-date">出力日: ' + escapeHtml(report.exportDateText) + "</p>",
+      '<div class="report-header-meta-block">' +
+        '<p class="report-header-inline" title="' + escapeHtml((headerEntry.fileName || report.documentTitle || "report") + " / " + headerMetaLine) + '">' +
+          '<span class="report-header-file">' + escapeHtml(headerEntry.fileName || report.documentTitle || "report") + "</span>" +
+        "</p>" +
+        headerMetaHtml +
+      "</div>",
       "</header>",
-      summaryHtml,
       '<main class="report-main">',
       sectionsHtml,
       "</main>",
       '<footer class="report-footer">このレポートは Lumina Zone で作成されました。</footer>',
       "</div>",
-      '<script>(function(){var printButton=document.getElementById("reportPrint");var closeButton=document.getElementById("reportClose");if(printButton){printButton.addEventListener("click",function(){window.print();});}if(closeButton){closeButton.addEventListener("click",function(){window.close();});}}());<\/script>',
+      buildReportDownloadScript(
+        report.documentTitle || "lumina-zone-report",
+        report.reportTitle || "修正指示書",
+        headerMetaLine,
+        reportPages,
+        shareApiBase
+      ),
       "</body>",
       "</html>"
     ].join("");
   }
 
+  function buildReportDownloadScript(documentTitle, reportTitle, headerMetaLine, reportPages, shareApiBase) {
+    return [
+      '<script>(function(){',
+      'var copyButton=document.getElementById("reportCopyLink");',
+      'var downloadButton=document.getElementById("reportDownload");',
+      'var closeButton=document.getElementById("reportClose");',
+      'var documentTitle=' + JSON.stringify(documentTitle) + ';',
+      'var reportTitle=' + JSON.stringify(reportTitle) + ';',
+      'var headerMetaLine=' + JSON.stringify(headerMetaLine) + ';',
+      'var reportPages=' + JSON.stringify(reportPages) + ';',
+      'var shareApiBase=' + JSON.stringify(shareApiBase || "https://luminazone.jp") + ';',
+      'var pageWidthPx=1680;',
+      'var pageHeightPx=1188;',
+      'function safeFetchJson(response){return response.text().then(function(text){if(!text){return {};}try{return JSON.parse(text);}catch(error){return {raw:text};}});}',
+      'async function copyText(value){if(navigator.clipboard&&window.isSecureContext!==false){await navigator.clipboard.writeText(value);return;}var input=document.createElement("input");input.value=value||"";document.body.appendChild(input);input.select();document.execCommand("copy");input.remove();}',
+      'function buildSharePayload(){var firstPage=reportPages[0]||{};var labels=[];reportPages.forEach(function(page){var label=String(page.settingsLabel||"").trim();if(label&&labels.indexOf(label)===-1){labels.push(label);}});return {fileName:firstPage.fileName||documentTitle||"未命名素材",durationText:firstPage.durationText||"00:00",resolutionText:firstPage.resolutionText||"-- × --",settingsKey:firstPage.settingsKey||"all",settingsLabel:firstPage.settingsLabel||"未選択",platformLabels:labels.length?labels:[String(firstPage.settingsLabel||"未選択")],instructionCount:reportPages.reduce(function(sum,page){return sum+(((page&&page.flags)||[]).length);},0),pages:reportPages.map(function(page){return {pageIndex:Number(page.pageIndex||0),pageCount:Number(page.pageCount||1),previewImageDataUrl:page.previewImageDataUrl||"",flags:(page.flags||[]).map(function(flag){return {id:flag.id||"",reportNo:Number(flag.reportNo||0),reportTitle:flag.reportTitle||"",reportPositionShort:flag.reportPositionShort||"",reportPositionLabel:flag.reportPositionLabel||"",reportSeverity:flag.reportSeverity||"low",reportStatus:flag.reportStatus||"pending",reportStatusLabel:flag.reportStatusLabel||"未対応",comment:flag.comment||"",timeLabel:flag.timeLabel||"",x:typeof flag.x==="number"?flag.x:0,y:typeof flag.y==="number"?flag.y:0};}),previewFrames:(page.previewFrames||[]).map(function(frame){return {id:frame.id||"",previewImageDataUrl:frame.previewImageDataUrl||page.previewImageDataUrl||""};})};})};}',
+      'function dataUrlToBytes(dataUrl){var base64=dataUrl.split(",")[1]||"";var binary=window.atob(base64);var length=binary.length;var bytes=new Uint8Array(length);for(var i=0;i<length;i+=1){bytes[i]=binary.charCodeAt(i);}return bytes;}',
+      'function buildPdfBlob(images){var parts=[];var offsets=[0];var offset=0;function pushAscii(text){var bytes=new TextEncoder().encode(text);parts.push(bytes);offset+=bytes.length;}function pushBinary(bytes){parts.push(bytes);offset+=bytes.length;}function markObject(id){offsets[id]=offset;}var pageWidth=841.89;var pageHeight=595.28;var objectId=1;var catalogId=objectId++;var pagesId=objectId++;var pageIds=[];var contentIds=[];var imageIds=[];images.forEach(function(){pageIds.push(objectId++);contentIds.push(objectId++);imageIds.push(objectId++);});pushAscii("%PDF-1.4\\n%\\xE2\\xE3\\xCF\\xD3\\n");markObject(catalogId);pushAscii(catalogId+" 0 obj\\n<< /Type /Catalog /Pages "+pagesId+" 0 R >>\\nendobj\\n");markObject(pagesId);pushAscii(pagesId+" 0 obj\\n<< /Type /Pages /Count "+images.length+" /Kids ["+pageIds.map(function(id){return id+" 0 R";}).join(" ")+"] >>\\nendobj\\n");images.forEach(function(image,index){var pageId=pageIds[index];var contentId=contentIds[index];var imageId=imageIds[index];var contentStream="q\\n"+pageWidth+" 0 0 "+pageHeight+" 0 0 cm\\n/Im1 Do\\nQ";markObject(pageId);pushAscii(pageId+" 0 obj\\n<< /Type /Page /Parent "+pagesId+" 0 R /MediaBox [0 0 "+pageWidth+" "+pageHeight+"] /Resources << /XObject << /Im1 "+imageId+" 0 R >> >> /Contents "+contentId+" 0 R >>\\nendobj\\n");markObject(contentId);pushAscii(contentId+" 0 obj\\n<< /Length "+contentStream.length+" >>\\nstream\\n"+contentStream+"\\nendstream\\nendobj\\n");markObject(imageId);pushAscii(imageId+" 0 obj\\n<< /Type /XObject /Subtype /Image /Width "+image.width+" /Height "+image.height+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Interpolate true /Length "+image.bytes.length+" >>\\nstream\\n");pushBinary(image.bytes);pushAscii("\\nendstream\\nendobj\\n");});var xrefOffset=offset;pushAscii("xref\\n0 "+objectId+"\\n");pushAscii("0000000000 65535 f \\n");for(var i=1;i<objectId;i+=1){pushAscii(String(offsets[i]||0).padStart(10,"0")+" 00000 n \\n");}pushAscii("trailer\\n<< /Size "+objectId+" /Root "+catalogId+" 0 R >>\\nstartxref\\n"+xrefOffset+"\\n%%EOF");return new Blob(parts,{type:"application/pdf"});}',
+      'function roundRect(ctx,x,y,w,h,r){var radius=Math.max(0,Math.min(r,w/2,h/2));ctx.beginPath();ctx.moveTo(x+radius,y);ctx.arcTo(x+w,y,x+w,y+h,radius);ctx.arcTo(x+w,y+h,x,y+h,radius);ctx.arcTo(x,y+h,x,y,radius);ctx.arcTo(x,y,x+w,y,radius);ctx.closePath();}',
+      'function drawCard(ctx,x,y,w,h,r,fill,stroke){ctx.save();ctx.fillStyle=fill;roundRect(ctx,x,y,w,h,r);ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}ctx.restore();}',
+      'function drawText(ctx,text,x,y,font,color,baseline,align){ctx.save();ctx.font=font;ctx.fillStyle=color;ctx.textBaseline=baseline||"alphabetic";ctx.textAlign=align||"left";ctx.fillText(text,x,y);ctx.restore();}',
+      'function drawWrappedText(ctx,text,x,y,maxWidth,lineHeight,maxLines,font,color){ctx.save();ctx.font=font;ctx.fillStyle=color;ctx.textBaseline="top";ctx.textAlign="left";var words=String(text||"").split(/\\s+/);var line="";var lineCount=0;for(var i=0;i<words.length;i+=1){var testLine=line?line+" "+words[i]:words[i];if(ctx.measureText(testLine).width>maxWidth&&line){ctx.fillText(line,x,y+lineCount*lineHeight);line=words[i];lineCount+=1;if(maxLines&&lineCount>=maxLines-1){break;}}else{line=testLine;}}if(line&&(maxLines===0||lineCount<maxLines)){ctx.fillText(line,x,y+lineCount*lineHeight);lineCount+=1;}ctx.restore();return y+lineCount*lineHeight;}',
+      'function loadImage(src){return new Promise(function(resolve,reject){var img=new Image();img.onload=function(){resolve(img);};img.onerror=function(error){reject(error);};img.src=src;});}',
+      'function fitSize(srcW,srcH,maxW,maxH){var scale=Math.min(maxW/srcW,maxH/srcH);return {width:srcW*scale,height:srcH*scale};}',
+      'function getSectionFlags(section){return Array.prototype.slice.call(section.querySelectorAll(".report-instruction-item[data-flag-id]"));}',
+      'function getReportStatusMeta(status){if(status==="done"){return {key:"done",label:"対応済み",buttonClass:"report-status-toggle report-status-toggle-done"};}return {key:"pending",label:"未対応",buttonClass:"report-status-toggle report-status-toggle-pending"};}',
+      'function renderStatusToggleLabel(label){return \'<span class="report-status-toggle-label">\'+label+\'</span><span class="report-status-toggle-icon" aria-hidden="true">▾</span>\';}',
+      'function updateInstructionStatusUi(item,status){var meta=getReportStatusMeta(status);var button=item.querySelector("[data-flag-status-toggle]");item.setAttribute("data-report-status",meta.key);if(button){button.className=meta.buttonClass;button.innerHTML=renderStatusToggleLabel(meta.label);button.setAttribute("aria-pressed",meta.key==="done"?"true":"false");button.setAttribute("aria-label",meta.label+" に切り替え");}}',
+      'function updateReportPageStatus(section,flagId,nextStatus){var pageIndex=parseInt(section.getAttribute("data-report-page-index")||"-1",10);if(pageIndex<0||!reportPages[pageIndex]){return;}var page=reportPages[pageIndex];(page.flags||[]).forEach(function(flag){if(String(flag.id||"")===String(flagId||"")){flag.reportStatus=nextStatus;flag.reportStatusLabel=getReportStatusMeta(nextStatus).label;}});}',
+      'function updateSectionSelection(section,nextIndex){var items=getSectionFlags(section);if(!items.length){return;}var total=items.length;var index=Math.max(0,Math.min(nextIndex,total-1));var activeItem=items[index];var activeId=activeItem.getAttribute("data-flag-id")||"";var nextPreviewSrc=activeItem.getAttribute("data-preview-src")||"";var pins=Array.prototype.slice.call(section.querySelectorAll(".report-preview-pin[data-flag-id]"));items.forEach(function(item,itemIndex){var isActive=itemIndex===index;item.classList.toggle("is-active",isActive);item.setAttribute("aria-current",isActive?"true":"false");});pins.forEach(function(pin,pinIndex){var isActive=pinIndex===index||pin.getAttribute("data-flag-id")===activeId;pin.classList.toggle("is-active",isActive);});var stage=section.querySelector(".report-preview-stage");if(stage){stage.setAttribute("data-active-flag-id",activeId);}var previewImage=section.querySelector(".report-preview-image");if(previewImage&&nextPreviewSrc&&previewImage.getAttribute("src")!==nextPreviewSrc){previewImage.setAttribute("src",nextPreviewSrc);}var currentLabel=section.querySelector("[data-nav-current]");if(currentLabel){currentLabel.textContent=String(index+1);}var prevButton=section.querySelector(\'[data-nav-direction="prev"]\');var nextButton=section.querySelector(\'[data-nav-direction="next"]\');if(prevButton){prevButton.disabled=index<=0;}if(nextButton){nextButton.disabled=index>=total-1;}if(activeItem&&typeof activeItem.scrollIntoView==="function"){activeItem.scrollIntoView({block:"nearest",behavior:"smooth"});}}',
+      'function wireSection(section){var items=getSectionFlags(section);if(!items.length){return;}items.forEach(function(item,itemIndex){var statusButton=item.querySelector("[data-flag-status-toggle]");item.addEventListener("click",function(){updateSectionSelection(section,itemIndex);});item.addEventListener("keydown",function(event){if(event.key==="Enter"||event.key===" "){event.preventDefault();updateSectionSelection(section,itemIndex);}});if(statusButton){statusButton.addEventListener("click",function(event){var currentStatus=item.getAttribute("data-report-status")==="done"?"done":"pending";var nextStatus=currentStatus==="done"?"pending":"done";event.stopPropagation();updateInstructionStatusUi(item,nextStatus);updateReportPageStatus(section,item.getAttribute("data-flag-id"),nextStatus);});}});Array.prototype.slice.call(section.querySelectorAll(".report-preview-pin[data-flag-id]")).forEach(function(pin,pinIndex){pin.addEventListener("click",function(){updateSectionSelection(section,pinIndex);});});Array.prototype.slice.call(section.querySelectorAll(".report-preview-nav-button")).forEach(function(button){button.addEventListener("click",function(){var current=parseInt((section.querySelector("[data-nav-current]")||{}).textContent||"1",10)-1;if(button.getAttribute("data-nav-direction")==="prev"){updateSectionSelection(section,current-1);}else{updateSectionSelection(section,current+1);}});});updateSectionSelection(section,0);}',
+      'async function copyShareUrl(){if(!copyButton){return;}var originalLabel=copyButton.textContent;copyButton.disabled=true;copyButton.textContent="発行中...";try{var response=await fetch(String(shareApiBase||"").replace(/\\/+$/,"")+"/api/share-create",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(buildSharePayload())});var payload=await safeFetchJson(response);if(!response.ok||!payload||!payload.url){throw new Error((payload&&payload.detail)|| (payload&&payload.error) || "共有URLの発行に失敗しました。");}await copyText(payload.url);copyButton.textContent="コピーしました";setTimeout(function(){copyButton.textContent=originalLabel;copyButton.disabled=false;},1800);return;}catch(error){console.error("Failed to create share report",error);window.alert("共有URLの発行に失敗しました。");copyButton.textContent=originalLabel;copyButton.disabled=false;}}',
+      'function renderInstructionItem(ctx,flag,index,x,y,w){var itemH=flag.comment?156:92;var statusLabel=flag.reportStatus==="done"?"対応済み":"未対応";var statusFill=flag.reportStatus==="done"?"#dcfce7":"#eef2f7";var statusText=flag.reportStatus==="done"?"#166534":"#475569";drawCard(ctx,x,y,w,itemH,22,"#ffffff","rgba(15,23,42,0.08)");ctx.save();ctx.fillStyle=flag.reportSeverityColor||"#64748b";roundRect(ctx,x+18,y+18,66,44,22);ctx.fill();ctx.restore();drawText(ctx,String(flag.reportNo||index+1),x+51,y+41,"800 30px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#ffffff","middle","center");drawText(ctx,flag.reportTitle||"",x+104,y+48,"700 36px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#0f172a","middle","left");drawText(ctx,"（"+(flag.reportPositionShort||"中央")+"）",x+220,y+49,"600 22px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#64748b","middle","left");ctx.save();ctx.fillStyle=statusFill;roundRect(ctx,x+w-138,y+18,120,40,20);ctx.fill();ctx.restore();drawText(ctx,statusLabel,x+w-78,y+39,"800 18px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif",statusText,"middle","center");if(flag.comment){drawCard(ctx,x+18,y+78,w-36,60,16,(flag.reportSeverity==="high"?"rgba(239,68,68,0.06)":flag.reportSeverity==="medium"?"rgba(245,158,11,0.08)":"rgba(100,116,139,0.08)"),null);drawText(ctx,"修正内容",x+34,y+99,"700 16px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#64748b","middle","left");drawWrappedText(ctx,flag.comment,x+34,y+112,w-68,24,2,"600 22px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#1f2937");}return y+itemH+16;}',
+      'async function renderPdfPage(page){var canvas=document.createElement("canvas");canvas.width=pageWidthPx;canvas.height=pageHeightPx;var ctx=canvas.getContext("2d");ctx.fillStyle="#f3f7fc";ctx.fillRect(0,0,canvas.width,canvas.height);drawCard(ctx,24,24,1632,148,28,"#ffffff","rgba(15,23,42,0.08)");drawText(ctx,"Lumina Zone",58,66,"700 24px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#2563eb");drawText(ctx,reportTitle,58,122,"800 56px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#0f172a");drawWrappedText(ctx,page.fileName||documentTitle,372,44,1220,46,1,"700 44px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#0f172a");drawText(ctx,headerMetaLine,372,118,"600 24px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#64748b");drawCard(ctx,24,194,1632,930,28,"#ffffff","rgba(15,23,42,0.08)");drawCard(ctx,48,220,712,878,24,"#f8fbff","rgba(37,99,235,0.1)");var previewImage=await loadImage(page.previewImageDataUrl);var fitted=fitSize(previewImage.width,previewImage.height,640,804);var previewX=48+((712-fitted.width)/2);var previewY=252+((804-fitted.height)/2);ctx.save();ctx.shadowColor="rgba(15,23,42,0.13)";ctx.shadowBlur=28;ctx.shadowOffsetY=12;roundRect(ctx,previewX,previewY,fitted.width,fitted.height,24);ctx.clip();ctx.drawImage(previewImage,previewX,previewY,fitted.width,fitted.height);ctx.restore();ctx.save();ctx.translate(previewX,previewY);drawExportFlags(ctx,page.flags||[],fitted.width,fitted.height,"");ctx.restore();drawCard(ctx,792,220,840,878,22,"#f8fafc","rgba(15,23,42,0.08)");drawText(ctx,"修正指示",820,268,"800 24px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#0f172a");if(page.pageCount>1){drawCard(ctx,1502,240,96,38,19,"rgba(37,99,235,0.12)",null);drawText(ctx,(page.pageIndex+1)+"/"+page.pageCount,1550,259,"800 18px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#2563eb","middle","center");}var itemY=300;(page.flags||[]).forEach(function(flag,index){itemY=renderInstructionItem(ctx,flag,index,820,itemY,784);});drawText(ctx,"このレポートは Lumina Zone で作成されました。",1320,1142,"500 16px SF Pro Display, Hiragino Sans, Yu Gothic, sans-serif","#64748b","alphabetic","left");return {dataUrl:canvas.toDataURL("image/jpeg",0.94),width:canvas.width,height:canvas.height};}',
+      'async function downloadPdf(){if(!downloadButton){return;}var originalLabel=downloadButton.textContent;downloadButton.disabled=true;downloadButton.textContent="生成中...";try{var rendered=await Promise.all(reportPages.map(renderPdfPage));var images=rendered.map(function(page){return {bytes:dataUrlToBytes(page.dataUrl),width:page.width,height:page.height};});var pdfBlob=buildPdfBlob(images);var link=document.createElement("a");var safeTitle=(documentTitle||"lumina-zone-report").replace(/\\.pdf$/i,"");link.href=URL.createObjectURL(pdfBlob);link.download=safeTitle+".pdf";document.body.appendChild(link);link.click();setTimeout(function(){URL.revokeObjectURL(link.href);link.remove();},1000);}catch(error){console.error("Failed to generate PDF",error);window.alert("PDFのダウンロードに失敗しました。");}finally{downloadButton.disabled=false;downloadButton.textContent=originalLabel;}}',
+      'if(copyButton){copyButton.addEventListener("click",function(){copyShareUrl();});}',
+      'if(downloadButton){downloadButton.addEventListener("click",function(){downloadPdf();});}',
+      'if(closeButton){closeButton.addEventListener("click",function(){window.close();});}',
+      'Array.prototype.slice.call(document.querySelectorAll(".report-section")).forEach(function(section){wireSection(section);});',
+      '}());<\/script>'
+    ].join("");
+  }
+
+  function buildReportPages(entries) {
+    var pages = [];
+    var maxFlagsPerPage = 5;
+
+    (entries || []).forEach(function (entry) {
+      var flags = entry.flags || [];
+      var previewFrames = entry.previewFrames || [];
+      var chunkCount = Math.max(1, Math.ceil(flags.length / maxFlagsPerPage));
+
+      if (!flags.length) {
+        pages.push(Object.assign({}, entry, {
+          flags: [],
+          previewFrames: [],
+          pageIndex: 0,
+          pageCount: 1
+        }));
+        return;
+      }
+
+      for (var index = 0; index < chunkCount; index += 1) {
+        var pageFlags = flags.slice(index * maxFlagsPerPage, (index + 1) * maxFlagsPerPage);
+        var pagePreviewFrames = pageFlags.map(function (flag) {
+          var flagId = String(flag.id || "");
+          var matchedFrame = previewFrames.find(function (frame) {
+            return String(frame.id || "") === flagId;
+          });
+
+          return matchedFrame || {
+            id: flagId,
+            previewImageDataUrl: entry.previewImageDataUrl || ""
+          };
+        });
+
+        pages.push(Object.assign({}, entry, {
+          flags: pageFlags,
+          previewFrames: pagePreviewFrames,
+          previewImageDataUrl: (pagePreviewFrames[0] && pagePreviewFrames[0].previewImageDataUrl) || entry.previewImageDataUrl || "",
+          pageIndex: index,
+          pageCount: chunkCount
+        }));
+      }
+    });
+
+    return pages;
+  }
+
   function buildReportSectionHtml(entry, index, totalSections) {
-    var metaItems = [
-      { label: "タイム", value: entry.durationText || "00:00" },
-      { label: "解像度", value: entry.resolutionText || "-- × --" },
-      { label: "表示設定", value: entry.settingsLabel || "未選択" },
-      { label: "チェック件数", value: entry.flags.length + "件" }
-    ];
-    var metaHtml = metaItems.map(function (item) {
+    var defaultActiveFlagId = entry.flags.length ? String(entry.flags[0].id || "") : "";
+    var previewFrameLookup = {};
+    (entry.previewFrames || []).forEach(function (frame) {
+      previewFrameLookup[String(frame.id || "")] = frame.previewImageDataUrl || "";
+    });
+    var instructionHtml = entry.flags.map(function (flag, flagIndex) {
+      var noBadgeClass = "report-no-badge report-no-badge-" + escapeHtml(flag.reportSeverity || "low");
+      var noteClass = "report-instruction-note report-instruction-note-" + escapeHtml(flag.reportSeverity || "low");
+      var memo = (flag.comment || "").trim();
+      var flagId = String(flag.id || "");
+      var itemClassName = "report-instruction-item" + (flagId === defaultActiveFlagId ? " is-active" : "");
       return (
-        '<article class="report-meta-item">' +
-          "<span>" + escapeHtml(item.label) + "</span>" +
-          "<strong>" + escapeHtml(item.value) + "</strong>" +
+        '<article class="' + itemClassName + '" data-flag-id="' + escapeHtml(flagId) + '" data-flag-index="' + escapeHtml(String(flagIndex)) + '" data-report-status="' + escapeHtml(flag.reportStatus || "pending") + '" data-preview-src="' + escapeHtml(previewFrameLookup[flagId] || entry.previewImageDataUrl || "") + '" role="button" tabindex="0" aria-current="' + (flagId === defaultActiveFlagId ? "true" : "false") + '">' +
+          '<div class="report-instruction-head">' +
+            '<div class="report-instruction-main">' +
+              '<span class="' + noBadgeClass + '">' + escapeHtml(String(flag.reportNo || "")) + "</span>" +
+              "<strong>" + escapeHtml(getFlagTitle(flag)) + "</strong>" +
+              '<span class="report-instruction-position">（' + escapeHtml(flag.reportPositionShort || flag.reportPositionLabel || FLAG_LABELS[flag.zone]) + "）</span>" +
+            "</div>" +
+            '<div class="report-instruction-aside">' +
+              '<button type="button" class="report-status-toggle report-status-toggle-' + escapeHtml(flag.reportStatus || "pending") + '" data-flag-status-toggle data-flag-id="' + escapeHtml(flagId) + '" aria-pressed="' + ((flag.reportStatus || "pending") === "done" ? "true" : "false") + '" aria-label="' + escapeHtml((flag.reportStatusLabel || "未対応") + " に切り替え") + '">' +
+                '<span class="report-status-toggle-label">' + escapeHtml(flag.reportStatusLabel || "未対応") + '</span>' +
+                '<span class="report-status-toggle-icon" aria-hidden="true">▾</span>' +
+              "</button>" +
+            "</div>" +
+          "</div>" +
+          (memo ? ('<div class="' + noteClass + '"><span>修正内容</span><p>' + escapeHtml(memo) + "</p></div>") : "") +
         "</article>"
       );
     }).join("");
-    var rowsHtml = entry.flags.map(function (flag) {
+    var previewPinsHtml = entry.flags.map(function (flag, flagIndex) {
+      var severityKey = escapeHtml(flag.reportSeverity || "low");
+      var flagId = String(flag.id || "");
+      var pinClassName = "report-preview-pin report-preview-pin-" + severityKey + (flagId === defaultActiveFlagId ? " is-active" : "");
       return (
-        "<tr>" +
-          "<td>" + escapeHtml(getFlagTitle(flag)) + "</td>" +
-          "<td>" + escapeHtml(FLAG_LABELS[flag.zone]) + "</td>" +
-          "<td>" + getPlatformInlineMarkup(flag.platform, "report-platform-icons") + "</td>" +
-          "<td>" + escapeHtml((flag.comment || "").trim() || "—") + "</td>" +
-        "</tr>"
+        '<button type="button" class="' + pinClassName + '" data-flag-id="' + escapeHtml(flagId) + '" data-flag-index="' + escapeHtml(String(flagIndex)) + '" style="left:' + escapeHtml(String((flag.x || 0) * 100)) + "%;top:" + escapeHtml(String((flag.y || 0) * 100)) + '%;">' +
+          '<span>' + escapeHtml(String(flag.reportNo || (flagIndex + 1))) + '</span>' +
+        '</button>'
       );
     }).join("");
     var sectionClassName = totalSections > 1 && index > 0 ? "report-section report-section-break" : "report-section";
     var previewHtml = entry.previewImageDataUrl
       ? (
         '<div class="report-preview-shell">' +
+          ((entry.flags || []).length > 1
+            ? (
+              '<div class="report-preview-nav" data-print-hide="true">' +
+                '<button type="button" class="report-preview-nav-button" data-nav-direction="prev">前へ</button>' +
+                '<div class="report-preview-nav-count"><span data-nav-current>1</span> / <span data-nav-total>' + escapeHtml(String(entry.flags.length)) + '</span></div>' +
+                '<button type="button" class="report-preview-nav-button" data-nav-direction="next">次へ</button>' +
+              '</div>'
+            )
+            : "") +
           '<div class="report-preview-media">' +
-            '<img class="report-preview-image" src="' + escapeHtml(entry.previewImageDataUrl) + '" alt="' + escapeHtml(entry.fileName + " の確認イメージ") + '">' +
+            '<div class="report-preview-stage" data-active-flag-id="' + escapeHtml(defaultActiveFlagId) + '">' +
+              '<img class="report-preview-image" src="' + escapeHtml(entry.previewImageDataUrl) + '" alt="' + escapeHtml(entry.fileName + " の確認イメージ") + '">' +
+              '<div class="report-preview-pins">' + previewPinsHtml + '</div>' +
+            '</div>' +
           "</div>" +
-          '<p class="report-preview-caption">' + escapeHtml(entry.previewCaption || "確認イメージ") + "</p>" +
+          ((entry.previewCaption || "").trim() ? ('<p class="report-preview-caption">' + escapeHtml(entry.previewCaption) + "</p>") : "") +
         "</div>"
       )
       : "";
-    var infoColumnHtml =
-      '<div class="report-info-column">' +
-        '<div class="report-section-copy">' +
-          '<p class="report-section-kicker">素材 ' + (index + 1) + "</p>" +
-          '<h2 title="' + escapeHtml(entry.fileName) + '">' + escapeHtml(entry.fileName) + "</h2>" +
-        "</div>" +
-        '<div class="report-meta-grid">' + metaHtml + "</div>" +
-      "</div>";
-    var overviewHtml = entry.previewImageDataUrl
-      ? (
-        '<div class="report-overview">' +
+    var overviewHtml =
+      '<div class="report-overview">' +
+        '<div class="report-preview-column">' +
           previewHtml +
-          infoColumnHtml +
-        "</div>"
-      )
-      : infoColumnHtml;
+        "</div>" +
+        '<div class="report-info-column">' +
+          '<div class="report-instruction-shell">' +
+            '<div class="report-instruction-header">' +
+              '<h3 class="report-instruction-title">修正指示</h3>' +
+              '<div class="report-instruction-header-meta">' +
+                '<span class="report-instruction-count">' + escapeHtml(String((entry.flags || []).length)) + '件</span>' +
+                (entry.pageCount > 1 ? ('<span class="report-page-chip">' + escapeHtml((entry.pageIndex + 1) + "/" + entry.pageCount) + "</span>") : "") +
+              '</div>' +
+            '</div>' +
+            '<div class="report-instruction-list">' + instructionHtml + "</div>" +
+          "</div>" +
+        "</div>" +
+      "</div>";
 
     return (
-      '<section class="' + sectionClassName + '">' +
+      '<section class="' + sectionClassName + '" data-report-page-index="' + escapeHtml(String(index)) + '">' +
         overviewHtml +
-        '<div class="report-table-shell">' +
-          '<table class="report-table">' +
-            "<thead><tr><th>タイム</th><th>確認位置</th><th>対象SNS</th><th>メモ</th></tr></thead>" +
-            "<tbody>" + rowsHtml + "</tbody>" +
-          "</table>" +
-        "</div>" +
       "</section>"
     );
   }
 
   function buildReportStyles() {
     return [
-      '@page { size: A4; margin: 16mm; }',
+      '@page { size: A4 landscape; margin: 10mm; }',
       'body { margin: 0; font-family: "SF Pro Display", "Hiragino Sans", "Yu Gothic", sans-serif; background: #f3f7fc; color: #111827; }',
-      '.report-body { padding: 24px; }',
-      '.report-shell { max-width: 960px; margin: 0 auto; }',
-      '.report-actions { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 18px; }',
+      '.report-body { padding: 18px; }',
+      '.report-shell { max-width: 1080px; margin: 0 auto; }',
+      '.report-topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px; }',
+      '.report-page-brand { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 90px; height: 90px; overflow: hidden; }',
+      '.report-page-brand-mark { display: block; width: 90px; height: 90px; object-fit: cover; object-position: center top; }',
+      '.report-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex: 1 1 auto; }',
       '.report-actions button { appearance: none; border: 0; border-radius: 999px; padding: 11px 18px; font: inherit; font-weight: 600; cursor: pointer; color: #ffffff; background: linear-gradient(135deg, #9bc7ff, #4b7cff); box-shadow: 0 14px 30px rgba(75, 124, 255, 0.2); }',
+      '.report-actions button:first-child { background: linear-gradient(135deg, #6fdc8c, #2fbf71); color: #ffffff; box-shadow: 0 14px 30px rgba(47, 191, 113, 0.2); }',
       '.report-actions button:last-child { background: #ffffff; color: #0f172a; border: 1px solid rgba(15, 23, 42, 0.12); box-shadow: none; }',
-      '.report-header { padding: 28px 30px; border-radius: 28px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08); }',
-      '.report-brand { margin: 0 0 8px; color: #2563eb; font-size: 0.86rem; font-weight: 700; letter-spacing: 0.02em; }',
-      '.report-header h1 { margin: 0; font-size: 1.9rem; line-height: 1.12; font-weight: 700; }',
-      '.report-date { margin: 12px 0 0; color: #475569; font-size: 0.95rem; }',
-      '.report-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }',
+      '.report-header { display: block; padding: 18px 22px; border-radius: 24px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08); }',
+      '.report-header-meta-block { min-width: 0; text-align: left; }',
+      '.report-header-inline { display: block; margin: 0 0 8px; white-space: nowrap; overflow: hidden; }',
+      '.report-header-file { color: #0f172a; font-size: 1.34rem; line-height: 1.16; font-weight: 700; overflow: hidden; text-overflow: ellipsis; display: block; }',
+      '.report-header-meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: #64748b; }',
+      '.report-header-meta-item { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }',
+      '.report-header-meta-label { color: #94a3b8; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.02em; }',
+      '.report-header-meta-value { color: #64748b; font-size: 0.84rem; line-height: 1.4; font-weight: 600; }',
+      '.report-header-meta-divider { color: rgba(100, 116, 139, 0.55); font-size: 0.78rem; font-weight: 700; }',
+      '.report-header-platform-icons { min-width: 0; }',
       '.report-summary-item, .report-meta-item { padding: 14px 16px; border-radius: 18px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); }',
       '.report-summary-item span, .report-meta-item span { display: block; color: #64748b; font-size: 0.82rem; margin-bottom: 6px; }',
       '.report-summary-item strong, .report-meta-item strong { font-size: 1rem; font-weight: 700; color: #0f172a; }',
-      '.report-main { display: grid; gap: 18px; margin-top: 18px; }',
-      '.report-section { border-radius: 26px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08); padding: 24px; }',
+      '.report-main { display: grid; gap: 14px; margin-top: 14px; }',
+      '.report-section { border-radius: 24px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08); padding: 18px; }',
       '.report-section-break { break-before: page; page-break-before: always; }',
-      '.report-section-kicker { margin: 0 0 8px; color: #2563eb; font-size: 0.82rem; font-weight: 700; }',
-      '.report-section-copy h2 { margin: 0; font-size: 1.35rem; line-height: 1.2; font-weight: 700; word-break: break-word; }',
-      '.report-overview { display: grid; grid-template-columns: minmax(192px, 228px) minmax(0, 1fr); gap: 20px; align-items: start; margin-bottom: 18px; }',
-      '.report-info-column { display: grid; gap: 14px; align-content: start; }',
-      '.report-preview-shell { padding: 12px; border-radius: 24px; background: linear-gradient(180deg, #edf4ff, #f8fbff); border: 1px solid rgba(37, 99, 235, 0.1); }',
-      '.report-preview-media { display: grid; place-items: center; }',
-      '.report-preview-image { display: block; width: min(100%, 186px); height: auto; border-radius: 22px; box-shadow: 0 18px 32px rgba(15, 23, 42, 0.13); }',
+      '.report-overview { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr); gap: 18px; align-items: start; }',
+      '.report-preview-column { min-width: 0; }',
+      '.report-info-column { display: grid; gap: 12px; align-content: start; min-width: 0; }',
+      '.report-preview-shell { padding: 10px; border-radius: 22px; background: linear-gradient(180deg, #edf4ff, #f8fbff); border: 1px solid rgba(37, 99, 235, 0.1); }',
+      '.report-preview-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }',
+      '.report-preview-nav-button { appearance: none; border: 1px solid rgba(15, 23, 42, 0.1); border-radius: 999px; padding: 7px 14px; background: #ffffff; color: #0f172a; font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }',
+      '.report-preview-nav-button:hover:not(:disabled) { background: #f8fafc; border-color: rgba(37, 99, 235, 0.22); color: #2563eb; transform: translateY(-1px); }',
+      '.report-preview-nav-button:disabled { opacity: 0.38; cursor: default; transform: none; }',
+      '.report-preview-nav-count { color: #64748b; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.01em; }',
+      '.report-preview-media { display: grid; place-items: center; min-height: 156mm; }',
+      '.report-preview-stage { position: relative; display: inline-block; line-height: 0; isolation: isolate; }',
+      '.report-preview-image { display: block; width: auto; max-width: 100%; max-height: 152mm; height: auto; border-radius: 22px; box-shadow: 0 16px 30px rgba(15, 23, 42, 0.13); }',
+      '.report-preview-pins { position: absolute; inset: 0; pointer-events: none; }',
+      '.report-preview-pin { position: absolute; transform: translate(-50%, -50%) scale(0.76); width: 36px; height: 36px; border-radius: 999px; border: 3px solid rgba(255, 255, 255, 0.96); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font: inherit; font-size: 1rem; font-weight: 800; line-height: 1; box-shadow: 0 10px 18px rgba(15, 23, 42, 0.18); cursor: pointer; opacity: 0.24; transition: transform 180ms ease, opacity 180ms ease, box-shadow 180ms ease, filter 180ms ease; pointer-events: auto; }',
+      '.report-preview-pin span { display: block; line-height: 1; }',
+      '.report-preview-pin.is-active { transform: translate(-50%, -50%) scale(1); opacity: 1; box-shadow: 0 14px 24px rgba(15, 23, 42, 0.22), 0 0 0 10px rgba(37, 99, 235, 0.12); filter: saturate(1.08); }',
+      '.report-preview-pin-high { background: #ef4444; }',
+      '.report-preview-pin-medium { background: #f59e0b; }',
+      '.report-preview-pin-low { background: #64748b; }',
       '.report-preview-caption { margin: 8px 0 0; color: #94a3b8; font-size: 0.74rem; letter-spacing: 0.01em; text-align: center; }',
-      '.report-meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }',
-      '.report-table-shell { overflow: hidden; border-radius: 18px; border: 1px solid rgba(15, 23, 42, 0.08); }',
-      '.report-table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }',
-      '.report-table thead { background: #eef4ff; }',
-      '.report-table th, .report-table td { text-align: left; padding: 12px 14px; vertical-align: top; border-bottom: 1px solid rgba(15, 23, 42, 0.08); }',
-      '.report-table th { color: #1e3a8a; font-size: 0.84rem; font-weight: 700; letter-spacing: 0.01em; }',
-      '.report-table td { color: #1f2937; line-height: 1.55; }',
+      '.report-instruction-shell { border-radius: 18px; border: 1px solid rgba(15, 23, 42, 0.08); background: #f8fafc; padding: 14px; }',
+      '.report-instruction-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }',
+      '.report-instruction-title { margin: 0; font-size: 0.92rem; font-weight: 800; color: #0f172a; letter-spacing: 0.01em; }',
+      '.report-instruction-header-meta { display: inline-flex; align-items: center; gap: 8px; color: #64748b; }',
+      '.report-instruction-count { font-size: 0.76rem; font-weight: 700; }',
+      '.report-page-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 42px; padding: 5px 10px; border-radius: 999px; background: rgba(37, 99, 235, 0.12); color: #2563eb; font-size: 0.76rem; font-weight: 800; line-height: 1; }',
+      '.report-instruction-list { display: grid; gap: 12px; }',
+      '.report-instruction-item { padding: 12px 14px; border-radius: 16px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); cursor: pointer; transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, background 180ms ease; }',
+      '.report-instruction-item:hover { border-color: rgba(37, 99, 235, 0.22); box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); transform: translateY(-1px); }',
+      '.report-instruction-item.is-active { border-color: rgba(37, 99, 235, 0.28); box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12); background: linear-gradient(180deg, #ffffff, #f8fbff); }',
+      '.report-instruction-item:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.22); outline-offset: 2px; }',
+      '.report-instruction-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }',
+      '.report-instruction-main { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }',
+      '.report-instruction-main strong { font-size: 0.98rem; line-height: 1.2; color: #0f172a; }',
+      '.report-instruction-position { color: #64748b; font-size: 0.86rem; font-weight: 600; }',
+      '.report-instruction-aside { display: inline-flex; align-items: center; gap: 10px; flex: 0 0 auto; }',
+      '.report-instruction-note { margin-top: 10px; padding: 10px 12px; border-radius: 14px; border-left: 4px solid #cbd5e1; background: #f8fafc; }',
+      '.report-instruction-note span { display: block; margin: 0 0 4px; color: #64748b; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; }',
+      '.report-instruction-note p { margin: 0; color: #1f2937; line-height: 1.55; font-size: 0.92rem; }',
+      '.report-instruction-note-high { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.06); }',
+      '.report-instruction-note-medium { border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.08); }',
+      '.report-instruction-note-low { border-left-color: #64748b; background: rgba(100, 116, 139, 0.08); }',
+      '.report-status-toggle { appearance: none; border: 1px solid transparent; border-radius: 999px; padding: 8px 12px; font-size: 0.74rem; font-weight: 800; letter-spacing: 0.01em; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, color 180ms ease, border-color 180ms ease; }',
+      '.report-status-toggle:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1); }',
+      '.report-status-toggle:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.18); outline-offset: 2px; }',
+      '.report-status-toggle-label { display: inline-block; line-height: 1; }',
+      '.report-status-toggle-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.58); font-size: 0.76rem; line-height: 1; transition: transform 180ms ease, background 180ms ease, opacity 180ms ease; opacity: 0.82; }',
+      '.report-status-toggle:hover .report-status-toggle-icon { transform: translateY(1px) scale(1.04); opacity: 1; }',
+      '.report-status-toggle-pending { background: rgba(71, 85, 105, 0.12); border-color: rgba(71, 85, 105, 0.2); color: #475569; }',
+      '.report-status-toggle-done { background: rgba(22, 163, 74, 0.14); border-color: rgba(22, 163, 74, 0.24); color: #166534; }',
+      '.report-instruction-item[data-report-status="done"] { border-color: rgba(22, 163, 74, 0.16); background: linear-gradient(180deg, #ffffff, #f6fff9); }',
+      '.report-no-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px; font-size: 0.92rem; font-weight: 800; color: #ffffff; border: 2px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14); }',
+      '.report-no-badge-high { background: #ef4444; }',
+      '.report-no-badge-medium { background: #f59e0b; }',
+      '.report-no-badge-low { background: #64748b; }',
       '.platform-inline-group { display: inline-flex; align-items: center; gap: 7px; flex-wrap: nowrap; vertical-align: middle; }',
       '.platform-inline-plus { color: #64748b; font-size: 0.82rem; font-weight: 700; line-height: 1; }',
       '.platform-inline-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 999px; flex: 0 0 auto; }',
@@ -3733,10 +4215,9 @@
       '.platform-inline-icon-tiktok .tiktok-red { fill: #fe2c55; }',
       '.platform-inline-icon-tiktok .tiktok-main { fill: #ffffff; }',
       '.report-platform-icons { min-width: 0; }',
-      '.report-table tbody tr:last-child td { border-bottom: 0; }',
-      '.report-footer { margin-top: 16px; color: #64748b; font-size: 0.82rem; text-align: right; }',
-      '@media print { body { background: #ffffff; } .report-body { padding: 0; } .report-actions { display: none !important; } .report-header, .report-section, .report-summary-item, .report-meta-item { box-shadow: none; } }',
-      '@media (max-width: 720px) { .report-summary, .report-meta-grid { grid-template-columns: 1fr 1fr; } .report-overview { grid-template-columns: 1fr; } .report-section { padding: 18px; } .report-header { padding: 22px; } .report-preview-shell { padding: 14px; } .report-preview-image { width: min(100%, 176px); } }'
+      '.report-footer { margin-top: 10px; color: #64748b; font-size: 0.72rem; text-align: right; }',
+      '@media print { body { background: #ffffff; } .report-body { padding: 0; } .report-topbar { display: none !important; } .report-header, .report-section, .report-summary-item, .report-meta-item { box-shadow: none; } .report-preview-nav { display: none !important; } }',
+      '@media (max-width: 860px) { .report-overview { grid-template-columns: 1fr; } .report-section { padding: 18px; } .report-header { padding: 22px; } .report-header-inline { white-space: normal; } .report-header-meta-row { gap: 8px; } .report-preview-shell { padding: 14px; } .report-preview-nav { gap: 10px; } .report-preview-media { min-height: auto; } .report-preview-image { width: 100%; max-height: none; } .report-topbar { align-items: flex-start; flex-direction: column; } .report-actions { justify-content: stretch; flex-wrap: wrap; width: 100%; } .report-actions button { flex: 1 1 auto; } .report-instruction-header { align-items: flex-start; flex-direction: column; } }'
     ].join("");
   }
 
@@ -3883,70 +4364,42 @@
   }
 
   function drawExportFlags(ctx, flags, width, height, activeFlagId) {
-    var zoneColors = {
-      top: "#ffb84d",
-      right: "#5ac8fa",
-      left: "#bf5af2",
-      bottom: "#ff6b6b",
-      center: "#34c759"
-    };
-
-    flags.forEach(function (flag) {
+    flags.forEach(function (flag, index) {
       var x = flag.x * width;
       var y = flag.y * height;
-      var bodyRadius = Math.max(14, Math.round(width * 0.014));
-      var bodyCenterY = y - Math.max(12, Math.round(bodyRadius * 0.95));
-      var tailSize = Math.max(8, Math.round(bodyRadius * 0.7));
-      var zoneColor = zoneColors[flag.zone] || "#5ac8fa";
+      var badgeRadius = Math.max(86, Math.min(118, Math.round(width * 0.092)));
+      var outerRadius = badgeRadius + 10;
+      var badgeColor = flag.reportSeverityColor || "#64748b";
+      var label = String(flag.reportNo || (index + 1));
       var isActive = activeFlagId && flag.id === activeFlagId;
+      var fontSize = label.length > 1 ? badgeRadius * 1.04 : badgeRadius * 1.18;
 
       ctx.save();
-      ctx.shadowColor = isActive ? "rgba(87, 158, 255, 0.34)" : "rgba(0, 0, 0, 0.18)";
-      ctx.shadowBlur = isActive ? bodyRadius + 15 : bodyRadius + 9;
-      ctx.shadowOffsetY = Math.max(8, Math.round(bodyRadius * 0.5));
+      ctx.shadowColor = isActive ? "rgba(79, 70, 229, 0.28)" : "rgba(15, 23, 42, 0.18)";
+      ctx.shadowBlur = isActive ? 28 : 20;
+      ctx.shadowOffsetY = 4;
 
-      ctx.fillStyle = "rgba(248, 250, 255, 0.96)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.98)";
       ctx.beginPath();
-      ctx.arc(x, bodyCenterY, bodyRadius, 0, Math.PI * 2);
+      ctx.arc(x, y, outerRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.restore();
-      ctx.save();
-      ctx.strokeStyle = isActive ? zoneColor : "rgba(37, 99, 235, 0.2)";
-      ctx.globalAlpha = isActive ? 0.62 : 0.34;
-      ctx.lineWidth = Math.max(2, Math.round(bodyRadius * 0.16));
+      ctx.fillStyle = badgeColor;
       ctx.beginPath();
-      ctx.arc(x, bodyCenterY, bodyRadius - 1, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = "rgba(248, 250, 255, 0.92)";
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.94)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x - tailSize * 0.55, bodyCenterY + bodyRadius * 0.68);
-      ctx.lineTo(x + tailSize * 0.55, bodyCenterY + bodyRadius * 0.68);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.88)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(x, bodyCenterY, bodyRadius, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = zoneColor;
-      ctx.beginPath();
-      ctx.arc(x, bodyCenterY, Math.max(6, Math.round(bodyRadius * 0.42)), 0, Math.PI * 2);
+      ctx.arc(x, y, badgeRadius, 0, Math.PI * 2);
       ctx.fill();
 
+      ctx.lineWidth = 5;
       ctx.strokeStyle = "rgba(255, 255, 255, 0.96)";
-      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(x, bodyCenterY, Math.max(5, Math.round(bodyRadius * 0.36)), 0, Math.PI * 2);
+      ctx.arc(x, y, badgeRadius, 0, Math.PI * 2);
       ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 " + Math.round(fontSize) + 'px "SF Pro Display", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, x, y + 1);
       ctx.restore();
     });
   }
