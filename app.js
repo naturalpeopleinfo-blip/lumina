@@ -3095,7 +3095,8 @@
       flags: reportFlags,
       previewImageDataUrl: previewImageDataUrl,
       previewFrames: previewFrames,
-      previewCaption: canPreviewCurrentMedia ? "現在開いている素材の表示イメージ" : "保存された確認履歴"
+      previewCaption: canPreviewCurrentMedia ? "現在開いている素材の表示イメージ" : "",
+      previewUnavailable: !canPreviewCurrentMedia
     };
   }
 
@@ -3997,7 +3998,16 @@
           ((entry.previewCaption || "").trim() ? ('<p class="report-preview-caption">' + escapeHtml(entry.previewCaption) + "</p>") : "") +
         "</div>"
       )
-      : "";
+      : (
+        '<div class="report-preview-shell report-preview-shell-empty">' +
+          '<div class="report-preview-empty">' +
+            '<div class="report-preview-empty-icon" aria-hidden="true">i</div>' +
+            '<h4>プレビューは保存されていません</h4>' +
+            '<p>履歴から開いた素材は、チェック内容のみを読み込んでいます。</p>' +
+            '<p>同じ素材をもう一度読み込むと、プレビュー付きで確認できます。</p>' +
+          '</div>' +
+        '</div>'
+      );
     var overviewHtml =
       '<div class="report-overview">' +
         '<div class="report-preview-column">' +
@@ -4057,6 +4067,7 @@
       '.report-preview-column { min-width: 0; }',
       '.report-info-column { display: grid; gap: 12px; align-content: start; min-width: 0; }',
       '.report-preview-shell { padding: 10px; border-radius: 22px; background: linear-gradient(180deg, #edf4ff, #f8fbff); border: 1px solid rgba(37, 99, 235, 0.1); }',
+      '.report-preview-shell-empty { min-height: 156mm; display: grid; place-items: center; }',
       '.report-preview-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }',
       '.report-preview-nav-button { appearance: none; border: 1px solid rgba(15, 23, 42, 0.1); border-radius: 999px; padding: 7px 14px; background: #ffffff; color: #0f172a; font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease; }',
       '.report-preview-nav-button:hover:not(:disabled) { background: #f8fafc; border-color: rgba(37, 99, 235, 0.22); color: #2563eb; transform: translateY(-1px); }',
@@ -4073,6 +4084,11 @@
       '.report-preview-pin-medium { background: #f59e0b; }',
       '.report-preview-pin-low { background: #64748b; }',
       '.report-preview-caption { margin: 8px 0 0; color: #94a3b8; font-size: 0.74rem; letter-spacing: 0.01em; text-align: center; }',
+      '.report-preview-empty { width: min(100%, 420px); padding: 26px 24px; border-radius: 22px; border: 1px dashed rgba(148, 163, 184, 0.32); background: rgba(255, 255, 255, 0.82); text-align: center; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32); }',
+      '.report-preview-empty-icon { width: 34px; height: 34px; margin: 0 auto 14px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: rgba(37, 99, 235, 0.1); color: #2563eb; font-size: 0.95rem; font-weight: 800; }',
+      '.report-preview-empty h4 { margin: 0 0 10px; color: #0f172a; font-size: 1rem; font-weight: 800; }',
+      '.report-preview-empty p { margin: 0; color: #64748b; font-size: 0.9rem; line-height: 1.7; }',
+      '.report-preview-empty p + p { margin-top: 8px; }',
       '.report-instruction-shell { border-radius: 18px; border: 1px solid rgba(15, 23, 42, 0.08); background: #f8fafc; padding: 14px; }',
       '.report-instruction-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }',
       '.report-instruction-title { margin: 0; font-size: 0.92rem; font-weight: 800; color: #0f172a; letter-spacing: 0.01em; }',
