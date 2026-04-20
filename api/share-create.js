@@ -1,6 +1,7 @@
 const {
   json,
   handleCors,
+  formatErrorDetail,
   readJsonBody,
   getBaseUrl,
   supabaseRest,
@@ -118,7 +119,7 @@ module.exports = async function handler(req, res) {
     console.error("share-create failed", error);
     return json(res, 500, {
       error: "Failed to create share report",
-      detail: error && error.message ? error.message : "unknown_error"
+      detail: formatErrorDetail(error)
     });
   }
 };

@@ -1,6 +1,7 @@
 const {
   json,
   handleCors,
+  formatErrorDetail,
   removeStorageObjects,
   supabaseRest
 } = require("./_share-utils");
@@ -54,7 +55,7 @@ module.exports = async function handler(req, res) {
     console.error("share-cleanup-expired failed", error);
     return json(res, 500, {
       error: "Failed to cleanup expired reports",
-      detail: error && error.message ? error.message : "unknown_error"
+      detail: formatErrorDetail(error)
     });
   }
 };

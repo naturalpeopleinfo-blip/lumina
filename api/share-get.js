@@ -1,6 +1,7 @@
 const {
   json,
   handleCors,
+  formatErrorDetail,
   createSignedUrl,
   supabaseRest
 } = require("./_share-utils");
@@ -83,7 +84,7 @@ module.exports = async function handler(req, res) {
     console.error("share-get failed", error);
     return json(res, 500, {
       error: "Failed to fetch shared report",
-      detail: error && error.message ? error.message : "unknown_error"
+      detail: formatErrorDetail(error)
     });
   }
 };

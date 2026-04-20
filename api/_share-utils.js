@@ -9,6 +9,34 @@ function json(res, statusCode, payload) {
   res.end(JSON.stringify(payload));
 }
 
+function formatErrorDetail(error) {
+  if (!error) {
+    return "unknown_error";
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    if (typeof error.message === "string") {
+      return error.message;
+    }
+
+    try {
+      return JSON.stringify(error.message);
+    } catch (_stringifyMessageError) {
+      return String(error.message);
+    }
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch (_stringifyError) {
+    return String(error);
+  }
+}
+
 function applyCors(req, res) {
   const origin = req.headers.origin || "*";
   res.setHeader("Access-Control-Allow-Origin", origin === "null" ? "*" : origin);
@@ -191,6 +219,7 @@ module.exports = {
   json,
   applyCors,
   handleCors,
+  formatErrorDetail,
   readJsonBody,
   getSupabaseConfig,
   getBaseUrl,
