@@ -301,6 +301,7 @@
     bindAuthPersistence();
     updateHistoryAwareness();
     syncInlineGuide();
+    updateWorkspaceSizeNotice();
     track("app_open");
   }
 
@@ -337,6 +338,7 @@
   function cacheElements() {
     els.previewColumn = document.getElementById("previewColumn");
     els.viewerDock = document.getElementById("viewerDock");
+    els.workspaceSizeNotice = document.getElementById("workspaceSizeNotice");
     els.fileInput = document.getElementById("fileInput");
     els.dropZone = document.getElementById("dropZone");
     els.stageFrame = document.getElementById("stageFrame");
@@ -502,9 +504,22 @@
     els.onboardingNext.addEventListener("click", advanceOnboarding);
 
     document.addEventListener("keydown", onKeydown);
-    window.addEventListener("resize", requestStageFit);
+    window.addEventListener("resize", function () {
+      requestStageFit();
+      updateWorkspaceSizeNotice();
+    });
     initStageResizeObserver();
     window.addEventListener("beforeunload", releaseObjectUrl);
+  }
+
+  function updateWorkspaceSizeNotice() {
+    var shouldWarn = (window.innerWidth || 0) > 0 && window.innerWidth < 1360;
+
+    if (!els.workspaceSizeNotice) {
+      return;
+    }
+
+    els.workspaceSizeNotice.hidden = !shouldWarn;
   }
 
   function normalizeRiskSettings(base, override) {

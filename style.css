@@ -5381,6 +5381,7 @@ body.app-page .workspace-history-trigger.action-button:disabled {
 }
 
 .viewer-stage {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   align-content: start;
@@ -5396,6 +5397,41 @@ body.app-page .workspace-history-trigger.action-button:disabled {
     linear-gradient(180deg, rgba(255, 255, 255, 0.024), rgba(255, 255, 255, 0.01)),
     linear-gradient(145deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012));
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.workspace-size-notice {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 16;
+  width: min(360px, calc(100% - 32px));
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(9, 11, 17, 0.86), rgba(9, 11, 17, 0.76)),
+    rgba(9, 11, 17, 0.78);
+  box-shadow:
+    0 22px 44px rgba(3, 5, 10, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.workspace-size-notice strong {
+  display: block;
+  color: rgba(248, 251, 255, 0.96);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.workspace-size-notice p {
+  margin: 8px 0 0;
+  color: rgba(214, 222, 236, 0.82);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .viewer-stage.is-dragover {
