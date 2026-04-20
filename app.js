@@ -263,7 +263,6 @@
     hasCampaignCheckout: false,
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
-    selectedHistoryKeys: {},
     hasPlaybackStarted: false,
     freshFlagId: "",
     freshFlagTimer: 0
@@ -398,8 +397,6 @@
     els.guideStageHintCopy = document.getElementById("guideStageHintCopy");
     els.historyModal = document.getElementById("historyModal");
     els.historyClose = document.getElementById("historyClose");
-    els.historyExportSelectedButton = document.getElementById("historyExportSelectedButton");
-    els.historyExportAllButton = document.getElementById("historyExportAllButton");
     els.historyEmpty = document.getElementById("historyEmpty");
     els.historyList = document.getElementById("historyList");
     els.confirmModal = document.getElementById("confirmModal");
@@ -488,12 +485,6 @@
     }
     if (els.historyClose) {
       els.historyClose.addEventListener("click", closeHistoryModal);
-    }
-    if (els.historyExportSelectedButton) {
-      els.historyExportSelectedButton.addEventListener("click", exportSelectedHistoryPdf);
-    }
-    if (els.historyExportAllButton) {
-      els.historyExportAllButton.addEventListener("click", exportAllHistoryPdf);
     }
     if (els.platformInfoModal) {
       els.platformInfoModal.addEventListener("click", onPlatformInfoModalClick);
@@ -1893,33 +1884,15 @@
 
   function updatePdfButtons() {
     var hasCurrentPdf = hasMediaLoaded() && state.flags.length > 0;
-    var historyEntries = readHistoryEntries();
-    var hasHistoryPdf = historyEntries.length > 0;
-    var hasSelectedHistoryPdf = getSelectedHistoryEntries(historyEntries).length > 0;
     var shouldSuggestCurrentPdf = hasCurrentPdf && state.pdfNeedsAttention;
     var isLocked = isPdfExportLocked();
     var currentTitle = hasCurrentPdf ? "今のチェック内容をPDFレポートで開きます。" : HINT_NEEDS_RECORDS;
-    var selectedTitle = hasSelectedHistoryPdf ? "選んだ素材だけをPDFレポートで開きます。" : "素材を選ぶと使えます。";
-    var allTitle = hasHistoryPdf ? "このアカウントの履歴をまとめてPDFレポートで開きます。" : HINT_NEEDS_HISTORY;
 
     if (els.exportCurrentPdfButton) {
       els.exportCurrentPdfButton.disabled = !hasCurrentPdf || isLocked;
       els.exportCurrentPdfButton.title = hasCurrentPdf && isLocked ? PDF_LIMIT_REACHED_MESSAGE : currentTitle;
       els.exportCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf && !isLocked);
       els.exportCurrentPdfButton.classList.toggle("is-locked", !!(hasCurrentPdf && isLocked));
-    }
-
-    if (els.historyExportSelectedButton) {
-      els.historyExportSelectedButton.disabled = !hasSelectedHistoryPdf || isLocked;
-      els.historyExportSelectedButton.title = hasSelectedHistoryPdf && isLocked ? PDF_LIMIT_REACHED_MESSAGE : selectedTitle;
-      els.historyExportSelectedButton.classList.toggle("is-suggested", hasSelectedHistoryPdf && !isLocked);
-      els.historyExportSelectedButton.classList.toggle("is-locked", !!(hasSelectedHistoryPdf && isLocked));
-    }
-
-    if (els.historyExportAllButton) {
-      els.historyExportAllButton.disabled = !hasHistoryPdf || isLocked;
-      els.historyExportAllButton.title = hasHistoryPdf && isLocked ? PDF_LIMIT_REACHED_MESSAGE : allTitle;
-      els.historyExportAllButton.classList.toggle("is-locked", !!(hasHistoryPdf && isLocked));
     }
   }
 
@@ -2363,7 +2336,6 @@
   }
 
   function openHistoryModal() {
-    state.selectedHistoryKeys = {};
     renderHistoryList();
     els.historyModal.hidden = false;
     state.isHistoryOpen = true;
@@ -2374,7 +2346,6 @@
   function closeHistoryModal() {
     els.historyModal.hidden = true;
     state.isHistoryOpen = false;
-    state.selectedHistoryKeys = {};
   }
 
   function openPlatformInfoModal() {
@@ -3106,26 +3077,6 @@
     };
   }
 
-  function isHistoryEntrySelected(mediaKey) {
-    return !!state.selectedHistoryKeys[String(mediaKey || "")];
-  }
-
-  function toggleHistoryEntrySelection(mediaKey) {
-    var selectionKey = String(mediaKey || "");
-
-    if (!selectionKey) {
-      return;
-    }
-
-    if (state.selectedHistoryKeys[selectionKey]) {
-      delete state.selectedHistoryKeys[selectionKey];
-    } else {
-      state.selectedHistoryKeys[selectionKey] = true;
-    }
-
-    renderHistoryList();
-  }
-
   async function buildHistoryReportEntry(entry, flags) {
     var reportFlags = buildReportFlags(flags || []);
     var reportPlatformKey = buildReportPlatformKey(reportFlags, "");
@@ -3148,16 +3099,6 @@
     };
   }
 
-  async function getSelectedHistoryEntries(entries) {
-    var selectedEntries = (entries || []).filter(function (entry) {
-      return isHistoryEntrySelected(entry.mediaKey);
-    });
-
-    return Promise.all(selectedEntries.map(function (entry) {
-      return buildHistoryReportEntry(entry, entry.flags);
-    }));
-  }
-
   function renderHistoryList() {
     var entries = readHistoryEntries();
     var isLocked = isPdfExportLocked();
@@ -3173,10 +3114,8 @@
     }
 
     els.historyList.innerHTML = entries.map(function (entry) {
-      var isSelected = isHistoryEntrySelected(entry.mediaKey);
-
       return (
-        '<article class="history-item' + (isSelected ? " is-selected" : "") + '">' +
+        '<article class="history-item">' +
           '<div class="history-item-header">' +
             '<div class="history-item-copy">' +
               '<strong title="' + escapeHtml(entry.fileName) + '">' + escapeHtml(entry.fileName) + "</strong>" +
@@ -3184,7 +3123,6 @@
             "</div>" +
             '<div class="history-item-actions">' +
               '<span class="history-date">' + escapeHtml(formatHistoryDate(entry.lastOpened)) + "</span>" +
-              '<button class="action-button action-button-ghost history-item-select' + (isSelected ? " is-selected" : "") + '" type="button" data-history-select-entry="' + escapeHtml(entry.mediaKey) + '">' + (isSelected ? "選択中" : "選択") + "</button>" +
               '<button class="action-button action-button-ghost history-item-export' + (isLocked ? " is-locked" : "") + '" type="button" data-history-export-entry="' + escapeHtml(entry.mediaKey) + '"' + exportDisabledMarkup + '>この素材をPDF化</button>' +
             "</div>" +
           "</div>" +
@@ -3266,16 +3204,10 @@
   }
 
   function onHistoryListClick(event) {
-    var selectButton = event.target.closest("[data-history-select-entry]");
     var exportButton = event.target.closest("[data-history-export-entry]");
     var chip = event.target.closest("[data-history-time]");
     var time = 0;
     var mediaKey = "";
-
-    if (selectButton) {
-      toggleHistoryEntrySelection(selectButton.getAttribute("data-history-select-entry") || "");
-      return;
-    }
 
     if (exportButton) {
       exportHistoryEntryPdf(exportButton.getAttribute("data-history-export-entry") || "");
@@ -3403,33 +3335,6 @@
       });
       showToast(settings.toastMessage || "PDF画面を開きました。", "success");
     }
-  }
-
-  function exportAllHistoryPdf() {
-    Promise.all(readHistoryEntries().map(function (entry) {
-      return buildHistoryReportEntry(entry, entry.flags);
-    })).then(function (entries) {
-      return exportHistoryReport(entries, {
-        reportType: "history_all",
-        reportTitle: "修正指示書",
-        toastMessage: "履歴のPDF画面を開きました。"
-      });
-    });
-  }
-
-  function exportSelectedHistoryPdf() {
-    getSelectedHistoryEntries(readHistoryEntries()).then(function (entries) {
-      if (!entries.length) {
-        showToast("PDFに含める素材を選んでください。", "warning");
-        return;
-      }
-
-      return exportHistoryReport(entries, {
-        reportType: "history_selected",
-        reportTitle: "修正指示書",
-        toastMessage: "選択した素材のPDF画面を開きました。"
-      });
-    });
   }
 
   function exportHistoryEntryPdf(mediaKey) {
