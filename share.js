@@ -22,6 +22,7 @@
     els.app = qs("shareApp");
     els.fileName = qs("shareFileName");
     els.meta = qs("shareMeta");
+    els.expiryNote = qs("shareExpiryNote");
     els.previewMedia = document.querySelector(".share-preview-media");
     els.previewImage = qs("sharePreviewImage");
     els.pinLayer = qs("sharePinLayer");
@@ -137,6 +138,20 @@
       '<span class="share-meta-divider">/</span>',
       '<span class="share-meta-item"><span class="share-meta-label">修正指示</span><span>' + escapeHtml(String(state.report.instructionCount || 0) + "件") + "</span></span>"
     ].join("");
+
+    if (els.expiryNote) {
+      els.expiryNote.textContent = buildExpiryText(state.report.expiresAt);
+    }
+  }
+
+  function buildExpiryText(expiresAt) {
+    var date = expiresAt ? new Date(expiresAt) : null;
+
+    if (!date || Number.isNaN(date.getTime())) {
+      return "共有URLは発行日から7日後に失効します。";
+    }
+
+    return (date.getMonth() + 1) + "月" + date.getDate() + "日中にこの共有URLは失効します。";
   }
 
   function renderPins() {

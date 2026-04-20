@@ -3835,6 +3835,7 @@
       '<button id="reportClose" type="button">閉じる</button>',
       "</div>",
       "</div>",
+      '<p class="report-share-note" data-print-hide="true">共有URLは発行日から7日後に失効します。</p>',
       '<header class="report-header">',
       '<div class="report-header-meta-block">' +
         '<p class="report-header-inline" title="' + escapeHtml((headerEntry.fileName || report.documentTitle || "report") + " / " + headerMetaLine) + '">' +
@@ -4062,6 +4063,7 @@
       '.report-actions button { appearance: none; border: 0; border-radius: 999px; padding: 11px 18px; font: inherit; font-weight: 600; cursor: pointer; color: #ffffff; background: linear-gradient(135deg, #9bc7ff, #4b7cff); box-shadow: 0 14px 30px rgba(75, 124, 255, 0.2); }',
       '.report-actions button:first-child { background: linear-gradient(135deg, #6fdc8c, #2fbf71); color: #ffffff; box-shadow: 0 14px 30px rgba(47, 191, 113, 0.2); }',
       '.report-actions button:last-child { background: #ffffff; color: #0f172a; border: 1px solid rgba(15, 23, 42, 0.12); box-shadow: none; }',
+      '.report-share-note { margin: 10px 0 0 auto; max-width: 320px; color: #64748b; font-size: 12px; line-height: 1.5; text-align: right; }',
       '.report-header { display: block; padding: 18px 22px; border-radius: 24px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08); }',
       '.report-header-meta-block { min-width: 0; text-align: left; }',
       '.report-header-inline { display: block; margin: 0 0 8px; white-space: nowrap; overflow: hidden; }',

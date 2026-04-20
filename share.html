@@ -104,6 +104,14 @@
       font-weight: 600;
     }
 
+    .share-expiry-note {
+      margin: 8px 0 0;
+      color: #64748b;
+      font-size: 0.84rem;
+      line-height: 1.55;
+      font-weight: 600;
+    }
+
     .share-meta-item {
       display: inline-flex;
       align-items: center;
@@ -425,7 +433,7 @@
     <div id="shareExpired" class="share-state share-hidden">
       <div>
         <h1>この共有URLの有効期限は切れています。</h1>
-        <p>必要な場合は、もう一度共有URLを発行してください。</p>
+        <p>共有URLは発行日から7日後に失効します。必要な場合は、もう一度共有URLを発行してください。</p>
       </div>
     </div>
     <div id="shareError" class="share-state share-hidden">
@@ -444,6 +452,7 @@
           <div class="share-header-copy">
             <h1 id="shareFileName" class="share-file">--</h1>
             <div id="shareMeta" class="share-meta"></div>
+            <p id="shareExpiryNote" class="share-expiry-note"></p>
           </div>
         </div>
         <button id="shareCopyButton" class="share-button share-button--copy" type="button">共有URLをコピー</button>

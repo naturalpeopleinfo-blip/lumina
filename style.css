@@ -7823,6 +7823,13 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   width: 100%;
 }
 
+.results-share-note {
+  margin: 10px 4px 0;
+  color: rgba(187, 201, 219, 0.68);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
 .flags-toolbar {
   display: flex;
   align-items: center;
