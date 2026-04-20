@@ -22,6 +22,7 @@
     els.app = qs("shareApp");
     els.fileName = qs("shareFileName");
     els.meta = qs("shareMeta");
+    els.previewMedia = document.querySelector(".share-preview-media");
     els.previewImage = qs("sharePreviewImage");
     els.pinLayer = qs("sharePinLayer");
     els.prevButton = qs("sharePrevButton");
@@ -152,6 +153,29 @@
         escapeHtml(String(flag.reportNo || "")) +
       "</div>";
     }).join("");
+
+    syncPinLayerBounds();
+  }
+
+  function syncPinLayerBounds() {
+    if (!els.previewMedia || !els.previewImage || !els.pinLayer) {
+      return;
+    }
+
+    var mediaRect = els.previewMedia.getBoundingClientRect();
+    var imageRect = els.previewImage.getBoundingClientRect();
+
+    if (!mediaRect.width || !mediaRect.height || !imageRect.width || !imageRect.height) {
+      return;
+    }
+
+    var left = imageRect.left - mediaRect.left;
+    var top = imageRect.top - mediaRect.top;
+
+    els.pinLayer.style.left = left + "px";
+    els.pinLayer.style.top = top + "px";
+    els.pinLayer.style.width = imageRect.width + "px";
+    els.pinLayer.style.height = imageRect.height + "px";
   }
 
   function renderPreview() {
@@ -162,6 +186,9 @@
       : (page && page.previewImageUrl ? page.previewImageUrl : "");
 
     els.previewImage.src = imageUrl;
+    if (els.previewImage.complete) {
+      requestAnimationFrame(syncPinLayerBounds);
+    }
     renderPins();
   }
 
@@ -273,6 +300,14 @@
   }
 
   function bindGlobalActions() {
+    els.previewImage.addEventListener("load", function () {
+      syncPinLayerBounds();
+    });
+
+    window.addEventListener("resize", function () {
+      syncPinLayerBounds();
+    });
+
     els.copyButton.addEventListener("click", function () {
       copyCurrentUrl();
     });
