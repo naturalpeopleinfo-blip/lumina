@@ -3579,19 +3579,37 @@
     setShareButtonBusy(true);
 
     try {
-      reportEntry = await buildCurrentReportEntry();
+      updateShareLoadingWindow(shareWindow, "チェック位置を準備しています", "動画から必要な確認フレームを取り出しています。", 0.12);
+      reportEntry = await buildCurrentReportEntry(function (current, total) {
+        updateShareLoadingWindow(
+          shareWindow,
+          "チェック位置を準備しています",
+          current + " / " + total + " の確認フレームを準備中です。",
+          0.12 + (total ? (current / total) * 0.34 : 0)
+        );
+      });
       report = {
         documentTitle: buildReportFileName(reportEntry.fileName, false),
         reportTitle: "修正指示書",
         sections: [reportEntry]
       };
-      sharePayload = await buildSharePayloadFromReport(report);
+      updateShareLoadingWindow(shareWindow, "画像を軽量化しています", "共有ページを開きやすいサイズに整えています。", 0.5);
+      sharePayload = await buildSharePayloadFromReport(report, function (current, total) {
+        updateShareLoadingWindow(
+          shareWindow,
+          "画像を軽量化しています",
+          current + " / " + total + " の画像を軽量化しています。",
+          0.5 + (total ? (current / total) * 0.22 : 0)
+        );
+      });
+      updateShareLoadingWindow(shareWindow, "共有URLを発行しています", "共有ページを保存しています。少しだけお待ちください。", 0.78);
       shareResult = await createShareUrl(sharePayload);
 
       if (!shareResult || !shareResult.url) {
         throw new Error("共有URLを取得できませんでした。");
       }
 
+      updateShareLoadingWindow(shareWindow, "共有ページを開いています", "まもなく共有ページに切り替わります。", 1);
       openGeneratedSharePage(shareWindow, shareResult.url);
       copied = await copyShareText(shareResult.url);
 
@@ -3661,13 +3679,23 @@
     shareWindow = openShareLoadingWindow();
 
     try {
-      sharePayload = await buildSharePayloadFromReport(report);
+      updateShareLoadingWindow(shareWindow, "画像を軽量化しています", "共有ページを開きやすいサイズに整えています。", 0.16);
+      sharePayload = await buildSharePayloadFromReport(report, function (current, total) {
+        updateShareLoadingWindow(
+          shareWindow,
+          "画像を軽量化しています",
+          current + " / " + total + " の画像を軽量化しています。",
+          0.16 + (total ? (current / total) * 0.56 : 0)
+        );
+      });
+      updateShareLoadingWindow(shareWindow, "共有URLを発行しています", "共有ページを保存しています。少しだけお待ちください。", 0.8);
       shareResult = await createShareUrl(sharePayload);
 
       if (!shareResult || !shareResult.url) {
         throw new Error("共有URLを取得できませんでした。");
       }
 
+      updateShareLoadingWindow(shareWindow, "共有ページを開いています", "まもなく共有ページに切り替わります。", 1);
       openGeneratedSharePage(shareWindow, shareResult.url);
       copied = await copyShareText(shareResult.url);
 
@@ -3716,11 +3744,11 @@
     });
   }
 
-  async function buildCurrentReportEntry() {
+  async function buildCurrentReportEntry(onProgress) {
     var platformKey = buildReportPlatformKey(state.flags, state.activePlatform);
     var reportFlags = buildReportFlags(state.flags);
     var previewImageDataUrl = createReportPreviewImageDataUrl(platformKey, reportFlags);
-    var previewFrames = await createReportPreviewFrames(platformKey, reportFlags);
+    var previewFrames = await createReportPreviewFrames(platformKey, reportFlags, onProgress);
 
     return {
       fileName: state.fileName || "未命名素材",
@@ -4029,7 +4057,7 @@
     });
   }
 
-  async function createReportPreviewFrames(platformKey, flags) {
+  async function createReportPreviewFrames(platformKey, flags, onProgress) {
     var reportFlags = flags && flags.length && flags[0].reportNo ? flags : buildReportFlags(flags);
     var fallbackImage = createReportPreviewImageDataUrl(platformKey, reportFlags);
     var previousTime = 0;
@@ -4041,6 +4069,9 @@
     }
 
     if (state.mediaType === "image") {
+      if (typeof onProgress === "function") {
+        onProgress(reportFlags.length, reportFlags.length);
+      }
       return reportFlags.map(function (flag) {
         return {
           id: String(flag.id || ""),
@@ -4061,6 +4092,9 @@
           id: String(flag.id || ""),
           previewImageDataUrl: createReportPreviewImageDataUrl(platformKey, reportFlags)
         });
+        if (typeof onProgress === "function") {
+          onProgress(index + 1, reportFlags.length);
+        }
       }
     } finally {
       await seekVideoForReportCapture(previousTime);
@@ -4144,13 +4178,18 @@
         ".share-loading-brand{margin:0 0 10px;color:#2563eb;font-weight:800;letter-spacing:.02em;}",
         ".share-loading-title{margin:0;color:#0f172a;font-size:1.2rem;font-weight:800;}",
         ".share-loading-copy{margin:12px 0 0;color:#64748b;font-size:.9rem;line-height:1.7;}",
+        ".share-loading-progress{height:8px;margin:22px 0 0;border-radius:999px;background:#e8eef8;overflow:hidden;}",
+        ".share-loading-progress-fill{display:block;width:8%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#60a5fa,#22c55e);transition:width .28s ease;}",
+        ".share-loading-status{margin:12px 0 0;color:#64748b;font-size:.78rem;font-weight:700;}",
         "</style>",
         "</head>",
         "<body>",
         '<main class="share-loading-card">',
         '<p class="share-loading-brand">Lumina Zone</p>',
-        '<h1 class="share-loading-title">共有ページを作成しています</h1>',
-        '<p class="share-loading-copy">チェック内容を整理して、共有できるURLを発行しています。</p>',
+        '<h1 id="shareLoadingTitle" class="share-loading-title">共有ページを作成しています</h1>',
+        '<p id="shareLoadingCopy" class="share-loading-copy">チェック内容を整理して、共有できるURLを発行しています。</p>',
+        '<div class="share-loading-progress" aria-hidden="true"><span id="shareLoadingProgress" class="share-loading-progress-fill"></span></div>',
+        '<p id="shareLoadingStatus" class="share-loading-status">準備中...</p>',
         "</main>",
         "</body>",
         "</html>"
@@ -4161,6 +4200,43 @@
     }
 
     return shareWindow;
+  }
+
+  function updateShareLoadingWindow(shareWindow, title, copy, progress) {
+    var clampedProgress = clamp(Number(progress) || 0, 0.05, 1);
+    var percentText = Math.round(clampedProgress * 100) + "%";
+    var doc = null;
+    var titleNode = null;
+    var copyNode = null;
+    var progressNode = null;
+    var statusNode = null;
+
+    if (!shareWindow || shareWindow.closed) {
+      return;
+    }
+
+    try {
+      doc = shareWindow.document;
+      titleNode = doc.getElementById("shareLoadingTitle");
+      copyNode = doc.getElementById("shareLoadingCopy");
+      progressNode = doc.getElementById("shareLoadingProgress");
+      statusNode = doc.getElementById("shareLoadingStatus");
+
+      if (titleNode && title) {
+        titleNode.textContent = title;
+      }
+      if (copyNode && copy) {
+        copyNode.textContent = copy;
+      }
+      if (progressNode) {
+        progressNode.style.width = percentText;
+      }
+      if (statusNode) {
+        statusNode.textContent = percentText;
+      }
+    } catch (error) {
+      // The window may already have navigated to the generated share URL.
+    }
   }
 
   function closeShareLoadingWindow(shareWindow) {
@@ -4337,11 +4413,22 @@
     }
   }
 
-  async function buildSharePayloadFromReport(report) {
+  async function buildSharePayloadFromReport(report, onProgress) {
     var reportPages = buildReportPages(report.sections || []);
     var firstPage = reportPages[0] || {};
     var labels = [];
     var pages = [];
+    var totalImages = reportPages.reduce(function (sum, page) {
+      return sum + 1 + ((page && page.previewFrames) || []).length;
+    }, 0);
+    var processedImages = 0;
+
+    function reportImageProgress() {
+      processedImages += 1;
+      if (typeof onProgress === "function") {
+        onProgress(processedImages, totalImages || 1);
+      }
+    }
 
     reportPages.forEach(function (page) {
       var label = String(page.settingsLabel || "").trim();
@@ -4353,21 +4440,23 @@
 
     for (var pageIndex = 0; pageIndex < reportPages.length; pageIndex += 1) {
       var page = reportPages[pageIndex] || {};
-      var compressedPreviewImage = await compressShareImageDataUrl(page.previewImageDataUrl || "", 640, 1138, 0.68);
+      var compressedPreviewImage = await compressShareImageDataUrl(page.previewImageDataUrl || "", 576, 1024, 0.56);
       var compressedPreviewFrames = [];
+      reportImageProgress();
 
-      for (var frameIndex = 0; frameIndex < (page.previewFrames || []).length; frameIndex += 1) {
-        var frame = (page.previewFrames || [])[frameIndex] || {};
+      compressedPreviewFrames = await Promise.all((page.previewFrames || []).map(async function (frameInput) {
+        var frame = frameInput || {};
         var sourceDataUrl = frame.previewImageDataUrl || page.previewImageDataUrl || "";
         var compressedFrameImage = sourceDataUrl === String(page.previewImageDataUrl || "")
           ? compressedPreviewImage
-          : await compressShareImageDataUrl(sourceDataUrl, 420, 746, 0.58);
+          : await compressShareImageDataUrl(sourceDataUrl, 378, 671, 0.46);
 
-        compressedPreviewFrames.push({
+        reportImageProgress();
+        return {
           id: frame.id || "",
           previewImageDataUrl: compressedFrameImage || compressedPreviewImage || ""
-        });
-      }
+        };
+      }));
 
       pages.push({
         pageIndex: Number(page.pageIndex || 0),

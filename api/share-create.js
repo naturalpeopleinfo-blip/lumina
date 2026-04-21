@@ -45,18 +45,14 @@ module.exports = async function handler(req, res) {
       return json(res, 400, { error: "No report pages provided" });
     }
 
-    const persistedPages = [];
+    const persistedPages = await Promise.all(pages.map(async function persistPage(pageInput, pageIndex) {
+      const page = pageInput || {};
+      const previewImagePromise = page.previewImageDataUrl
+        ? uploadDataUrl(token, "page-" + (pageIndex + 1) + "-preview", page.previewImageDataUrl)
+        : Promise.resolve("");
 
-    for (let pageIndex = 0; pageIndex < pages.length; pageIndex += 1) {
-      const page = pages[pageIndex] || {};
-      const previewImagePath = page.previewImageDataUrl
-        ? await uploadDataUrl(token, "page-" + (pageIndex + 1) + "-preview", page.previewImageDataUrl)
-        : "";
-
-      const flags = [];
-
-      for (let flagIndex = 0; flagIndex < (page.flags || []).length; flagIndex += 1) {
-        const flag = page.flags[flagIndex] || {};
+      const flagsPromise = Promise.all((page.flags || []).map(async function persistFlag(flagInput, flagIndex) {
+        const flag = flagInput || {};
         const frame = (page.previewFrames || []).find(function (item) {
           return String(item.id || "") === String(flag.id || "");
         });
@@ -65,20 +61,20 @@ module.exports = async function handler(req, res) {
           ? await uploadDataUrl(token, "page-" + (pageIndex + 1) + "-flag-" + (flagIndex + 1), frame.previewImageDataUrl)
           : "";
 
-        flags.push(
-          Object.assign(sanitizeFlag(flag), {
-            previewFramePath: previewFramePath
-          })
-        );
-      }
+        return Object.assign(sanitizeFlag(flag), {
+          previewFramePath: previewFramePath
+        });
+      }));
 
-      persistedPages.push({
+      const [previewImagePath, flags] = await Promise.all([previewImagePromise, flagsPromise]);
+
+      return {
         pageIndex: Number(page.pageIndex || 0),
         pageCount: Number(page.pageCount || 1),
         previewImagePath: previewImagePath,
         flags: flags
-      });
-    }
+      };
+    }));
 
     const firstPage = pages[0] || {};
     const firstFlags = firstPage.flags || [];
