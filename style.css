@@ -4878,6 +4878,18 @@ body.landing-page .landing-step-note {
   pointer-events: none;
 }
 
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .workspace-main,
 .viewer-dock {
   position: relative;
@@ -6786,11 +6798,27 @@ body.app-page .workspace-history-trigger.action-button:disabled {
   isolation: isolate;
   overflow: hidden;
   will-change: box-shadow, transform, filter;
+  display: grid;
+  place-items: center;
+  min-height: 42px;
 }
 
 .source-load-button-label {
   position: relative;
   z-index: 3;
+}
+
+.source-load-button-icon {
+  position: relative;
+  z-index: 3;
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter:
+    brightness(0)
+    invert(1)
+    drop-shadow(0 4px 9px rgba(0, 0, 0, 0.22));
 }
 
 .source-load-button::before,

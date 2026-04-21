@@ -1607,19 +1607,23 @@
 
   function updateSourceLoadButton() {
     var label;
+    var nextLabel = "";
 
     if (!els.sourceLoadButton) {
       return;
     }
 
+    nextLabel = state.fileName ? "別素材を読み込む" : "素材を読み込む";
     label = els.sourceLoadButton.querySelector(".source-load-button-label");
+    els.sourceLoadButton.setAttribute("aria-label", nextLabel);
+    els.sourceLoadButton.setAttribute("title", nextLabel);
 
     if (label) {
-      label.textContent = state.fileName ? "別素材を読み込む" : "素材を読み込む";
+      label.textContent = nextLabel;
       return;
     }
 
-    els.sourceLoadButton.textContent = state.fileName ? "別素材を読み込む" : "素材を読み込む";
+    els.sourceLoadButton.textContent = nextLabel;
   }
 
   function normalizePlanValue(plan) {
