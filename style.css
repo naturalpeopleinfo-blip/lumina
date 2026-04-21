@@ -5006,16 +5006,27 @@ body.landing-page .landing-step-note {
 }
 
 .workspace-utility-logo {
-  width: 42px;
+  width: 126px;
+  max-width: 30vw;
+  max-height: 28px;
   height: auto;
   display: block;
   flex: 0 0 auto;
   object-fit: contain;
-  filter: drop-shadow(0 10px 20px rgba(10, 66, 160, 0.1));
+  filter: drop-shadow(0 10px 20px rgba(10, 66, 160, 0.12));
 }
 
 .workspace-history-trigger {
   min-width: 132px;
+}
+
+.workspace-guide-trigger {
+  min-width: 112px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 14px;
+  font-size: 0.82rem;
+  font-weight: 650;
 }
 
 .workspace-bookmark-banner {
@@ -7249,6 +7260,23 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   gap: 8px;
 }
 
+.setup-card .speed-dock {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.speed-icon-button {
+  min-height: 42px;
+  justify-content: center;
+  padding: 0;
+}
+
+.speed-icon {
+  width: 22px;
+  height: 22px;
+  fill: rgba(248, 251, 255, 0.92);
+  filter: drop-shadow(0 4px 9px rgba(0, 0, 0, 0.22));
+}
+
 .action-button,
 .segment-button {
   min-height: 42px;
@@ -7375,12 +7403,42 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 }
 
 .review-card {
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto;
+  gap: 9px;
 }
 
 .results-card {
-  grid-template-rows: auto minmax(140px, 1fr) auto auto;
+  grid-template-rows: auto minmax(140px, 1fr) auto auto auto;
   min-height: 0;
+}
+
+.results-card.is-editing-comment {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.results-list-view {
+  display: grid;
+  gap: 9px;
+  min-height: 0;
+}
+
+.flags-list-heading {
+  color: rgba(247, 250, 255, 0.92);
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.results-card:not(.is-editing-comment) .comment-editor {
+  display: none;
+}
+
+.results-card.is-editing-comment .results-list-view,
+.results-card.is-editing-comment .results-export-row,
+.results-card.is-editing-comment .results-share-note,
+.results-card.is-editing-comment .flags-toolbar,
+.results-card.is-editing-comment .card-pill {
+  display: none;
 }
 
 .flags-header-row {
@@ -7426,7 +7484,7 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 }
 
 .flags-hint-card {
-  padding: 11px 12px;
+  padding: 9px 11px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.03), transparent 52%),
@@ -7526,6 +7584,7 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 }
 
 .flag-item-sample .flag-time-button,
+.flag-item-sample .flag-comment-action,
 .flag-item-sample .flag-delete {
   cursor: default;
 }
@@ -7554,10 +7613,9 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 }
 
 .flag-item {
-  display: flex;
+  display: grid;
   align-self: start;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 7px 9px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -7566,7 +7624,6 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.028), transparent 36%),
     rgba(255, 255, 255, 0.014);
   transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
-  flex-wrap: wrap;
   min-width: 0;
   cursor: pointer;
 }
@@ -7587,8 +7644,16 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
     0 16px 28px rgba(0, 0, 0, 0.14);
 }
 
+.flag-main-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .flag-time-button {
-  min-width: 92px;
+  min-width: 86px;
   min-height: 36px;
   padding: 0 12px;
   border-radius: 12px;
@@ -7615,13 +7680,14 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 .flag-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-  flex-wrap: wrap;
-  flex: 1 1 140px;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .flag-comment-badge,
+.flag-category-badge,
 .flag-zone-badge,
 .flag-platform-badge {
   display: inline-flex;
@@ -7638,6 +7704,33 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 .flag-comment-badge {
   border-color: rgba(10, 132, 255, 0.18);
   color: #8ec5ff;
+}
+
+.flag-category-badge {
+  border-color: rgba(52, 199, 89, 0.2);
+  background: rgba(52, 199, 89, 0.08);
+  color: #8ee8a6;
+}
+
+.flag-note-preview {
+  flex: 1 1 auto;
+  max-width: 100%;
+  color: rgba(240, 236, 230, 0.84);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: pre-line;
+}
+
+.flag-note-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 2px;
 }
 
 .flag-zone-badge[data-zone="top"] {
@@ -7754,7 +7847,15 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   fill: #ffffff;
 }
 
-.flag-delete {
+.flag-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+
+.flag-delete,
+.flag-comment-action {
   min-height: 28px;
   padding: 0 10px;
   border-radius: 999px;
@@ -7766,9 +7867,43 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   white-space: nowrap;
 }
 
+.flag-comment-action {
+  border-color: rgba(52, 199, 89, 0.28);
+  background:
+    linear-gradient(180deg, rgba(52, 199, 89, 0.14), rgba(52, 199, 89, 0.045)),
+    rgba(255, 255, 255, 0.018);
+  color: #a8f2b7;
+  font-weight: 700;
+}
+
+.flag-comment-action:hover {
+  border-color: rgba(52, 199, 89, 0.46);
+  color: #e0ffe6;
+}
+
+.flag-delete {
+  width: 30px;
+  padding: 0;
+  justify-content: center;
+}
+
+.flag-delete-icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  pointer-events: none;
+}
+
 .flag-delete:hover {
   border-color: rgba(201, 48, 48, 0.3);
   color: #ffb3b3;
+}
+
+.comment-back-button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.74rem;
+  flex: 0 0 auto;
 }
 
 .comment-editor {
@@ -7784,6 +7919,8 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 }
 
 .comment-editor.is-disabled {
+  gap: 4px;
+  padding: 10px 12px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.012)),
     rgba(255, 255, 255, 0.012);
@@ -7805,6 +7942,17 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   color: rgba(240, 236, 230, 0.52);
 }
 
+.comment-editor.is-disabled .timestamp-pill,
+.comment-editor.is-disabled .comment-field-group,
+.comment-editor.is-disabled .comment-editor-error,
+.comment-editor.is-disabled .comment-actions {
+  display: none;
+}
+
+.comment-editor.has-selection .timestamp-pill {
+  display: none;
+}
+
 .comment-editor-header {
   display: flex;
   align-items: start;
@@ -7823,6 +7971,149 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   color: var(--text-primary);
   line-height: 1.4;
   overflow-wrap: anywhere;
+}
+
+.comment-field-group {
+  display: grid;
+  gap: 8px;
+}
+
+.comment-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(196, 208, 223, 0.78);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.comment-step-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(10, 132, 255, 0.26);
+  background: rgba(10, 132, 255, 0.12);
+  color: #9fd2ff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.comment-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.comment-choice-button,
+.comment-template-button {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    rgba(255, 255, 255, 0.018);
+  color: rgba(240, 236, 230, 0.82);
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.comment-choice-button {
+  min-height: 34px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.comment-template-list {
+  display: grid;
+  gap: 7px;
+}
+
+.comment-select-wrap {
+  position: relative;
+}
+
+.comment-select-wrap::after {
+  content: "▾";
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  transform: translateY(-50%);
+  color: rgba(240, 236, 230, 0.64);
+  font-size: 0.84rem;
+  pointer-events: none;
+}
+
+.comment-template-select {
+  min-height: 44px;
+  width: 100%;
+  padding: 0 34px 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    rgba(255, 255, 255, 0.018);
+  color: rgba(240, 236, 230, 0.9);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.comment-template-select:focus {
+  border-color: rgba(10, 132, 255, 0.3);
+  box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.12);
+}
+
+.comment-template-preview {
+  margin: 0;
+  padding: 10px 11px;
+  border-radius: 13px;
+  border: 1px solid rgba(52, 199, 89, 0.2);
+  background: rgba(52, 199, 89, 0.07);
+  color: rgba(242, 255, 246, 0.92);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.comment-template-button {
+  min-height: 42px;
+  padding: 9px 11px;
+  border-radius: 13px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.comment-choice-button:hover,
+.comment-template-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(10, 132, 255, 0.28);
+}
+
+.comment-choice-button.is-active,
+.comment-template-button.is-active {
+  border-color: rgba(52, 199, 89, 0.34);
+  background:
+    linear-gradient(180deg, rgba(52, 199, 89, 0.2), rgba(52, 199, 89, 0.08)),
+    rgba(255, 255, 255, 0.02);
+  color: #f2fff6;
+  box-shadow: 0 0 0 1px rgba(52, 199, 89, 0.08), 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.comment-editor.is-disabled .comment-choice-button,
+.comment-editor.is-disabled .comment-template-button {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .comment-input {
@@ -7852,6 +8143,14 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 .comment-input:disabled {
   opacity: 0.46;
   cursor: not-allowed;
+}
+
+.comment-editor-error {
+  margin: -2px 0 0;
+  color: #ffb3b3;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .comment-editor-lead {
@@ -7919,7 +8218,7 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 
 .dock-primary {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
 }
 
@@ -8745,7 +9044,8 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   }
 
   .workspace-utility-logo {
-    width: 36px;
+    width: 102px;
+    max-height: 24px;
   }
 
   .workspace-utility-kicker {
@@ -8847,7 +9147,6 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
 
   .meta-chip-grid,
   .platform-dock,
-  .speed-dock,
   .dock-primary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -10107,6 +10406,7 @@ body.app-page .segment-button {
 body.app-page .flags-toolbar-copy,
 body.app-page .comment-editor-header h4,
 body.app-page .flag-platform-badge,
+body.app-page .flag-comment-action,
 body.app-page .flag-delete {
   color: rgba(29, 29, 31, 0.78);
 }
@@ -10289,6 +10589,7 @@ body.app-page .flags-empty-label {
 body.app-page .flags-toolbar-copy,
 body.app-page .comment-editor-header h4,
 body.app-page .flag-platform-badge,
+body.app-page .flag-comment-action,
 body.app-page .flag-delete,
 body.app-page .workspace-utility-caption,
 body.app-page .workspace-auth-user-copy span,
@@ -10596,6 +10897,7 @@ body.app-page .sidebar-left .history-inline-hint,
 body.app-page .sidebar-left .mode-note,
 body.app-page .sidebar-right .flags-toolbar-copy,
 body.app-page .sidebar-right .flag-platform-badge,
+body.app-page .sidebar-right .flag-comment-action,
 body.app-page .sidebar-right .flag-delete,
 body.app-page .sidebar-right .eyebrow,
 body.app-page .sidebar-right .timestamp-pill,
@@ -10632,7 +10934,8 @@ body.app-page .sidebar-right .flags-toolbar-copy {
   max-width: none;
 }
 
-body.app-page .sidebar-left .guide-button {
+body.app-page .guide-button,
+body.app-page .workspace-guide-trigger {
   color: rgba(248, 251, 255, 0.98);
   font-weight: 600;
   text-shadow: 0 1px 0 rgba(8, 18, 34, 0.18);
@@ -10738,7 +11041,8 @@ body.app-page .sidebar-right .step-label-inline {
   text-shadow: 0 1px 0 rgba(8, 18, 34, 0.18);
 }
 
-body.app-page .sidebar-left .guide-button {
+body.app-page .guide-button,
+body.app-page .workspace-guide-trigger {
   border-color: rgba(143, 168, 255, 0.32);
   background:
     linear-gradient(180deg, #5ea7ff 0%, #0a84ff 100%),
@@ -10761,7 +11065,8 @@ body.app-page .sidebar-left .guide-button {
   animation: guide-button-gradient-flow 6.8s linear infinite;
 }
 
-body.app-page .sidebar-left .guide-button:hover {
+body.app-page .guide-button:hover,
+body.app-page .workspace-guide-trigger:hover {
   border-color: rgba(171, 191, 255, 0.42);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.26),
@@ -10779,7 +11084,8 @@ body.app-page .sidebar-left .guide-button:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.app-page .sidebar-left .guide-button {
+  body.app-page .guide-button,
+  body.app-page .workspace-guide-trigger {
     animation: none;
   }
 }
@@ -11607,4 +11913,953 @@ body.app-page .viewer-dock .dock-button-play[data-guide-tag]::after {
   .landing-footer-links {
     gap: 8px 14px;
   }
+}
+
+/* 2026-04-21 Lumina Zone app: premium dark visual pass.
+   Appearance-only overrides for a calmer, more precise review workspace. */
+body.app-page {
+  --bg-base: #070b12;
+  --bg-depth: #0b1020;
+  --panel-surface: rgba(9, 13, 23, 0.94);
+  --panel-card: rgba(18, 24, 38, 0.76);
+  --panel-border: rgba(229, 231, 235, 0.08);
+  --text-primary: #e5e7eb;
+  --text-secondary: #a7b0c0;
+  --text-muted: #6b7280;
+  --gold: #3b82f6;
+  --gold-bright: #bfdbfe;
+  --gold-soft: rgba(59, 130, 246, 0.14);
+  --gold-line: rgba(147, 197, 253, 0.22);
+  --danger-base: rgba(239, 68, 68, 0.7);
+  --danger-soft: rgba(248, 113, 113, 0.16);
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 50% 8%, rgba(59, 130, 246, 0.1), transparent 28%),
+    radial-gradient(circle at 82% 0%, rgba(14, 165, 233, 0.05), transparent 26%),
+    linear-gradient(180deg, #0b1020 0%, #070b12 100%);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+body.app-page::before {
+  opacity: 0.42;
+  background:
+    radial-gradient(circle at top center, rgba(255, 255, 255, 0.045), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 18%);
+}
+
+body.app-page .app-shell {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.08), transparent 35%),
+    transparent;
+}
+
+body.app-page .workspace-shell {
+  border-color: rgba(229, 231, 235, 0.07);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(12, 18, 31, 0.96), rgba(7, 11, 18, 0.96)),
+    #070b12;
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+body.app-page .workspace-shell::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), transparent 15%),
+    radial-gradient(circle at 50% 0%, rgba(147, 197, 253, 0.07), transparent 32%);
+}
+
+body.app-page .workspace-utility-bar {
+  border-color: rgba(229, 231, 235, 0.08);
+  background:
+    linear-gradient(180deg, rgba(20, 27, 42, 0.82), rgba(11, 16, 28, 0.76)),
+    rgba(12, 18, 31, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 42px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body.app-page .sidebar-left .control-card,
+body.app-page .sidebar-right .control-card {
+  border-color: rgba(229, 231, 235, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    radial-gradient(circle at 18% 0%, rgba(96, 165, 250, 0.07), transparent 42%),
+    rgba(17, 24, 39, 0.68);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 18px 38px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body.app-page .sidebar-left .control-card::before,
+body.app-page .sidebar-right .control-card::before {
+  background: linear-gradient(90deg, transparent, rgba(147, 197, 253, 0.18), transparent);
+}
+
+body.app-page .viewer-stage {
+  border-color: rgba(148, 163, 184, 0.1);
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.03), transparent 45%),
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08), transparent 36%),
+    linear-gradient(180deg, #070b12 0%, #0b1020 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+body.app-page .stage-surface {
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 45%),
+    linear-gradient(180deg, #050914 0%, #090e1a 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 232, 240, 0.08),
+    inset 0 24px 50px rgba(255, 255, 255, 0.015),
+    0 30px 70px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(15, 23, 42, 0.7);
+}
+
+body.app-page .stage-surface:not(.has-media) {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(96, 165, 250, 0.07), transparent 34%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.025), transparent 42%),
+    linear-gradient(180deg, #060a13 0%, #090e1a 100%);
+}
+
+body.app-page .stage-surface video,
+body.app-page .stage-surface img {
+  background: #050914;
+}
+
+body.app-page .stage-preview-toolbar,
+body.app-page .stage-inline-legend-item {
+  border-color: rgba(229, 231, 235, 0.14);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.62), rgba(7, 11, 18, 0.5)),
+    rgba(15, 23, 42, 0.54);
+  color: rgba(229, 231, 235, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+body.app-page .workspace-utility-kicker,
+body.app-page .workspace-auth-user-copy strong,
+body.app-page .card-header h3,
+body.app-page .nameplate-card strong,
+body.app-page .meta-chip strong,
+body.app-page .metric-label-row strong,
+body.app-page .flags-title-chip,
+body.app-page .flags-list-heading,
+body.app-page .comment-editor-header h4,
+body.app-page .flag-note-preview,
+body.app-page .comment-input,
+body.app-page .comment-template-select,
+body.app-page .segment-button,
+body.app-page .action-button {
+  color: #e5e7eb;
+}
+
+body.app-page .workspace-utility-caption,
+body.app-page .workspace-auth-user-copy span,
+body.app-page .workspace-history-text,
+body.app-page .history-inline-hint,
+body.app-page .mode-note,
+body.app-page .utility-note,
+body.app-page .support-note,
+body.app-page .flags-hint-card p,
+body.app-page .comment-editor-lead,
+body.app-page .results-share-note,
+body.app-page .flags-empty-copy {
+  color: #a7b0c0;
+}
+
+body.app-page .eyebrow,
+body.app-page .mini-label,
+body.app-page .nameplate-card span,
+body.app-page .meta-chip span,
+body.app-page .metric-label-row span,
+body.app-page .flags-toolbar-copy,
+body.app-page .timestamp-pill,
+body.app-page .comment-field-label,
+body.app-page .comment-input::placeholder,
+body.app-page .flags-empty-label {
+  color: #6b7280;
+}
+
+body.app-page .nameplate-card,
+body.app-page .meta-chip,
+body.app-page .metric-chip,
+body.app-page .flags-hint-card,
+body.app-page .flags-empty,
+body.app-page .flag-item,
+body.app-page .comment-editor,
+body.app-page .comment-input,
+body.app-page .comment-template-select,
+body.app-page .comment-template-preview,
+body.app-page .workspace-auth-link.action-button-ghost,
+body.app-page .viewer-utility-button,
+body.app-page .action-button-ghost,
+body.app-page .segment-button {
+  border-color: rgba(229, 231, 235, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.016)),
+    rgba(255, 255, 255, 0.022);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 22px rgba(0, 0, 0, 0.13);
+}
+
+body.app-page .action-button-primary,
+body.app-page .segment-button.is-active {
+  border-color: rgba(147, 197, 253, 0.38);
+  background:
+    linear-gradient(180deg, rgba(80, 145, 245, 0.92), rgba(37, 99, 235, 0.88)),
+    rgba(37, 99, 235, 0.86);
+  color: #f8fafc;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 12px 24px rgba(37, 99, 235, 0.2),
+    0 0 0 1px rgba(59, 130, 246, 0.08);
+}
+
+body.app-page .action-button-primary:hover:not(:disabled),
+body.app-page .segment-button.is-active:hover:not(:disabled) {
+  border-color: rgba(191, 219, 254, 0.46);
+  background:
+    linear-gradient(180deg, rgba(96, 165, 250, 0.96), rgba(37, 99, 235, 0.92)),
+    rgba(37, 99, 235, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 14px 28px rgba(37, 99, 235, 0.24);
+}
+
+body.app-page .action-button-ghost:hover:not(:disabled),
+body.app-page .segment-button:hover:not(:disabled),
+body.app-page .viewer-utility-button:hover:not(:disabled) {
+  border-color: rgba(147, 197, 253, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.022)),
+    rgba(255, 255, 255, 0.03);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
+body.app-page .workspace-history-trigger.action-button,
+body.app-page .workspace-guide-trigger.action-button,
+body.app-page .workspace-plan-manage.action-button-ghost,
+body.app-page .workspace-auth-link.action-button-ghost {
+  border-color: rgba(229, 231, 235, 0.09);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.018)),
+    rgba(15, 23, 42, 0.48);
+  color: #dbe4f0;
+}
+
+body.app-page .guide-button,
+body.app-page .workspace-guide-trigger {
+  animation: none;
+  border-color: rgba(147, 197, 253, 0.28);
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.86), rgba(37, 99, 235, 0.82)),
+    rgba(37, 99, 235, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 12px 26px rgba(37, 99, 235, 0.18);
+}
+
+body.app-page .action-button.is-suggested:not(:disabled),
+body.app-page #exportCurrentPdfButton.action-button.is-suggested:not(:disabled),
+body.app-page #historyCurrentPdfButton.action-button.is-suggested:not(:disabled) {
+  border-color: rgba(134, 239, 172, 0.54);
+  background:
+    linear-gradient(180deg, rgba(90, 210, 116, 0.96), rgba(34, 197, 94, 0.92) 56%, rgba(22, 163, 74, 0.9)),
+    rgba(34, 197, 94, 0.9);
+  color: #f8fafc;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 14px 30px rgba(21, 128, 61, 0.24),
+    0 0 26px rgba(34, 197, 94, 0.18);
+}
+
+body.app-page .risk-area-block-high,
+body.app-page .risk-zone-high {
+  background:
+    repeating-linear-gradient(
+      -55deg,
+      rgba(255, 255, 255, 0.085) 0 8px,
+      rgba(255, 255, 255, 0.018) 8px 18px
+    ),
+    linear-gradient(180deg, rgba(248, 113, 113, 0.16), rgba(239, 68, 68, 0.18)),
+    linear-gradient(180deg, rgba(239, 68, 68, 0.78) 0%, rgba(220, 38, 38, 0.66) 70%, rgba(153, 27, 27, 0.42) 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(254, 202, 202, 0.08),
+    inset 0 18px 22px rgba(254, 202, 202, 0.035),
+    inset 0 -10px 18px rgba(69, 10, 10, 0.08);
+}
+
+body.app-page .risk-area-block-caution,
+body.app-page .risk-zone-caution {
+  background:
+    repeating-linear-gradient(
+      -55deg,
+      rgba(255, 255, 255, 0.052) 0 8px,
+      rgba(255, 255, 255, 0.014) 8px 18px
+    ),
+    linear-gradient(180deg, rgba(251, 191, 36, 0.12), rgba(249, 115, 22, 0.14)),
+    linear-gradient(180deg, rgba(251, 146, 60, 0.42) 0%, rgba(249, 115, 22, 0.34) 68%, rgba(194, 65, 12, 0.22) 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(254, 215, 170, 0.06),
+    inset 0 14px 18px rgba(255, 237, 213, 0.03);
+}
+
+body.app-page .stage-inline-legend-item i[style*="77, 201, 255"] {
+  background: rgba(249, 115, 22, 0.58) !important;
+}
+
+body.app-page .flag-pin,
+body.app-page .flag-pin[data-zone="top"],
+body.app-page .flag-pin[data-zone="right"],
+body.app-page .flag-pin[data-zone="left"],
+body.app-page .flag-pin[data-zone="bottom"],
+body.app-page .flag-pin[data-zone="center"] {
+  color: #f59e0b;
+  border-color: rgba(255, 255, 255, 0.78);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 237, 0.86)),
+    rgba(251, 191, 36, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 14px 28px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(15, 23, 42, 0.16),
+    0 0 22px rgba(245, 158, 11, 0.26);
+}
+
+body.app-page .flag-pin::before {
+  border-color: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.1),
+    0 0 18px rgba(245, 158, 11, 0.32);
+}
+
+body.app-page .flag-pin::after {
+  border-right-color: rgba(255, 255, 255, 0.58);
+  border-bottom-color: rgba(255, 255, 255, 0.58);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 237, 0.86)),
+    rgba(251, 191, 36, 0.18);
+}
+
+body.app-page .flag-pin.is-active {
+  color: #fbbf24;
+  border-color: rgba(254, 240, 138, 0.96);
+  background:
+    linear-gradient(180deg, rgba(255, 251, 235, 0.99), rgba(254, 243, 199, 0.92)),
+    rgba(251, 191, 36, 0.22);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.28),
+    0 0 0 9px rgba(251, 191, 36, 0.18),
+    0 0 34px rgba(245, 158, 11, 0.28);
+}
+
+body.app-page .results-card {
+  gap: 14px;
+  padding: 17px;
+}
+
+body.app-page .results-list-view {
+  gap: 12px;
+  padding: 1px;
+}
+
+body.app-page .flags-thread {
+  padding-top: 4px;
+}
+
+body.app-page .flags-list {
+  gap: 8px;
+  padding-right: 6px;
+}
+
+body.app-page .flag-item {
+  padding: 8px 10px;
+  border-color: rgba(229, 231, 235, 0.085);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.018)),
+    rgba(15, 23, 42, 0.24);
+}
+
+body.app-page .flag-item:hover {
+  border-color: rgba(147, 197, 253, 0.25);
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.09), rgba(255, 255, 255, 0.018)),
+    rgba(15, 23, 42, 0.28);
+}
+
+body.app-page .flag-item.is-active {
+  border-color: rgba(147, 197, 253, 0.38);
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.14), rgba(255, 255, 255, 0.02)),
+    rgba(15, 23, 42, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 0 1px rgba(59, 130, 246, 0.1),
+    0 14px 28px rgba(0, 0, 0, 0.18);
+}
+
+body.app-page .flag-time-button,
+body.app-page .timestamp-pill,
+body.app-page .card-pill {
+  border-color: rgba(147, 197, 253, 0.24);
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.12), rgba(255, 255, 255, 0.018)),
+    rgba(15, 23, 42, 0.26);
+  color: #bfdbfe;
+}
+
+body.app-page .flag-comment-action {
+  border-color: rgba(134, 239, 172, 0.24);
+  background:
+    linear-gradient(180deg, rgba(34, 197, 94, 0.16), rgba(34, 197, 94, 0.045)),
+    rgba(15, 23, 42, 0.22);
+  color: #bbf7d0;
+}
+
+body.app-page .flag-delete {
+  border-color: rgba(229, 231, 235, 0.08);
+  background: rgba(15, 23, 42, 0.22);
+  color: #8b95a5;
+}
+
+body.app-page .flag-delete:hover {
+  border-color: rgba(248, 113, 113, 0.34);
+  color: #fecaca;
+}
+
+body.app-page .flag-category-badge {
+  border-color: rgba(134, 239, 172, 0.18);
+  background: rgba(34, 197, 94, 0.08);
+  color: #bbf7d0;
+}
+
+body.app-page .flag-zone-badge {
+  background: rgba(15, 23, 42, 0.24);
+}
+
+body.app-page .comment-editor {
+  gap: 14px;
+  padding: 14px;
+  border-color: rgba(147, 197, 253, 0.14);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(59, 130, 246, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.062), rgba(255, 255, 255, 0.018)),
+    rgba(15, 23, 42, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 16px 34px rgba(0, 0, 0, 0.22);
+}
+
+body.app-page .comment-editor.has-selection {
+  border-color: rgba(147, 197, 253, 0.2);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(59, 130, 246, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(15, 23, 42, 0.36);
+}
+
+body.app-page .comment-choice-button,
+body.app-page .comment-template-button,
+body.app-page .comment-template-select,
+body.app-page .comment-input {
+  border-color: rgba(229, 231, 235, 0.09);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.016)),
+    rgba(3, 7, 18, 0.28);
+  color: #e5e7eb;
+}
+
+body.app-page .comment-choice-button:hover,
+body.app-page .comment-template-button:hover,
+body.app-page .comment-template-select:hover,
+body.app-page .comment-input:hover {
+  border-color: rgba(147, 197, 253, 0.22);
+}
+
+body.app-page .comment-choice-button.is-active,
+body.app-page .comment-template-button.is-active {
+  border-color: rgba(147, 197, 253, 0.32);
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.07)),
+    rgba(15, 23, 42, 0.24);
+  color: #eff6ff;
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.08),
+    0 12px 24px rgba(0, 0, 0, 0.14);
+}
+
+body.app-page .comment-template-select:focus,
+body.app-page .comment-input:focus {
+  border-color: rgba(147, 197, 253, 0.38);
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+body.app-page .comment-template-select option {
+  color: #e5e7eb;
+  background: #111827;
+}
+
+body.app-page .comment-template-preview {
+  border-color: rgba(134, 239, 172, 0.18);
+  background:
+    linear-gradient(180deg, rgba(34, 197, 94, 0.11), rgba(34, 197, 94, 0.035)),
+    rgba(15, 23, 42, 0.22);
+  color: #dcfce7;
+}
+
+body.app-page .comment-step-label {
+  border-color: rgba(147, 197, 253, 0.26);
+  background: rgba(59, 130, 246, 0.13);
+  color: #bfdbfe;
+}
+
+body.app-page .results-export-row {
+  padding-top: 4px;
+}
+
+body.app-page .results-export-row .action-button {
+  min-height: 48px;
+}
+
+body.app-page .results-share-note {
+  margin-top: 8px;
+  color: rgba(167, 176, 192, 0.74);
+}
+
+body.app-page .viewer-dock {
+  border-color: rgba(229, 231, 235, 0.09);
+  background:
+    linear-gradient(180deg, rgba(17, 24, 39, 0.94), rgba(8, 13, 23, 0.92)),
+    rgba(8, 13, 23, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+/* 2026-04-21 app hierarchy pass:
+   stronger dark layers, clearer stage focus, and restrained blue affordances. */
+body.app-page {
+  --text-primary: #e5e7eb;
+  --text-secondary: #b6c0d4;
+  --text-muted: #7c879d;
+  --gold: #3b82f6;
+  --gold-bright: #d7e8ff;
+  --gold-line: rgba(120, 160, 255, 0.22);
+  background:
+    radial-gradient(circle at 50% 8%, rgba(59, 130, 246, 0.08), transparent 26%),
+    radial-gradient(circle at 84% 0%, rgba(59, 130, 246, 0.035), transparent 22%),
+    linear-gradient(180deg, #08101e 0%, #04070d 100%);
+}
+
+body.app-page::before {
+  opacity: 0.34;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(147, 197, 253, 0.045), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 16%);
+}
+
+body.app-page .app-shell {
+  background:
+    radial-gradient(circle at 50% 2%, rgba(59, 130, 246, 0.06), transparent 32%),
+    transparent;
+}
+
+body.app-page .workspace-shell {
+  border-color: rgba(120, 160, 255, 0.08);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.06), transparent 36%),
+    linear-gradient(180deg, rgba(8, 14, 26, 0.98), rgba(4, 7, 13, 0.98)),
+    #04070d;
+  box-shadow:
+    0 34px 88px rgba(0, 0, 0, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+body.app-page .workspace-utility-bar {
+  border-color: rgba(120, 160, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(22, 31, 50, 0.84), rgba(12, 18, 32, 0.78)),
+    rgba(12, 18, 32, 0.78);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    0 0 0 1px rgba(59, 130, 246, 0.025);
+}
+
+body.app-page .workspace-history-trigger.action-button,
+body.app-page .workspace-guide-trigger.action-button,
+body.app-page .workspace-auth-link.action-button-ghost {
+  border-color: rgba(120, 160, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.14), rgba(255, 255, 255, 0.024)),
+    rgba(15, 23, 42, 0.58);
+  color: #dbeafe;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+body.app-page .workspace-guide-trigger.action-button {
+  border-color: rgba(147, 197, 253, 0.34);
+  background:
+    linear-gradient(180deg, rgba(73, 148, 255, 0.92), rgba(37, 99, 235, 0.86)),
+    rgba(37, 99, 235, 0.84);
+  color: #f8fafc;
+}
+
+body.app-page .sidebar-left .control-card,
+body.app-page .sidebar-right .control-card,
+body.app-page .results-card {
+  border-color: rgba(255, 255, 255, 0.095);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.022)),
+    radial-gradient(circle at 18% 0%, rgba(96, 165, 250, 0.075), transparent 42%),
+    rgba(18, 25, 40, 0.76);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 20px 42px rgba(0, 0, 0, 0.24);
+}
+
+body.app-page .viewer-stage {
+  border-color: rgba(120, 160, 255, 0.13);
+  background:
+    radial-gradient(circle at 50% 36%, rgba(59, 130, 246, 0.07), transparent 44%),
+    linear-gradient(180deg, rgba(12, 20, 36, 0.96), rgba(7, 12, 22, 0.98)),
+    #07101d;
+  box-shadow:
+    0 26px 58px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    inset 0 0 0 1px rgba(147, 197, 253, 0.025);
+}
+
+body.app-page .stage-surface-wrap {
+  align-items: center;
+  padding: 12px;
+  border-radius: 28px;
+  border: 1px solid rgba(120, 160, 255, 0.1);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(59, 130, 246, 0.055), transparent 48%),
+    linear-gradient(180deg, rgba(13, 22, 40, 0.92), rgba(7, 11, 22, 0.92)),
+    rgba(7, 11, 22, 0.92);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+body.app-page .stage-surface {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  background:
+    radial-gradient(circle at center, rgba(59, 130, 246, 0.08), transparent 45%),
+    linear-gradient(180deg, #07101d 0%, #0a1326 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(147, 197, 253, 0.035),
+    inset 0 22px 52px rgba(255, 255, 255, 0.02),
+    0 32px 72px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(2, 6, 23, 0.82);
+}
+
+body.app-page .stage-surface:not(.has-media) {
+  background:
+    radial-gradient(circle at 50% 36%, rgba(59, 130, 246, 0.12), transparent 42%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.035), transparent 44%),
+    linear-gradient(180deg, #07101d 0%, #0a1326 100%);
+}
+
+body.app-page .empty-state-card {
+  border-color: rgba(147, 197, 253, 0.16);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.09), transparent 40%),
+    linear-gradient(180deg, rgba(19, 29, 48, 0.96), rgba(10, 17, 30, 0.94)),
+    rgba(10, 17, 30, 0.94);
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.app-page .viewer-dock {
+  border-color: rgba(120, 160, 255, 0.13);
+  background:
+    linear-gradient(180deg, rgba(22, 31, 50, 0.9), rgba(13, 19, 34, 0.88)),
+    rgba(13, 19, 34, 0.88);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+body.app-page .viewer-dock .dock-button {
+  border-color: rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.024)),
+    rgba(15, 23, 42, 0.34);
+}
+
+body.app-page .viewer-dock .dock-button-play,
+body.app-page .viewer-dock .dock-button-play.is-playing {
+  border-color: rgba(147, 197, 253, 0.46);
+  background:
+    linear-gradient(180deg, rgba(73, 148, 255, 0.9), rgba(37, 99, 235, 0.76)),
+    rgba(37, 99, 235, 0.72);
+  color: #f8fafc;
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.1),
+    0 12px 28px rgba(37, 99, 235, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+body.app-page .dock-timeline {
+  color: #b6c0d4;
+}
+
+body.app-page .timeline-shell {
+  min-height: 24px;
+  padding: 0 2px;
+}
+
+body.app-page .timeline-range {
+  height: 13px;
+  background:
+    linear-gradient(
+      90deg,
+      #9cc9ff 0%,
+      #3b82f6 min(var(--range-progress), 100%),
+      rgba(182, 192, 212, 0.22) min(var(--range-progress), 100%),
+      rgba(182, 192, 212, 0.22) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+body.app-page .timeline-range:disabled {
+  background: rgba(182, 192, 212, 0.18);
+}
+
+body.app-page .results-list-view {
+  gap: 12px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.036), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.03);
+}
+
+body.app-page .comment-editor {
+  border-color: rgba(120, 160, 255, 0.12);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(59, 130, 246, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.024)),
+    rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 18px 36px rgba(0, 0, 0, 0.24);
+}
+
+body.app-page .results-export-row {
+  padding-top: 12px;
+}
+
+body.app-page .results-export-row .action-button {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 16px 32px rgba(22, 163, 74, 0.2),
+    0 0 24px rgba(34, 197, 94, 0.12);
+}
+
+body.app-page .flags-toolbar {
+  padding-top: 8px;
+}
+
+body.app-page .card-header h3,
+body.app-page .flags-title-chip,
+body.app-page .flags-list-heading,
+body.app-page .comment-editor-header h4,
+body.app-page .nameplate-card strong,
+body.app-page .meta-chip strong,
+body.app-page .metric-label-row strong,
+body.app-page .flag-note-preview {
+  color: #e5e7eb;
+}
+
+body.app-page .workspace-history-text,
+body.app-page .mode-note,
+body.app-page .flags-hint-card p,
+body.app-page .comment-editor-lead,
+body.app-page .results-share-note,
+body.app-page .flags-empty-copy {
+  color: #b6c0d4;
+}
+
+body.app-page .eyebrow,
+body.app-page .mini-label,
+body.app-page .nameplate-card span,
+body.app-page .meta-chip span,
+body.app-page .metric-label-row span,
+body.app-page .comment-field-label,
+body.app-page .comment-input::placeholder,
+body.app-page .timestamp-pill {
+  color: #7c879d;
+}
+
+body.app-page .action-button-primary,
+body.app-page .segment-button.is-active,
+body.app-page .flag-item.is-active,
+body.app-page .comment-choice-button.is-active,
+body.app-page .comment-template-button.is-active {
+  border-color: rgba(147, 197, 253, 0.42);
+}
+
+/* 2026-04-21 center preview readability pass */
+body.app-page .stage-surface-wrap {
+  border-color: rgba(120, 160, 255, 0.14);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(59, 130, 246, 0.07), transparent 46%),
+    linear-gradient(180deg, rgba(15, 25, 45, 0.94), rgba(7, 11, 22, 0.93)),
+    rgba(7, 11, 22, 0.93);
+  box-shadow:
+    0 0 40px rgba(0, 140, 255, 0.12),
+    0 22px 44px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 0 0 1px rgba(59, 130, 246, 0.025);
+}
+
+body.app-page .stage-surface,
+body.app-page .stage-surface:not(.has-media) {
+  background:
+    radial-gradient(circle at center, rgba(59, 130, 246, 0.12), transparent 42%),
+    linear-gradient(180deg, #07101d 0%, #0a1326 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(147, 197, 253, 0.04),
+    inset 0 22px 52px rgba(255, 255, 255, 0.02),
+    0 0 40px rgba(0, 140, 255, 0.12),
+    0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+body.app-page .empty-state-card {
+  border-color: rgba(148, 163, 184, 0.16);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.08), transparent 38%),
+    linear-gradient(180deg, rgba(22, 32, 52, 0.76), rgba(15, 23, 42, 0.72)),
+    rgba(15, 23, 42, 0.72);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.app-page .empty-state-card strong {
+  color: #f8fafc;
+}
+
+body.app-page .empty-state-card p,
+body.app-page .empty-state-list li {
+  color: #cbd5e1;
+}
+
+body.app-page .empty-kicker {
+  color: #94a3b8;
+}
+
+/* 2026-04-21 final focused polish */
+body.app-page .empty-state-card {
+  border-color: rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.09), transparent 38%),
+    linear-gradient(180deg, rgba(24, 36, 58, 0.8), rgba(15, 23, 42, 0.78)),
+    rgba(15, 23, 42, 0.78);
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.app-page .empty-state-card strong {
+  color: #f8fafc;
+}
+
+body.app-page .empty-state-card p,
+body.app-page .empty-state-list li {
+  color: #cbd5e1;
+}
+
+body.app-page .empty-kicker {
+  color: #94a3b8;
+}
+
+body.app-page .viewer-dock {
+  border-color: rgba(120, 160, 255, 0.14);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.075);
+}
+
+body.app-page .timeline-shell {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.app-page #exportCurrentPdfButton:disabled {
+  opacity: 0.85;
+  filter: saturate(0.85) brightness(0.92);
+}
+
+body.app-page #exportCurrentPdfButton:not(:disabled) {
+  border-color: rgba(134, 239, 172, 0.58);
+  background:
+    linear-gradient(180deg, #34d399 0%, #22c55e 48%, #16a34a 100%);
+  color: #f8fafc;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 10px 25px rgba(34, 197, 94, 0.22),
+    0 0 0 1px rgba(34, 197, 94, 0.08);
+}
+
+body.app-page #exportCurrentPdfButton:not(:disabled):hover {
+  border-color: rgba(187, 247, 208, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 12px 28px rgba(34, 197, 94, 0.26),
+    0 0 0 1px rgba(34, 197, 94, 0.1);
+}
+
+body.app-page .risk-area-block-caution,
+body.app-page .risk-zone-caution {
+  background:
+    repeating-linear-gradient(
+      -55deg,
+      rgba(255, 255, 255, 0.052) 0 8px,
+      rgba(255, 255, 255, 0.014) 8px 18px
+    ),
+    linear-gradient(180deg, rgba(103, 232, 249, 0.16), rgba(103, 232, 249, 0.22)),
+    linear-gradient(180deg, rgba(103, 232, 249, 0.42) 0%, rgba(34, 211, 238, 0.34) 68%, rgba(8, 145, 178, 0.22) 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(103, 232, 249, 0.12),
+    inset 0 14px 18px rgba(207, 250, 254, 0.035);
+}
+
+body.app-page .stage-inline-legend-item-caution i,
+body.app-page .stage-inline-legend-item i[style*="77, 201, 255"] {
+  background: rgba(103, 232, 249, 0.62) !important;
+  box-shadow: 0 0 0 1px rgba(103, 232, 249, 0.45);
 }

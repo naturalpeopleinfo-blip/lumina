@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var SPEED_OPTIONS = [1, 1.5, 2, 3];
+  var SPEED_OPTIONS = [1, 1.5];
   var DEFAULT_RATIO = 9 / 16;
   var IPHONE_TALL_RATIO = 430 / 932;
   var DEFAULT_FRAME_RATE = 30;
@@ -129,6 +129,34 @@
     left: "左",
     bottom: "下",
     center: "中央"
+  };
+  var COMMENT_CATEGORIES = ["UI被り", "位置", "内容", "デザイン", "素材", "その他"];
+  var COMMENT_TEMPLATES = {
+    "UI被り": [
+      "テロップがUIに被っているため、位置を調整してください",
+      "UIと重なっているため、上に移動してください",
+      "UIに隠れて見えづらいため、位置を調整してください"
+    ],
+    "位置": [
+      "テロップの位置が低いため、上に調整してください",
+      "端に寄りすぎているため、中央寄せにしてください",
+      "見切れているため、位置を調整してください"
+    ],
+    "内容": [
+      "テロップの文言を修正してください",
+      "誤字があるため修正してください",
+      "表現を調整してください"
+    ],
+    "デザイン": [
+      "文字サイズを調整してください",
+      "色が見えづらいため変更してください",
+      "視認性を改善してください"
+    ],
+    "素材": [
+      "この部分の素材を差し替えてください",
+      "画像を変更してください",
+      "動画を別素材に変更してください"
+    ]
   };
   var TOAST_TITLES = {
     success: "保存完了",
@@ -264,6 +292,12 @@
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
     hasPlaybackStarted: false,
+    isCommentEditorOpen: false,
+    commentDraft: {
+      category: "",
+      templateText: "",
+      customNote: ""
+    },
     freshFlagId: "",
     freshFlagTimer: 0
   };
@@ -356,8 +390,6 @@
     els.speedButtons = document.getElementById("speedButtons");
     els.playToggle = document.getElementById("playToggle");
     els.playToggleLabel = document.getElementById("playToggleLabel");
-    els.jumpBack = document.getElementById("jumpBack");
-    els.jumpForward = document.getElementById("jumpForward");
     els.frameBack = document.getElementById("frameBack");
     els.frameForward = document.getElementById("frameForward");
     els.timeline = document.getElementById("timeline");
@@ -373,13 +405,19 @@
     els.guideStepModes = document.getElementById("guideStepModes");
     els.guideStepShare = document.getElementById("guideStepShare");
     els.exportCurrentPdfButton = document.getElementById("exportCurrentPdfButton");
+    els.resultsCard = document.getElementById("resultsCard");
     els.flagsCount = document.getElementById("flagsCount");
     els.flagsHint = document.getElementById("flagsHint");
-    els.autoStopToggle = document.getElementById("autoStopToggle");
     els.commentEditorTitle = document.getElementById("commentEditorTitle");
     els.commentEditorLead = document.getElementById("commentEditorLead");
     els.commentTargetTime = document.getElementById("commentTargetTime");
+    els.commentBackButton = document.getElementById("commentBackButton");
+    els.commentCategoryButtons = document.getElementById("commentCategoryButtons");
+    els.commentTemplateGroup = document.getElementById("commentTemplateGroup");
+    els.commentTemplateSelect = document.getElementById("commentTemplateSelect");
+    els.commentTemplatePreview = document.getElementById("commentTemplatePreview");
     els.flagCommentInput = document.getElementById("flagCommentInput");
+    els.commentEditorError = document.getElementById("commentEditorError");
     els.saveCommentButton = document.getElementById("saveCommentButton");
     els.clearCommentButton = document.getElementById("clearCommentButton");
     els.flagsEmpty = document.getElementById("flagsEmpty");
@@ -427,12 +465,6 @@
     els.stageSurface.addEventListener("click", onStageSurfaceClick);
     els.flagPins.addEventListener("click", onFlagPinsClick);
     els.playToggle.addEventListener("click", togglePlayback);
-    els.jumpBack.addEventListener("click", function () {
-      skipBy(-3);
-    });
-    els.jumpForward.addEventListener("click", function () {
-      skipBy(3);
-    });
     els.frameBack.addEventListener("click", function () {
       skipBy(-1);
     });
@@ -445,7 +477,6 @@
     els.flagMarkers.addEventListener("click", onFlagMarkerClick);
     els.flagsList.addEventListener("click", onFlagsListClick);
     els.clearFlagsButton.addEventListener("click", clearAllFlags);
-    els.autoStopToggle.addEventListener("click", toggleAutoStop);
     if (els.exportCurrentPdfButton) {
       els.exportCurrentPdfButton.addEventListener("click", exportCurrentPdf);
     }
@@ -460,6 +491,10 @@
     }
     els.saveCommentButton.addEventListener("click", saveSelectedFlagComment);
     els.clearCommentButton.addEventListener("click", clearSelectedFlagComment);
+    els.commentBackButton.addEventListener("click", closeCommentEditor);
+    els.commentCategoryButtons.addEventListener("click", onCommentCategoryClick);
+    els.commentTemplateSelect.addEventListener("change", onCommentTemplateChange);
+    els.flagCommentInput.addEventListener("input", onFlagCommentInputChange);
     els.flagCommentInput.addEventListener("keydown", onFlagCommentInputKeydown);
 
     els.video.addEventListener("loadedmetadata", onVideoMetadataLoaded);
@@ -842,9 +877,11 @@
 
   function renderSpeedButtons() {
     els.speedButtons.innerHTML = SPEED_OPTIONS.map(function (speed) {
+      var speedLabel = speed === 1 ? "通常速度" : "早見速度";
+
       return (
-        '<button class="segment-button" type="button" data-speed="' + speed + '">' +
-        speed.toFixed(1) + "x" +
+        '<button class="segment-button speed-icon-button" type="button" data-speed="' + speed + '" aria-label="' + speedLabel + '" title="' + speedLabel + '">' +
+        getSpeedIconMarkup(speed) +
         "</button>"
       );
     }).join("");
@@ -857,6 +894,22 @@
       state.playbackRate = parseFloat(button.getAttribute("data-speed")) || 1;
       syncPlaybackRate();
     });
+  }
+
+  function getSpeedIconMarkup(speed) {
+    if (speed === 1) {
+      return (
+        '<svg class="speed-icon speed-icon-walk" viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path d="M13.1 4.3a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0Zm-1.9 3.3c.7 0 1.4.3 1.8.9l1.5 2.2 2.1 1.1-.8 1.6-2.7-1.3-1.1-1.5-.8 3.3 2.8 2.1v4h-2v-3l-2.2-1.5-1 4.5H6.7l1.6-7 1-3.7-1.6.9-1.1 2.7-1.8-.7 1.3-3.2 3.4-2c.5-.3 1.1-.4 1.7-.4Z"></path>' +
+        "</svg>"
+      );
+    }
+
+    return (
+      '<svg class="speed-icon speed-icon-run" viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M15 4.2a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0ZM11.2 7c.8 0 1.5.3 2 .9l1.7 2 2.6.2-.1 1.9-3.5-.3-1-1.1-1.1 2.2 2.7 1.7 1.6 5.1-2 .6-1.3-4.1-2.7-1.5-2.2 5.2-1.9-.8 2.4-5.7 1.1-2.5-1.8.9-1.9 2.3-1.5-1.2 2.2-2.7 3.6-2.6c.4-.3.8-.5 1.4-.5Z"></path>' +
+      "</svg>"
+    );
   }
 
   function togglePlatformSelection(platformKey) {
@@ -916,7 +969,11 @@
   }
 
   function updateFlagsHint() {
-    els.flagsHint.textContent = "中央のプレビューをクリックすると、ここに記録されます。";
+    if (!els.flagsHint) {
+      return;
+    }
+
+    els.flagsHint.textContent = "止めて、気になる位置をクリック";
   }
 
   function setModeDescription(text) {
@@ -1024,27 +1081,27 @@
     }
 
     if (step === "source") {
-      els.flagsHint.textContent = "気になるシーンで停止して下さい。";
+      els.flagsHint.textContent = "素材を読み込んで開始";
       return;
     }
 
     if (step === "platform") {
-      els.flagsHint.textContent = "中央プレビューをクリックして、チェックとメモを残せます。";
+      els.flagsHint.textContent = "SNSを選んで確認";
       return;
     }
 
     if (step === "play") {
-      els.flagsHint.textContent = "次に再生して、気になる場所で止めます。";
+      els.flagsHint.textContent = "止めて、気になる位置をクリック";
       return;
     }
 
     if (step === "click") {
-      els.flagsHint.textContent = "中央のプレビューで気になる位置をクリックすると、ここに記録されます。";
+      els.flagsHint.textContent = "止めて、気になる位置をクリック";
       return;
     }
 
     if (step === "memo") {
-      els.flagsHint.textContent = "必要ならメモを残して保存できます。";
+      els.flagsHint.textContent = "修正内容を追加できます";
       return;
     }
 
@@ -1067,15 +1124,6 @@
   }
 
   function updateAutoStopButton() {
-    var enabled = state.autoStopEnabled;
-    var isReady = hasMediaLoaded() && !!state.flags.length;
-
-    els.autoStopToggle.textContent = enabled ? "自動停止 ON" : "自動停止 OFF";
-    els.autoStopToggle.classList.toggle("is-active", enabled);
-    els.autoStopToggle.classList.toggle("is-ready", isReady && !enabled);
-    els.autoStopToggle.setAttribute("aria-pressed", enabled ? "true" : "false");
-    els.autoStopToggle.disabled = !isReady;
-    els.autoStopToggle.title = state.flags.length ? "次の記録位置で自動停止します。" : HINT_NEEDS_RECORDS;
     updatePdfButtons();
   }
 
@@ -1885,13 +1933,10 @@
     var playbackEnabled = enabled && state.mediaType === "video";
 
     els.playToggle.disabled = !playbackEnabled;
-    els.jumpBack.disabled = !playbackEnabled;
-    els.jumpForward.disabled = !playbackEnabled;
     els.frameBack.disabled = !playbackEnabled;
     els.frameForward.disabled = !playbackEnabled;
     els.timeline.disabled = !playbackEnabled;
     els.clearFlagsButton.disabled = !enabled || !state.flags.length;
-    els.autoStopToggle.disabled = !playbackEnabled || !state.flags.length;
     els.clearFlagsButton.title = state.flags.length ? "今のチェック記録をすべて削除します。" : HINT_NEEDS_RECORDS;
     updatePdfButtons();
     syncInlineGuide();
@@ -2466,6 +2511,10 @@
       x: roundToThousandths(xRatio),
       y: roundToThousandths(yRatio),
       platform: normalizePlatformKey(state.activePlatform),
+      category: "",
+      templateText: "",
+      customNote: "",
+      finalNote: "",
       comment: "",
       createdAt: Date.now()
     };
@@ -2613,45 +2662,216 @@
   function selectFlag(flagId) {
     if (!flagId || !findFlagById(flagId)) {
       state.selectedFlagId = "";
+      state.isCommentEditorOpen = false;
+      resetCommentDraft();
       updateFlagHighlights();
       renderCommentEditor();
       return;
     }
 
     state.selectedFlagId = flagId;
+    setCommentDraftFromFlag(findFlagById(flagId));
     updateFlagHighlights();
     renderCommentEditor();
   }
 
-  function renderCommentEditor() {
-    var flag = state.selectedFlagId ? findFlagById(state.selectedFlagId) : null;
-
-    els.commentEditor.classList.toggle("is-disabled", !flag);
-    els.commentEditor.classList.toggle("has-selection", !!flag);
-    els.commentEditor.classList.toggle("is-guided", !!flag && flag.id === state.freshFlagId);
-
-    if (!flag) {
-      els.commentEditorTitle.textContent = "チェック箇所にメモを記述。";
-      if (els.commentEditorLead) {
-        els.commentEditorLead.textContent = "上の一覧を選ぶと、ここでメモを確認できます。";
-      }
-      els.commentTargetTime.textContent = "一覧から選択";
-      els.flagCommentInput.value = "";
-      els.flagCommentInput.disabled = true;
-      els.saveCommentButton.disabled = true;
-      els.clearCommentButton.disabled = true;
+  function openCommentEditor(flagId) {
+    if (!flagId || !findFlagById(flagId)) {
       return;
     }
 
-    els.commentEditorTitle.textContent = FLAG_LABELS[flag.zone] + " / " + getPlatformMeta(flag.platform).label;
+    state.isCommentEditorOpen = true;
+    selectFlag(flagId);
+  }
+
+  function closeCommentEditor() {
+    state.isCommentEditorOpen = false;
+    renderCommentEditor();
+  }
+
+  function resetCommentDraft() {
+    state.commentDraft = {
+      category: "",
+      templateText: "",
+      customNote: ""
+    };
+  }
+
+  function setCommentDraftFromFlag(flag) {
+    if (!flag) {
+      resetCommentDraft();
+      return;
+    }
+
+    var category = normalizeCommentCategory(flag.category || "");
+    state.commentDraft = {
+      category: category,
+      templateText: String(flag.templateText || ""),
+      customNote: category ? String(flag.customNote || "") : String(flag.customNote || flag.finalNote || flag.comment || "")
+    };
+  }
+
+  function normalizeCommentCategory(category) {
+    category = String(category || "");
+    return COMMENT_CATEGORIES.indexOf(category) >= 0 ? category : "";
+  }
+
+  function getFlagFinalNote(flag) {
+    if (!flag) {
+      return "";
+    }
+
+    return String(flag.finalNote || flag.comment || "");
+  }
+
+  function getCommentCategoryLabel(flag) {
+    return normalizeCommentCategory(flag && flag.category) || "";
+  }
+
+  function isOtherCommentCategory(category) {
+    return category === "その他";
+  }
+
+  function buildFinalNoteFromDraft() {
+    var category = normalizeCommentCategory(state.commentDraft.category);
+    var templateText = String(state.commentDraft.templateText || "").trim();
+    var customNote = String(state.commentDraft.customNote || "").trim();
+
+    if (isOtherCommentCategory(category)) {
+      return customNote;
+    }
+
+    if (!customNote) {
+      return templateText;
+    }
+
+    return templateText + "\n補足：" + customNote;
+  }
+
+  function getCommentDraftError() {
+    var category = normalizeCommentCategory(state.commentDraft.category);
+    var templateText = String(state.commentDraft.templateText || "").trim();
+    var customNote = String(state.commentDraft.customNote || "").trim();
+
+    if (!category) {
+      return "カテゴリを選択してください";
+    }
+
+    if (isOtherCommentCategory(category)) {
+      return customNote ? "" : "修正内容を入力してください";
+    }
+
+    return templateText ? "" : "テンプレを選択してください";
+  }
+
+  function renderCommentChoiceButtons(container, items, activeValue, buttonClass, dataName) {
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = items.map(function (item) {
+      var value = typeof item === "string" ? item : item.value;
+      var label = typeof item === "string" ? item : item.label;
+      var isActive = value === activeValue;
+
+      return (
+        '<button class="' + buttonClass + (isActive ? " is-active" : "") + '" type="button" data-' + dataName + '="' + escapeHtml(value) + '" aria-pressed="' + (isActive ? "true" : "false") + '">' +
+          escapeHtml(label) +
+        "</button>"
+      );
+    }).join("");
+  }
+
+  function renderCommentTemplateSelect(templates, activeValue) {
+    if (!els.commentTemplateSelect) {
+      return;
+    }
+
+    els.commentTemplateSelect.innerHTML = (
+      '<option value="">修正指示を選択</option>' +
+      templates.map(function (templateText) {
+        var selected = templateText === activeValue ? " selected" : "";
+        return '<option value="' + escapeHtml(templateText) + '"' + selected + ">" + escapeHtml(templateText) + "</option>";
+      }).join("")
+    );
+
+    if (els.commentTemplatePreview) {
+      els.commentTemplatePreview.textContent = activeValue || "";
+      els.commentTemplatePreview.hidden = !activeValue;
+    }
+  }
+
+  function renderCommentControls(flag) {
+    var category = normalizeCommentCategory(state.commentDraft.category);
+    var templates = COMMENT_TEMPLATES[category] || [];
+    var validationError = getCommentDraftError();
+    var hasSelection = !!flag;
+    var hasSavedNote = !!(flag && getFlagFinalNote(flag).trim());
+
+    renderCommentChoiceButtons(els.commentCategoryButtons, COMMENT_CATEGORIES, category, "comment-choice-button", "comment-category");
+
+    if (els.commentTemplateGroup) {
+      els.commentTemplateGroup.hidden = !hasSelection || !category || isOtherCommentCategory(category);
+    }
+
+    renderCommentTemplateSelect(templates, state.commentDraft.templateText);
+    if (els.commentTemplateSelect) {
+      els.commentTemplateSelect.disabled = !hasSelection || !templates.length;
+    }
+
+    els.flagCommentInput.value = state.commentDraft.customNote || "";
+    els.flagCommentInput.disabled = !hasSelection;
+    els.saveCommentButton.disabled = !hasSelection || !!validationError;
+    els.clearCommentButton.disabled = !hasSavedNote && !state.commentDraft.category && !state.commentDraft.templateText && !state.commentDraft.customNote;
+
+    if (els.commentEditorError) {
+      els.commentEditorError.textContent = hasSelection ? validationError : "";
+      els.commentEditorError.hidden = !hasSelection || !validationError;
+    }
+  }
+
+  function updateCommentValidationState(flag) {
+    var validationError = flag ? getCommentDraftError() : "";
+    var hasSavedNote = !!(flag && getFlagFinalNote(flag).trim());
+
+    els.saveCommentButton.disabled = !flag || !!validationError;
+    els.clearCommentButton.disabled = !hasSavedNote && !state.commentDraft.category && !state.commentDraft.templateText && !state.commentDraft.customNote;
+
+    if (els.commentEditorError) {
+      els.commentEditorError.textContent = flag ? validationError : "";
+      els.commentEditorError.hidden = !flag || !validationError;
+    }
+  }
+
+  function renderCommentEditor() {
+    var flag = state.selectedFlagId ? findFlagById(state.selectedFlagId) : null;
+    var isOpen = !!(flag && state.isCommentEditorOpen);
+
+    if (els.resultsCard) {
+      els.resultsCard.classList.toggle("is-editing-comment", isOpen);
+    }
+
+    els.commentEditor.classList.toggle("is-disabled", !isOpen);
+    els.commentEditor.classList.toggle("has-selection", isOpen);
+    els.commentEditor.classList.toggle("is-guided", isOpen && flag.id === state.freshFlagId);
+
+    if (!isOpen) {
+      resetCommentDraft();
+      els.commentEditorTitle.textContent = "チェック一覧から選択";
+      if (els.commentEditorLead) {
+        els.commentEditorLead.textContent = "メモ追加を押すと、修正内容を入力できます。";
+      }
+      els.commentTargetTime.textContent = "一覧から選択";
+      renderCommentControls(null);
+      return;
+    }
+
+    els.commentEditorTitle.textContent = getFlagTitle(flag) + " / " + FLAG_LABELS[flag.zone] + " / " + getPlatformMeta(flag.platform).label + " の修正指示";
     if (els.commentEditorLead) {
-      els.commentEditorLead.textContent = "メモを確認・編集できます。";
+      els.commentEditorLead.textContent = "このチェックに対して修正内容を追加します。";
     }
     els.commentTargetTime.textContent = getFlagTitle(flag);
-    els.flagCommentInput.value = flag.comment || "";
-    els.flagCommentInput.disabled = false;
-    els.saveCommentButton.disabled = false;
-    els.clearCommentButton.disabled = !(flag.comment || "").length;
+    renderCommentControls(flag);
   }
 
   function onFlagCommentInputKeydown(event) {
@@ -2663,15 +2883,62 @@
     saveSelectedFlagComment();
   }
 
+  function onCommentCategoryClick(event) {
+    var button = event.target.closest("[data-comment-category]");
+    var flag = state.selectedFlagId ? findFlagById(state.selectedFlagId) : null;
+    var category = "";
+
+    if (!button || !flag) {
+      return;
+    }
+
+    category = normalizeCommentCategory(button.getAttribute("data-comment-category"));
+    state.commentDraft.category = category;
+    state.commentDraft.templateText = "";
+    renderCommentEditor();
+  }
+
+  function onCommentTemplateChange(event) {
+    var flag = state.selectedFlagId ? findFlagById(state.selectedFlagId) : null;
+
+    if (!event.target || !flag) {
+      return;
+    }
+
+    state.commentDraft.templateText = String(event.target.value || "");
+    renderCommentEditor();
+  }
+
+  function onFlagCommentInputChange() {
+    state.commentDraft.customNote = String(els.flagCommentInput.value || "").slice(0, 160);
+    updateCommentValidationState(state.selectedFlagId ? findFlagById(state.selectedFlagId) : null);
+  }
+
   function saveSelectedFlagComment() {
     var flag = state.selectedFlagId ? findFlagById(state.selectedFlagId) : null;
+    var errorMessage = "";
     var nextComment = "";
 
     if (!flag) {
       return;
     }
 
-    nextComment = String(els.flagCommentInput.value || "").trim();
+    state.commentDraft.customNote = String(els.flagCommentInput.value || "").trim();
+    errorMessage = getCommentDraftError();
+    if (errorMessage) {
+      if (els.commentEditorError) {
+        els.commentEditorError.textContent = errorMessage;
+        els.commentEditorError.hidden = false;
+      }
+      showToast(errorMessage, "warning");
+      return;
+    }
+
+    nextComment = buildFinalNoteFromDraft();
+    flag.category = normalizeCommentCategory(state.commentDraft.category);
+    flag.templateText = isOtherCommentCategory(flag.category) ? "" : String(state.commentDraft.templateText || "").trim();
+    flag.customNote = String(state.commentDraft.customNote || "").trim();
+    flag.finalNote = nextComment;
     flag.comment = nextComment;
     persistFlags();
     renderFlags();
@@ -2687,13 +2954,18 @@
 
   function clearSelectedFlagComment() {
     var flag = state.selectedFlagId ? findFlagById(state.selectedFlagId) : null;
+    var hasDraft = !!(state.commentDraft.category || state.commentDraft.templateText || state.commentDraft.customNote);
 
-    if (!flag || !(flag.comment || "").length) {
+    if (!flag || !(getFlagFinalNote(flag) || flag.category || flag.templateText || flag.customNote || hasDraft)) {
       return;
     }
 
+    flag.category = "";
+    flag.templateText = "";
+    flag.customNote = "";
+    flag.finalNote = "";
     flag.comment = "";
-    els.flagCommentInput.value = "";
+    resetCommentDraft();
     persistFlags();
     renderFlags();
     renderCommentEditor();
@@ -2704,7 +2976,23 @@
     var item = event.target.closest("[data-flag-id]");
     var jumpButton = event.target.closest("[data-flag-jump]");
     var deleteButton = event.target.closest("[data-flag-delete]");
+    var commentButton = event.target.closest("[data-flag-comment]");
     var flag = null;
+
+    if (commentButton) {
+      flag = findFlagById(commentButton.getAttribute("data-flag-comment"));
+      if (!flag) {
+        return;
+      }
+
+      jumpToTime(getFlagStartTime(flag), true);
+      if (state.mediaType === "video") {
+        els.video.pause();
+      }
+      updateTransportState();
+      openCommentEditor(flag.id);
+      return;
+    }
 
     if (jumpButton) {
       selectFlag(jumpButton.getAttribute("data-flag-jump"));
@@ -2757,6 +3045,7 @@
     state.flags = nextFlags;
     if (state.selectedFlagId === flagId) {
       state.selectedFlagId = "";
+      state.isCommentEditorOpen = false;
     }
     if (!state.flags.length) {
       state.pdfNeedsAttention = false;
@@ -2785,6 +3074,7 @@
   function performClearAllFlags() {
     state.flags = [];
     state.selectedFlagId = "";
+    state.isCommentEditorOpen = false;
     state.autoStopTargetTime = null;
     state.pdfNeedsAttention = false;
     clearFreshFlagGuidance();
@@ -2820,18 +3110,29 @@
       var isActive = flag.id === activeFlagId;
       var isFresh = flag.id === state.freshFlagId;
       var timeLabel = getFlagTitle(flag);
+      var categoryLabel = getCommentCategoryLabel(flag);
+      var finalNote = getFlagFinalNote(flag).trim();
 
       return (
         '<article class="flag-item' + (isActive ? " is-active" : "") + (isFresh ? " is-fresh" : "") + '" data-flag-id="' + escapeHtml(flag.id) + '">' +
-          '<button class="flag-time-button" type="button" data-flag-jump="' + escapeHtml(flag.id) + '" data-time="' + getFlagStartTime(flag) + '">' +
-            escapeHtml(timeLabel) +
-          "</button>" +
-          '<div class="flag-meta">' +
-            ((flag.comment || "").length ? '<span class="flag-comment-badge">メモ</span>' : "") +
-            '<span class="flag-zone-badge" data-zone="' + escapeHtml(flag.zone) + '">' + escapeHtml(FLAG_LABELS[flag.zone]) + "</span>" +
-            getPlatformInlineMarkup(flag.platform, "flag-platform-badge") +
+          '<div class="flag-main-row">' +
+            '<button class="flag-time-button" type="button" data-flag-jump="' + escapeHtml(flag.id) + '" data-time="' + getFlagStartTime(flag) + '">' +
+              escapeHtml(timeLabel) +
+            "</button>" +
+            '<div class="flag-meta">' +
+              '<span class="flag-zone-badge" data-zone="' + escapeHtml(flag.zone) + '">' + escapeHtml(FLAG_LABELS[flag.zone]) + "</span>" +
+              getPlatformInlineMarkup(flag.platform, "flag-platform-badge") +
+            "</div>" +
+            '<div class="flag-actions">' +
+              '<button class="flag-comment-action" type="button" data-flag-comment="' + escapeHtml(flag.id) + '">' + (finalNote.length ? "編集" : "メモ追加") + "</button>" +
+              '<button class="flag-delete" type="button" data-flag-delete="' + escapeHtml(flag.id) + '" aria-label="削除" title="削除">' +
+                '<svg class="flag-delete-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+                  '<path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h1.5v-7H10Zm2.5 0v7H14v-7h-1.5Z"></path>' +
+                "</svg>" +
+              "</button>" +
+            "</div>" +
           "</div>" +
-          '<button class="flag-delete" type="button" data-flag-delete="' + escapeHtml(flag.id) + '">削除</button>' +
+          (finalNote.length ? '<div class="flag-note-row">' + (categoryLabel ? '<span class="flag-category-badge">' + escapeHtml(categoryLabel) + "</span>" : '<span class="flag-comment-badge">メモ</span>') + '<span class="flag-note-preview">' + escapeHtml(finalNote) + "</span></div>" : "") +
         "</article>"
       );
     }).join("");
@@ -3005,7 +3306,11 @@
       x: clamp(parseFloat(flag.x) || 0, 0, 1),
       y: clamp(parseFloat(flag.y) || 0, 0, 1),
       platform: normalizePlatformKey(flag.platform),
-      comment: String(flag.comment || ""),
+      category: normalizeCommentCategory(flag.category || ""),
+      templateText: String(flag.templateText || ""),
+      customNote: String(flag.customNote || ""),
+      finalNote: String(flag.finalNote || flag.comment || ""),
+      comment: String(flag.finalNote || flag.comment || ""),
       createdAt: parseInt(flag.createdAt, 10) || Date.now()
     };
   }
@@ -3453,6 +3758,7 @@
         reportPositionLabel: getReportPositionLabel(flag),
         reportPositionShort: getReportPositionBaseLabel(flag),
         reportPlatformLabel: getPlatformMeta(flag.platform).label,
+        comment: getFlagFinalNote(flag),
         reportSeverity: severity.key,
         reportSeverityLabel: severity.label,
         reportSeverityColor: severity.color,
@@ -4432,7 +4738,11 @@
           x: flag.x,
           y: flag.y,
           platform: normalizePlatformKey(flag.platform),
-          comment: flag.comment || ""
+          category: normalizeCommentCategory(flag.category || ""),
+          templateText: flag.templateText || "",
+          customNote: flag.customNote || "",
+          finalNote: getFlagFinalNote(flag),
+          comment: getFlagFinalNote(flag)
         };
       })
     };

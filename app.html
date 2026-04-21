@@ -8,7 +8,7 @@
     name="description"
     content="映像制作会社向けの完全ローカル動作セーフゾーン確認SPAツール Lumina Zone"
   >
-  <link rel="stylesheet" href="style.css?v=20260420-timeline-progress-1">
+  <link rel="stylesheet" href="style.css?v=20260421-premium-dark-1">
 </head>
 <body class="app-page">
   <div class="app-shell">
@@ -17,8 +17,11 @@
 
       <header class="workspace-utility-bar" aria-label="ワークスペースヘッダー">
         <div class="workspace-utility-brand">
-          <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="workspace-utility-logo" width="50" height="50">
+          <img src="./assets/luminazone_logo_letter.png" alt="Lumina Zone" class="workspace-utility-logo" width="126" height="19">
           <button id="historyToggle" class="action-button action-button-ghost workspace-history-trigger" type="button">履歴を見る</button>
+          <button id="helpToggle" class="action-button action-button-ghost workspace-guide-trigger" type="button" aria-haspopup="dialog" aria-controls="onboardingOverlay">
+            使い方ガイド
+          </button>
         </div>
 
         <div id="workspaceBookmarkBanner" class="workspace-bookmark-banner" hidden>
@@ -69,12 +72,6 @@
 
       <div class="workspace-main">
         <aside class="sidebar-column sidebar-left">
-          <div class="sidebar-guide-wrap">
-            <button id="helpToggle" class="viewer-utility-button guide-button" type="button" aria-haspopup="dialog" aria-controls="onboardingOverlay">
-              使い方ガイド
-            </button>
-          </div>
-
           <section id="guideStepSource" class="control-card status-card">
             <div class="card-header">
               <div>
@@ -136,6 +133,7 @@
               <span class="mini-label">再生速度</span>
               <div id="speedButtons" class="speed-dock" aria-label="再生速度選択"></div>
             </div>
+
           </section>
         </aside>
 
@@ -213,14 +211,12 @@
 
           <div id="viewerDock" class="viewer-dock">
             <div class="dock-primary">
-              <button id="jumpBack" class="dock-button" type="button">-3秒</button>
               <button id="frameBack" class="dock-button dock-button-secondary" type="button">-1秒</button>
               <button id="playToggle" class="dock-button dock-button-play" type="button">
                 <span class="transport-icon" aria-hidden="true"></span>
                 <span id="playToggleLabel">再生</span>
               </button>
               <button id="frameForward" class="dock-button dock-button-secondary" type="button">+1秒</button>
-              <button id="jumpForward" class="dock-button" type="button">+3秒</button>
             </div>
 
             <div class="dock-timeline">
@@ -235,84 +231,84 @@
         </section>
 
         <aside class="sidebar-column sidebar-right">
-          <section class="control-card review-card">
-            <div class="flags-header-row">
-              <div class="flags-title-chip"><span class="step-label-inline">STEP 3</span><span>動画チェック</span></div>
-            </div>
-
-            <div class="flags-hint-card">
-              <p id="flagsHint">中央のプレビューをクリックすると、ここに記録されます。</p>
-            </div>
-
-            <div id="guideStepShare" class="review-utility-stack review-utility-stack-secondary">
-              <button id="autoStopToggle" class="segment-button review-toggle-button" type="button" aria-pressed="false">自動停止 OFF</button>
-            </div>
-          </section>
-
-          <section class="control-card results-card">
-            <div class="flags-header-row">
-              <div class="flags-title-chip"><span>チェック一覧</span></div>
+          <section id="resultsCard" class="control-card results-card">
+            <div class="flags-header-row results-main-header">
+              <div class="flags-title-chip"><span class="step-label-inline">STEP 3</span><span>動画をチェックする</span></div>
               <span id="flagsCount" class="card-pill">0件</span>
             </div>
 
-            <div class="flags-thread">
+            <div class="results-list-view">
+              <div class="flags-list-heading">チェック一覧</div>
+              <div class="flags-thread">
               <div id="flagsEmpty" class="flags-empty">
                 <span class="flags-empty-label">表示例</span>
                 <p class="flags-empty-copy">ここにチェックした箇所が並びます。</p>
                 <article class="flag-item flag-item-sample" aria-hidden="true">
-                  <span class="flag-time-button">00:00</span>
-                  <div class="flag-meta">
-                    <span class="flag-zone-badge" data-zone="right">右</span>
-                    <span class="flag-platform-badge">
-                      <span class="platform-inline-group" aria-label="TikTok / Reels">
-                        <span class="platform-inline-icon platform-inline-icon-tiktok" aria-hidden="true">
-                          <svg class="platform-inline-svg" viewBox="0 0 24 24">
-                            <path class="tiktok-shadow tiktok-cyan" d="M13.8 3.8c.4 1.6 1.4 2.8 2.9 3.6 1 .5 1.8.7 2.4.7v2.5c-.8 0-1.9-.2-3.2-.8-.6-.3-1.3-.7-1.9-1.3v7c0 3.1-2.4 5.5-5.5 5.5s-5.4-2.4-5.4-5.5 2.4-5.5 5.4-5.5c.4 0 .8 0 1.2.1v2.6a4 4 0 0 0-1.2-.2c-1.6 0-2.8 1.2-2.8 2.9 0 1.6 1.2 2.8 2.8 2.8 1.6 0 2.9-1.2 2.9-2.8V3.8h2.4Z"></path>
-                            <path class="tiktok-shadow tiktok-red" d="M14.9 3c.4 1.5 1.5 2.8 3 3.6 1 .5 1.9.7 2.5.7v2.7c-.8 0-2-.2-3.4-.9-.7-.3-1.4-.8-2-1.4v7.2c0 3.1-2.5 5.6-5.6 5.6S3.8 18 3.8 14.9s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.1-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3s1.3 2.9 2.9 2.9 2.9-1.3 2.9-2.9V3h2.6Z"></path>
-                            <path class="tiktok-main" d="M14.4 3.3c.4 1.6 1.5 2.9 3 3.7 1 .5 1.9.7 2.4.7v2.6c-.8 0-2-.2-3.3-.9-.7-.3-1.4-.8-2-1.4v7.1c0 3.1-2.5 5.6-5.6 5.6S3.5 18.2 3.5 15.1s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.2-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3S7.5 18 9.1 18s2.9-1.3 2.9-2.9V3.3h2.4Z"></path>
-                          </svg>
-                        </span>
-                        <span class="platform-inline-plus" aria-hidden="true">+</span>
-                        <span class="platform-inline-icon platform-inline-icon-instagram" aria-hidden="true">
-                          <svg class="platform-inline-svg" viewBox="0 0 24 24">
-                            <path d="M7.2 3h9.6A4.2 4.2 0 0 1 21 7.2v9.6a4.2 4.2 0 0 1-4.2 4.2H7.2A4.2 4.2 0 0 1 3 16.8V7.2A4.2 4.2 0 0 1 7.2 3Zm0 2.2a2 2 0 0 0-2 2v9.6a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V7.2a2 2 0 0 0-2-2H7.2Zm4.8 2.3A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2.2A2.3 2.3 0 1 0 14.3 12 2.3 2.3 0 0 0 12 9.7Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path>
-                          </svg>
-                        </span>
+                  <div class="flag-main-row">
+                    <span class="flag-time-button">00:00</span>
+                    <div class="flag-meta">
+                      <span class="flag-zone-badge" data-zone="right">右</span>
+                      <span class="flag-platform-badge">SNS</span>
+                    </div>
+                    <div class="flag-actions">
+                      <span class="flag-comment-action">メモ追加</span>
+                      <span class="flag-delete">
+                        <svg class="flag-delete-icon" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h1.5v-7H10Zm2.5 0v7H14v-7h-1.5Z"></path>
+                        </svg>
                       </span>
-                    </span>
-                    <span class="flag-comment-badge">メモ</span>
+                    </div>
                   </div>
-                  <span class="flag-delete">削除</span>
                 </article>
               </div>
               <div id="flagsList" class="flags-list" aria-live="polite"></div>
+              </div>
             </div>
 
             <div id="commentEditor" class="comment-editor">
               <div class="comment-editor-header">
                 <div>
-                  <p class="eyebrow">選択中のメモ</p>
-                  <h4 id="commentEditorTitle">チェック箇所にメモを記述。</h4>
-                  <p id="commentEditorLead" class="comment-editor-lead">上の一覧を選ぶと、ここでメモを確認できます。</p>
+                  <p class="eyebrow">選択中の修正</p>
+                  <h4 id="commentEditorTitle">チェック箇所に修正内容を追加。</h4>
+                  <p id="commentEditorLead" class="comment-editor-lead">カテゴリを選ぶと、伝わりやすい修正指示を追加できます。</p>
                 </div>
                 <span id="commentTargetTime" class="timestamp-pill">--:--</span>
+                <button id="commentBackButton" class="action-button action-button-ghost comment-back-button" type="button">一覧に戻る</button>
               </div>
 
-              <input
-                id="flagCommentInput"
-                class="comment-input"
-                type="text"
-                maxlength="160"
-                placeholder="必要な時だけ、共有メモを短く残します。"
-              >
+              <div class="comment-field-group">
+                <span class="comment-field-label"><span class="comment-step-label">STEP 1</span> 修正カテゴリ</span>
+                <div id="commentCategoryButtons" class="comment-choice-grid" aria-label="修正内容カテゴリ"></div>
+              </div>
+
+              <div id="commentTemplateGroup" class="comment-field-group" hidden>
+                <label for="commentTemplateSelect" class="comment-field-label"><span class="comment-step-label">STEP 2</span> 修正指示</label>
+                <div class="comment-select-wrap">
+                  <select id="commentTemplateSelect" class="comment-template-select" aria-label="修正指示テンプレ"></select>
+                </div>
+                <p id="commentTemplatePreview" class="comment-template-preview" hidden></p>
+              </div>
+
+              <div class="comment-field-group">
+                <label for="flagCommentInput" class="comment-field-label">補足（任意）</label>
+                <input
+                  id="flagCommentInput"
+                  class="comment-input"
+                  type="text"
+                  maxlength="160"
+                  placeholder="必要があれば補足を入力してください"
+                >
+              </div>
+
+              <p id="commentEditorError" class="comment-editor-error" hidden></p>
 
               <div class="comment-actions">
-                <button id="saveCommentButton" class="action-button action-button-primary" type="button">保存</button>
-                <button id="clearCommentButton" class="action-button action-button-ghost" type="button">消す</button>
+                <button id="saveCommentButton" class="action-button action-button-primary" type="button">この内容で追加する</button>
+                <button id="clearCommentButton" class="action-button action-button-ghost" type="button">メモを削除</button>
               </div>
             </div>
 
-            <div class="results-export-row">
+            <div id="guideStepShare" class="results-export-row">
               <button id="exportCurrentPdfButton" class="action-button action-button-ghost review-primary-button" type="button">チェック内容を共有</button>
             </div>
             <p class="results-share-note">共有URLは発行日から7日後に失効します。</p>
