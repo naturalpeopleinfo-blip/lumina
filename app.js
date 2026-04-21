@@ -3556,6 +3556,10 @@
   async function exportCurrentPdf() {
     var reportEntry = null;
     var report = null;
+    var shareWindow = null;
+    var sharePayload = null;
+    var shareResult = null;
+    var copied = false;
 
     if (!hasMediaLoaded()) {
       showToast("先に動画を読み込んでください。", "warning");
@@ -3571,21 +3575,26 @@
       return;
     }
 
-    reportEntry = await buildCurrentReportEntry();
-    report = {
-      documentTitle: buildReportFileName(reportEntry.fileName, false),
-      exportDateText: formatReportDateTime(Date.now()),
-      reportTitle: "修正指示書",
-      summary:
-        '<section class="report-summary">' +
-          '<div class="report-summary-item"><span>出力日</span><strong>' + escapeHtml(formatReportDateLabel(Date.now())) + "</strong></div>" +
-          '<div class="report-summary-item"><span>形式</span><strong>ビジュアル付き</strong></div>' +
-          '<div class="report-summary-item"><span>用途</span><strong>共有・提出向け</strong></div>' +
-        "</section>",
-      sections: [reportEntry]
-    };
+    shareWindow = openShareLoadingWindow();
+    setShareButtonBusy(true);
 
-    if (openReportWindow(report)) {
+    try {
+      reportEntry = await buildCurrentReportEntry();
+      report = {
+        documentTitle: buildReportFileName(reportEntry.fileName, false),
+        reportTitle: "修正指示書",
+        sections: [reportEntry]
+      };
+      sharePayload = await buildSharePayloadFromReport(report);
+      shareResult = await createShareUrl(sharePayload);
+
+      if (!shareResult || !shareResult.url) {
+        throw new Error("共有URLを取得できませんでした。");
+      }
+
+      openGeneratedSharePage(shareWindow, shareResult.url);
+      copied = await copyShareText(shareResult.url);
+
       state.pdfNeedsAttention = false;
       updatePdfButtons();
       await recordPdfExportToDb({
@@ -3595,14 +3604,22 @@
         projectCount: 1,
         meta: {
           mediaKey: state.mediaKey,
-          fileName: state.fileName || "未命名素材"
+          fileName: state.fileName || "未命名素材",
+          shareToken: shareResult.token || "",
+          shareUrl: shareResult.url
         }
       });
       track("pdf_export", {
         report_type: "current",
         marker_count: state.flags.length
       });
-      showToast("共有ページを開きました。", "success");
+      showToast(copied ? "共有ページを開きました。URLもコピーしました。" : "共有ページを開きました。", "success");
+    } catch (error) {
+      closeShareLoadingWindow(shareWindow);
+      console.error("Failed to create share page", error);
+      window.alert("共有URLの発行に失敗しました。\n\n原因: " + getErrorMessage(error));
+    } finally {
+      setShareButtonBusy(false);
     }
   }
 
@@ -3610,6 +3627,10 @@
     var report = null;
     var totalFlags = 0;
     var settings = options || {};
+    var shareWindow = null;
+    var shareResult = null;
+    var sharePayload = null;
+    var copied = false;
 
     if (!entries.length) {
       showToast("共有する履歴がありません。", "warning");
@@ -3637,7 +3658,19 @@
       sections: entries
     };
 
-    if (openReportWindow(report)) {
+    shareWindow = openShareLoadingWindow();
+
+    try {
+      sharePayload = await buildSharePayloadFromReport(report);
+      shareResult = await createShareUrl(sharePayload);
+
+      if (!shareResult || !shareResult.url) {
+        throw new Error("共有URLを取得できませんでした。");
+      }
+
+      openGeneratedSharePage(shareWindow, shareResult.url);
+      copied = await copyShareText(shareResult.url);
+
       await recordPdfExportToDb({
         reportType: settings.reportType || "history_all",
         exportFileName: report.documentTitle,
@@ -3646,7 +3679,9 @@
         meta: {
           mediaKeys: entries.map(function (entry) {
             return entry.mediaKey;
-          })
+          }),
+          shareToken: shareResult.token || "",
+          shareUrl: shareResult.url
         }
       });
       track("pdf_export", {
@@ -3654,7 +3689,11 @@
         item_count: entries.length,
         marker_count: totalFlags
       });
-      showToast(settings.toastMessage || "共有ページを開きました。", "success");
+      showToast(copied ? "共有ページを開きました。URLもコピーしました。" : (settings.toastMessage || "共有ページを開きました。"), "success");
+    } catch (error) {
+      closeShareLoadingWindow(shareWindow);
+      console.error("Failed to create share page", error);
+      window.alert("共有URLの発行に失敗しました。\n\n原因: " + getErrorMessage(error));
     }
   }
 
@@ -4080,6 +4119,310 @@
     reportWindow.document.write(buildReportDocumentHtml(report, settings));
     reportWindow.document.close();
     return true;
+  }
+
+  function openShareLoadingWindow() {
+    var shareWindow = window.open("", "_blank", "width=1080,height=900");
+
+    if (!shareWindow) {
+      showToast("共有ページを開けませんでした。ポップアップ設定をご確認ください。", "warning");
+      return null;
+    }
+
+    try {
+      shareWindow.document.open();
+      shareWindow.document.write([
+        "<!DOCTYPE html>",
+        '<html lang="ja">',
+        "<head>",
+        '<meta charset="UTF-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+        "<title>共有ページを作成中...</title>",
+        "<style>",
+        'body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f3f7fc;color:#0f172a;font-family:"SF Pro Display","Hiragino Sans","Yu Gothic",sans-serif;}',
+        ".share-loading-card{width:min(420px,calc(100vw - 40px));padding:34px 30px;border-radius:28px;background:#fff;border:1px solid rgba(15,23,42,.08);box-shadow:0 24px 50px rgba(15,23,42,.12);text-align:center;}",
+        ".share-loading-brand{margin:0 0 10px;color:#2563eb;font-weight:800;letter-spacing:.02em;}",
+        ".share-loading-title{margin:0;color:#0f172a;font-size:1.2rem;font-weight:800;}",
+        ".share-loading-copy{margin:12px 0 0;color:#64748b;font-size:.9rem;line-height:1.7;}",
+        "</style>",
+        "</head>",
+        "<body>",
+        '<main class="share-loading-card">',
+        '<p class="share-loading-brand">Lumina Zone</p>',
+        '<h1 class="share-loading-title">共有ページを作成しています</h1>',
+        '<p class="share-loading-copy">チェック内容を整理して、共有できるURLを発行しています。</p>',
+        "</main>",
+        "</body>",
+        "</html>"
+      ].join(""));
+      shareWindow.document.close();
+    } catch (error) {
+      console.warn("Failed to render share loading window", error);
+    }
+
+    return shareWindow;
+  }
+
+  function closeShareLoadingWindow(shareWindow) {
+    if (!shareWindow || shareWindow.closed) {
+      return;
+    }
+
+    try {
+      shareWindow.close();
+    } catch (error) {
+      // The share window may be cross-origin after a navigation attempt.
+    }
+  }
+
+  function openGeneratedSharePage(shareWindow, url) {
+    if (shareWindow && !shareWindow.closed) {
+      try {
+        shareWindow.location.replace(url);
+        return;
+      } catch (error) {
+        console.warn("Failed to redirect prepared share window", error);
+      }
+    }
+
+    if (!window.open(url, "_blank")) {
+      window.location.href = url;
+    }
+  }
+
+  function setShareButtonBusy(isBusy) {
+    if (!els.exportCurrentPdfButton) {
+      return;
+    }
+
+    if (isBusy) {
+      if (!els.exportCurrentPdfButton.dataset.idleLabel) {
+        els.exportCurrentPdfButton.dataset.idleLabel = els.exportCurrentPdfButton.textContent || "チェック内容を共有";
+      }
+      els.exportCurrentPdfButton.disabled = true;
+      els.exportCurrentPdfButton.textContent = "共有ページを作成中...";
+      els.exportCurrentPdfButton.classList.add("is-loading");
+      return;
+    }
+
+    els.exportCurrentPdfButton.textContent = els.exportCurrentPdfButton.dataset.idleLabel || "チェック内容を共有";
+    els.exportCurrentPdfButton.classList.remove("is-loading");
+    updatePdfButtons();
+  }
+
+  function getShareApiBase() {
+    if (window.location && /^https?:$/i.test(window.location.protocol || "")) {
+      return window.location.origin.replace(/\/+$/, "");
+    }
+
+    return "https://luminazone.jp";
+  }
+
+  function getErrorMessage(error) {
+    var rawMessage = error && error.message ? error.message : error;
+
+    if (typeof rawMessage === "string") {
+      return rawMessage;
+    }
+
+    try {
+      return JSON.stringify(rawMessage);
+    } catch (_error) {
+      return String(rawMessage);
+    }
+  }
+
+  function safeFetchJson(response) {
+    return response.text().then(function (text) {
+      if (!text) {
+        return {};
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch (error) {
+        return { raw: text };
+      }
+    });
+  }
+
+  async function copyShareText(value) {
+    var text = String(value || "");
+    var input = null;
+    var copied = false;
+
+    if (!text) {
+      return true;
+    }
+
+    try {
+      window.focus();
+    } catch (_focusError) {}
+
+    if (navigator.clipboard && window.isSecureContext !== false) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (_clipboardError) {}
+    }
+
+    try {
+      input = document.createElement("input");
+      input.value = text;
+      input.setAttribute("readonly", "readonly");
+      input.style.position = "fixed";
+      input.style.top = "-1000px";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.focus();
+      input.select();
+      copied = document.execCommand("copy");
+      input.remove();
+      return copied;
+    } catch (_execCommandError) {
+      if (input && input.parentNode) {
+        input.remove();
+      }
+      return false;
+    }
+  }
+
+  function fitShareImageSize(srcW, srcH, maxW, maxH) {
+    var scale = Math.min(maxW / srcW, maxH / srcH);
+
+    return {
+      width: srcW * scale,
+      height: srcH * scale
+    };
+  }
+
+  function loadShareImage(src) {
+    return new Promise(function (resolve, reject) {
+      var image = new Image();
+
+      image.onload = function () {
+        resolve(image);
+      };
+      image.onerror = function (error) {
+        reject(error);
+      };
+      image.src = src;
+    });
+  }
+
+  async function compressShareImageDataUrl(dataUrl, maxWidth, maxHeight, quality) {
+    var image = null;
+    var fitted = null;
+    var canvas = null;
+    var ctx = null;
+
+    if (!dataUrl) {
+      return "";
+    }
+
+    try {
+      image = await loadShareImage(dataUrl);
+      fitted = fitShareImageSize(image.width, image.height, maxWidth, maxHeight);
+      canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(fitted.width));
+      canvas.height = Math.max(1, Math.round(fitted.height));
+      ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL("image/jpeg", quality);
+    } catch (error) {
+      console.warn("Failed to compress shared report image", error);
+      return dataUrl;
+    }
+  }
+
+  async function buildSharePayloadFromReport(report) {
+    var reportPages = buildReportPages(report.sections || []);
+    var firstPage = reportPages[0] || {};
+    var labels = [];
+    var pages = [];
+
+    reportPages.forEach(function (page) {
+      var label = String(page.settingsLabel || "").trim();
+
+      if (label && labels.indexOf(label) === -1) {
+        labels.push(label);
+      }
+    });
+
+    for (var pageIndex = 0; pageIndex < reportPages.length; pageIndex += 1) {
+      var page = reportPages[pageIndex] || {};
+      var compressedPreviewImage = await compressShareImageDataUrl(page.previewImageDataUrl || "", 640, 1138, 0.68);
+      var compressedPreviewFrames = [];
+
+      for (var frameIndex = 0; frameIndex < (page.previewFrames || []).length; frameIndex += 1) {
+        var frame = (page.previewFrames || [])[frameIndex] || {};
+        var sourceDataUrl = frame.previewImageDataUrl || page.previewImageDataUrl || "";
+        var compressedFrameImage = sourceDataUrl === String(page.previewImageDataUrl || "")
+          ? compressedPreviewImage
+          : await compressShareImageDataUrl(sourceDataUrl, 420, 746, 0.58);
+
+        compressedPreviewFrames.push({
+          id: frame.id || "",
+          previewImageDataUrl: compressedFrameImage || compressedPreviewImage || ""
+        });
+      }
+
+      pages.push({
+        pageIndex: Number(page.pageIndex || 0),
+        pageCount: Number(page.pageCount || 1),
+        previewImageDataUrl: compressedPreviewImage,
+        flags: (page.flags || []).map(function (flag) {
+          return {
+            id: flag.id || "",
+            reportNo: Number(flag.reportNo || 0),
+            reportTitle: flag.reportTitle || "",
+            reportPositionShort: flag.reportPositionShort || "",
+            reportPositionLabel: flag.reportPositionLabel || "",
+            reportSeverity: flag.reportSeverity || "low",
+            reportStatus: flag.reportStatus || "pending",
+            reportStatusLabel: flag.reportStatusLabel || "未対応",
+            comment: flag.comment || "",
+            timeLabel: flag.timeLabel || "",
+            x: typeof flag.x === "number" ? flag.x : 0,
+            y: typeof flag.y === "number" ? flag.y : 0
+          };
+        }),
+        previewFrames: compressedPreviewFrames
+      });
+    }
+
+    return {
+      fileName: firstPage.fileName || report.documentTitle || "未命名素材",
+      durationText: firstPage.durationText || "00:00",
+      resolutionText: firstPage.resolutionText || "-- × --",
+      settingsKey: firstPage.settingsKey || "all",
+      settingsLabel: firstPage.settingsLabel || "未選択",
+      platformLabels: labels.length ? labels : [String(firstPage.settingsLabel || "未選択")],
+      instructionCount: reportPages.reduce(function (sum, page) {
+        return sum + (((page && page.flags) || []).length);
+      }, 0),
+      pages: pages
+    };
+  }
+
+  async function createShareUrl(sharePayload) {
+    var response = await fetch(getShareApiBase() + "/api/share-create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(sharePayload)
+    });
+    var payload = await safeFetchJson(response);
+
+    if (!response.ok || !payload || !payload.url) {
+      throw new Error(getErrorMessage((payload && (payload.detail || payload.error || payload.raw)) || ("HTTP " + response.status)));
+    }
+
+    return payload;
   }
 
   function buildReportDocumentHtml(report, options) {
