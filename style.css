@@ -13285,3 +13285,37 @@ body.app-page .stage-inline-legend-item i[style*="77, 201, 255"] {
   background: rgba(103, 232, 249, 0.62) !important;
   box-shadow: 0 0 0 1px rgba(103, 232, 249, 0.45);
 }
+
+/* 2026-04-22 mobile app header cleanup */
+@media (max-width: 760px) {
+  body.app-page .workspace-auth-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  body.app-page .workspace-plan-meter {
+    width: 100%;
+    min-width: 0;
+  }
+
+  body.app-page .workspace-plan-manage {
+    width: auto;
+    min-width: 108px;
+    justify-self: end;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  body.app-page .workspace-billing-action,
+  body.app-page .workspace-auth-state {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  body.app-page .workspace-size-notice {
+    display: none !important;
+  }
+}

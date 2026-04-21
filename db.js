@@ -5,6 +5,8 @@
   var databaseConfig = config.database || {};
   var supabaseClient = null;
   var currentProfile = null;
+  var DEVICE_ID_KEY = "lumina-device-id";
+  var DEVICE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 
   function isConfigured() {
     return !!(
@@ -300,6 +302,119 @@
     });
   }
 
+  function canUseLocalStorage() {
+    try {
+      return !!window.localStorage;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function createDeviceId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return window.crypto.randomUUID();
+    }
+
+    return "device-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
+  }
+
+  function getDeviceId() {
+    var deviceId = "";
+
+    if (canUseLocalStorage()) {
+      deviceId = window.localStorage.getItem(DEVICE_ID_KEY) || "";
+      if (!deviceId) {
+        deviceId = createDeviceId();
+        window.localStorage.setItem(DEVICE_ID_KEY, deviceId);
+      }
+      return deviceId;
+    }
+
+    return createDeviceId();
+  }
+
+  function getDeviceLabel() {
+    var userAgent = window.navigator && window.navigator.userAgent ? window.navigator.userAgent : "";
+
+    if (/iPhone|Android|Mobile/i.test(userAgent)) {
+      return "Mobile";
+    }
+
+    if (/iPad|Tablet/i.test(userAgent)) {
+      return "Tablet";
+    }
+
+    return "Desktop";
+  }
+
+  async function registerDeviceSession(options) {
+    return runAsAuthenticated(async function (client, user) {
+      var settings = options || {};
+      var maxActive = Number(settings.maxActive) || 2;
+      var now = new Date();
+      var deviceId = getDeviceId();
+      var expiresAt = new Date(now.getTime() + DEVICE_SESSION_TTL_MS).toISOString();
+      var payload = {
+        clerk_user_id: user.id,
+        device_id: deviceId,
+        device_label: getDeviceLabel(),
+        user_agent: window.navigator && window.navigator.userAgent ? window.navigator.userAgent.slice(0, 500) : "",
+        last_seen_at: now.toISOString(),
+        expires_at: expiresAt
+      };
+      var upsertResponse = await client
+        .from("device_sessions")
+        .upsert(payload, { onConflict: "clerk_user_id,device_id" });
+      var activeResponse = null;
+      var activeSessions = [];
+      var allowedDeviceIds = [];
+
+      if (upsertResponse.error) {
+        throw upsertResponse.error;
+      }
+
+      activeResponse = await client
+        .from("device_sessions")
+        .select("device_id, device_label, last_seen_at, expires_at")
+        .eq("clerk_user_id", user.id)
+        .gt("expires_at", now.toISOString())
+        .order("last_seen_at", { ascending: false });
+
+      if (activeResponse.error) {
+        throw activeResponse.error;
+      }
+
+      activeSessions = activeResponse.data || [];
+      allowedDeviceIds = activeSessions.slice(0, maxActive).map(function (session) {
+        return session.device_id;
+      });
+
+      return {
+        allowed: allowedDeviceIds.indexOf(deviceId) !== -1,
+        activeCount: activeSessions.length,
+        maxActive: maxActive,
+        deviceId: deviceId
+      };
+    });
+  }
+
+  async function unregisterDeviceSession() {
+    return runAsAuthenticated(async function (client, user) {
+      var deviceId = getDeviceId();
+      var response = await client
+        .from("device_sessions")
+        .delete()
+        .eq("clerk_user_id", user.id)
+        .eq("device_id", deviceId);
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      return true;
+    });
+  }
+
   function normalizeProjectEntry(project) {
     if (!project || !project.media_key) {
       return null;
@@ -346,6 +461,8 @@
     loadHistoryEntries: loadHistoryEntries,
     saveProjectSnapshot: saveProjectSnapshot,
     recordPdfExport: recordPdfExport,
-    getPdfExportsTodayCount: getPdfExportsTodayCount
+    getPdfExportsTodayCount: getPdfExportsTodayCount,
+    registerDeviceSession: registerDeviceSession,
+    unregisterDeviceSession: unregisterDeviceSession
   };
 })();

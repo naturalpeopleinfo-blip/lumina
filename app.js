@@ -172,6 +172,8 @@
   var ANONYMOUS_FLAG_LIMIT = 1;
   var FREE_DAILY_PDF_LIMIT = 2;
   var PDF_LIMIT_REACHED_MESSAGE = "本日の無料枠を使い切りました。PROなら無制限で共有できます。";
+  var DEVICE_SESSION_LIMIT = 2;
+  var DEVICE_LIMIT_MESSAGE = "このアカウントは同時に2台まで利用できます。別の端末で利用する場合は、いずれかの端末からログアウトしてください。";
   var BOOKMARK_HINT_DISMISSED_KEY = "lumina-boundary-pro::bookmark-hint-dismissed";
   var stageResizeObserver = null;
   var ONBOARDING_STEPS = [
@@ -291,6 +293,9 @@
     billingCurrentPeriodEnd: "",
     hasBillingPortal: false,
     hasCampaignCheckout: false,
+    deviceSessionAllowed: true,
+    deviceSessionChecked: false,
+    deviceSessionSignOutStarted: false,
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
     hasPlaybackStarted: false,
@@ -336,6 +341,7 @@
     updateAuthGateUi();
     requestStageFit();
     bindAuthPersistence();
+    bindDeviceSessionHeartbeat();
     updateHistoryAwareness();
     syncInlineGuide();
     updateWorkspaceSizeNotice();
@@ -350,6 +356,9 @@
     window.luminaAuth.onChange(function (authState) {
       if (!authState || !authState.isAuthenticated) {
         clearAccountProfile();
+        state.deviceSessionAllowed = true;
+        state.deviceSessionChecked = false;
+        state.deviceSessionSignOutStarted = false;
         state.currentProjectId = "";
         state.remoteHistoryEntries = [];
         state.remoteHistoryLoaded = false;
@@ -362,6 +371,18 @@
 
       syncUserAndRefreshHistory();
     });
+  }
+
+  function bindDeviceSessionHeartbeat() {
+    window.setInterval(function () {
+      var authState = getCurrentAuthState();
+
+      if (!authState || !authState.isAuthenticated || !hasUnlimitedPdfAccess() || state.deviceSessionSignOutStarted) {
+        return;
+      }
+
+      enforceDeviceSessionLimit();
+    }, 5 * 60 * 1000);
   }
 
   function getCurrentAuthState() {
@@ -382,9 +403,23 @@
     showToast(LOGIN_REQUIRED_MESSAGE, "warning");
   }
 
+  function showDeviceLimitGuide() {
+    showToast(DEVICE_LIMIT_MESSAGE, "warning");
+  }
+
+  function hasDeviceSessionAccess() {
+    return state.deviceSessionAllowed !== false;
+  }
+
   function requireAuthenticatedAction() {
-    if (isUserAuthenticated()) {
+    if (isUserAuthenticated() && hasDeviceSessionAccess()) {
       return true;
+    }
+
+    if (isUserAuthenticated()) {
+      showDeviceLimitGuide();
+      updateAuthGateUi();
+      return false;
     }
 
     showLoginRequiredGuide();
@@ -400,6 +435,11 @@
   }
 
   function canCreateFlagRecord() {
+    if (isUserAuthenticated() && !hasDeviceSessionAccess()) {
+      showDeviceLimitGuide();
+      return false;
+    }
+
     if (isUserAuthenticated()) {
       return true;
     }
@@ -1710,6 +1750,9 @@
     state.billingCurrentPeriodEnd = "";
     state.hasBillingPortal = false;
     state.hasCampaignCheckout = false;
+    state.deviceSessionAllowed = true;
+    state.deviceSessionChecked = false;
+    state.deviceSessionSignOutStarted = false;
     updatePlanMeter();
     updateBookmarkHint();
     updatePdfButtons();
@@ -1997,14 +2040,15 @@
     var shouldSuggestCurrentPdf = hasCurrentPdf && state.pdfNeedsAttention;
     var isLocked = isPdfExportLocked();
     var isAuthenticated = isUserAuthenticated();
+    var isDeviceLimited = isAuthenticated && !hasDeviceSessionAccess();
     var currentTitle = isAuthenticated
-      ? (hasCurrentPdf ? "今のチェック内容を共有ページで開きます。" : HINT_NEEDS_RECORDS)
+      ? (isDeviceLimited ? DEVICE_LIMIT_MESSAGE : (hasCurrentPdf ? "今のチェック内容を共有ページで開きます。" : HINT_NEEDS_RECORDS))
       : LOGIN_REQUIRED_MESSAGE;
 
     if (els.exportCurrentPdfButton) {
-      els.exportCurrentPdfButton.disabled = !hasCurrentPdf || isLocked;
+      els.exportCurrentPdfButton.disabled = !hasCurrentPdf || isLocked || isDeviceLimited;
       els.exportCurrentPdfButton.title = hasCurrentPdf && isLocked ? PDF_LIMIT_REACHED_MESSAGE : currentTitle;
-      els.exportCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf && !isLocked);
+      els.exportCurrentPdfButton.classList.toggle("is-suggested", shouldSuggestCurrentPdf && !isLocked && !isDeviceLimited);
       els.exportCurrentPdfButton.classList.toggle("is-locked", !!(hasCurrentPdf && isLocked));
     }
   }
@@ -5269,6 +5313,9 @@
     return window.luminaDb.syncCurrentUserProfile()
       .then(function (profile) {
         applyAccountProfile(profile || (window.luminaDb.getCurrentProfile ? window.luminaDb.getCurrentProfile() : null));
+        return enforceDeviceSessionLimit();
+      })
+      .then(function () {
         return refreshPdfUsageCount();
       })
       .then(function () {
@@ -5278,6 +5325,72 @@
         console.warn("Failed to sync app user", error);
         updatePlanMeter();
       });
+  }
+
+  function enforceDeviceSessionLimit() {
+    if (!hasUnlimitedPdfAccess()) {
+      state.deviceSessionAllowed = true;
+      state.deviceSessionChecked = true;
+      updateAuthGateUi();
+      return Promise.resolve(true);
+    }
+
+    if (!window.luminaDb || typeof window.luminaDb.registerDeviceSession !== "function") {
+      state.deviceSessionAllowed = true;
+      state.deviceSessionChecked = false;
+      updateAuthGateUi();
+      return Promise.resolve(true);
+    }
+
+    return window.luminaDb.registerDeviceSession({ maxActive: DEVICE_SESSION_LIMIT })
+      .then(function (result) {
+        var isAllowed = !result || result.allowed !== false;
+
+        state.deviceSessionAllowed = isAllowed;
+        state.deviceSessionChecked = true;
+        updateAuthGateUi();
+
+        if (!isAllowed) {
+          handleDeviceSessionLimitReached();
+        }
+
+        return isAllowed;
+      })
+      .catch(function (error) {
+        console.warn("Failed to verify device session limit", error);
+        state.deviceSessionAllowed = true;
+        state.deviceSessionChecked = false;
+        updateAuthGateUi();
+        return true;
+      });
+  }
+
+  function handleDeviceSessionLimitReached() {
+    if (state.deviceSessionSignOutStarted) {
+      return;
+    }
+
+    state.deviceSessionSignOutStarted = true;
+    showDeviceLimitGuide();
+
+    window.setTimeout(function () {
+      var signOut = window.luminaAuth && typeof window.luminaAuth.signOut === "function"
+        ? window.luminaAuth.signOut
+        : null;
+      var unregister = window.luminaDb && typeof window.luminaDb.unregisterDeviceSession === "function"
+        ? window.luminaDb.unregisterDeviceSession
+        : null;
+      var unregisterPromise = unregister ? unregister().catch(function () {}) : Promise.resolve();
+
+      unregisterPromise.then(function () {
+        if (signOut) {
+          return signOut();
+        }
+        return null;
+      }).catch(function (error) {
+        console.warn("Failed to sign out limited device", error);
+      });
+    }, 1200);
   }
 
   function maybeLoadRemoteProjectSnapshot(mediaKey) {
