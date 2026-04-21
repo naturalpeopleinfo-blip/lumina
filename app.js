@@ -3560,6 +3560,7 @@
     var sharePayload = null;
     var shareResult = null;
     var copied = false;
+    var openedSharePage = false;
 
     if (!hasMediaLoaded()) {
       showToast("先に動画を読み込んでください。", "warning");
@@ -3575,7 +3576,7 @@
       return;
     }
 
-    shareWindow = openShareLoadingWindow();
+    shareWindow = openShareProgressOverlay();
     setShareButtonBusy(true);
 
     try {
@@ -3610,7 +3611,7 @@
       }
 
       updateShareLoadingWindow(shareWindow, "共有ページを開いています", "まもなく共有ページに切り替わります。", 1);
-      openGeneratedSharePage(shareWindow, shareResult.url);
+      openedSharePage = openGeneratedSharePage(shareWindow, shareResult.url);
       copied = await copyShareText(shareResult.url);
 
       state.pdfNeedsAttention = false;
@@ -3631,7 +3632,9 @@
         report_type: "current",
         marker_count: state.flags.length
       });
-      showToast(copied ? "共有ページを開きました。URLもコピーしました。" : "共有ページを開きました。", "success");
+      showToast(openedSharePage
+        ? (copied ? "共有ページを開きました。URLもコピーしました。" : "共有ページを開きました。")
+        : "共有ページの準備ができました。ボタンから開いてください。", "success");
     } catch (error) {
       closeShareLoadingWindow(shareWindow);
       console.error("Failed to create share page", error);
@@ -3649,6 +3652,7 @@
     var shareResult = null;
     var sharePayload = null;
     var copied = false;
+    var openedSharePage = false;
 
     if (!entries.length) {
       showToast("共有する履歴がありません。", "warning");
@@ -3676,7 +3680,7 @@
       sections: entries
     };
 
-    shareWindow = openShareLoadingWindow();
+    shareWindow = openShareProgressOverlay();
 
     try {
       updateShareLoadingWindow(shareWindow, "画像を軽量化しています", "共有ページを開きやすいサイズに整えています。", 0.16);
@@ -3696,7 +3700,7 @@
       }
 
       updateShareLoadingWindow(shareWindow, "共有ページを開いています", "まもなく共有ページに切り替わります。", 1);
-      openGeneratedSharePage(shareWindow, shareResult.url);
+      openedSharePage = openGeneratedSharePage(shareWindow, shareResult.url);
       copied = await copyShareText(shareResult.url);
 
       await recordPdfExportToDb({
@@ -3717,7 +3721,9 @@
         item_count: entries.length,
         marker_count: totalFlags
       });
-      showToast(copied ? "共有ページを開きました。URLもコピーしました。" : (settings.toastMessage || "共有ページを開きました。"), "success");
+      showToast(openedSharePage
+        ? (copied ? "共有ページを開きました。URLもコピーしました。" : (settings.toastMessage || "共有ページを開きました。"))
+        : "共有ページの準備ができました。ボタンから開いてください。", "success");
     } catch (error) {
       closeShareLoadingWindow(shareWindow);
       console.error("Failed to create share page", error);
@@ -4202,6 +4208,60 @@
     return shareWindow;
   }
 
+  function openShareProgressOverlay() {
+    var existing = document.getElementById("shareProgressOverlay");
+    var overlay = document.createElement("div");
+
+    if (existing && existing.parentNode) {
+      existing.remove();
+    }
+
+    overlay.id = "shareProgressOverlay";
+    overlay.innerHTML = [
+      "<style>",
+      "#shareProgressOverlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:24px;background:rgba(3,7,18,.54);backdrop-filter:blur(10px);}",
+      "#shareProgressOverlay .share-progress-card{width:min(440px,calc(100vw - 40px));padding:28px;border-radius:28px;background:rgba(15,23,42,.94);border:1px solid rgba(148,163,184,.18);box-shadow:0 28px 70px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.06);color:#e5e7eb;font-family:\"SF Pro Display\",\"Hiragino Sans\",\"Yu Gothic\",sans-serif;}",
+      "#shareProgressOverlay .share-progress-brand{display:flex;align-items:center;gap:10px;margin:0 0 16px;color:#93c5fd;font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}",
+      "#shareProgressOverlay .share-progress-dot{width:9px;height:9px;border-radius:999px;background:#22c55e;box-shadow:0 0 18px rgba(34,197,94,.58);animation:sharePulse 1.2s ease-in-out infinite;}",
+      "#shareProgressOverlay .share-progress-title{margin:0;color:#f8fafc;font-size:1.16rem;font-weight:800;line-height:1.45;}",
+      "#shareProgressOverlay .share-progress-copy{margin:10px 0 0;color:#b6c0d4;font-size:.9rem;line-height:1.7;}",
+      "#shareProgressOverlay .share-progress-bar{height:9px;margin:22px 0 0;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden;}",
+      "#shareProgressOverlay .share-progress-fill{display:block;width:8%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#60a5fa,#22c55e);box-shadow:0 0 20px rgba(96,165,250,.28);transition:width .28s ease;}",
+      "#shareProgressOverlay .share-progress-status{display:flex;justify-content:space-between;gap:14px;margin:12px 0 0;color:#94a3b8;font-size:.78rem;font-weight:700;}",
+      "#shareProgressOverlay .share-progress-actions{display:none;margin-top:20px;gap:10px;}",
+      "#shareProgressOverlay .share-progress-actions.is-visible{display:flex;}",
+      "#shareProgressOverlay .share-progress-button{appearance:none;border:0;border-radius:999px;padding:11px 16px;background:linear-gradient(180deg,#34d399 0%,#16a34a 100%);color:#fff;font:inherit;font-size:.86rem;font-weight:800;cursor:pointer;box-shadow:0 12px 26px rgba(34,197,94,.22),inset 0 1px 0 rgba(255,255,255,.18);}",
+      "#shareProgressOverlay .share-progress-button-secondary{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);}",
+      "@keyframes sharePulse{0%,100%{transform:scale(.84);opacity:.65;}50%{transform:scale(1.18);opacity:1;}}",
+      "</style>",
+      '<section class="share-progress-card" role="status" aria-live="polite">',
+      '<p class="share-progress-brand"><span class="share-progress-dot" aria-hidden="true"></span>Lumina Zone</p>',
+      '<h2 id="shareLoadingTitle" class="share-progress-title">共有ページを作成しています</h2>',
+      '<p id="shareLoadingCopy" class="share-progress-copy">チェック内容を整理して、共有できるURLを発行しています。</p>',
+      '<div class="share-progress-bar" aria-hidden="true"><span id="shareLoadingProgress" class="share-progress-fill"></span></div>',
+      '<p class="share-progress-status"><span id="shareLoadingStatus">準備中...</span><span>この画面のままお待ちください</span></p>',
+      '<div id="shareProgressActions" class="share-progress-actions">',
+      '<button id="shareProgressOpenButton" class="share-progress-button" type="button">共有ページを開く</button>',
+      '<button id="shareProgressCloseButton" class="share-progress-button share-progress-button-secondary" type="button">閉じる</button>',
+      "</div>",
+      "</section>"
+    ].join("");
+
+    document.body.appendChild(overlay);
+
+    return {
+      isOverlay: true,
+      node: overlay,
+      titleNode: overlay.querySelector("#shareLoadingTitle"),
+      copyNode: overlay.querySelector("#shareLoadingCopy"),
+      progressNode: overlay.querySelector("#shareLoadingProgress"),
+      statusNode: overlay.querySelector("#shareLoadingStatus"),
+      actionsNode: overlay.querySelector("#shareProgressActions"),
+      openButton: overlay.querySelector("#shareProgressOpenButton"),
+      closeButton: overlay.querySelector("#shareProgressCloseButton")
+    };
+  }
+
   function updateShareLoadingWindow(shareWindow, title, copy, progress) {
     var clampedProgress = clamp(Number(progress) || 0, 0.05, 1);
     var percentText = Math.round(clampedProgress * 100) + "%";
@@ -4210,6 +4270,22 @@
     var copyNode = null;
     var progressNode = null;
     var statusNode = null;
+
+    if (shareWindow && shareWindow.isOverlay) {
+      if (shareWindow.titleNode && title) {
+        shareWindow.titleNode.textContent = title;
+      }
+      if (shareWindow.copyNode && copy) {
+        shareWindow.copyNode.textContent = copy;
+      }
+      if (shareWindow.progressNode) {
+        shareWindow.progressNode.style.width = percentText;
+      }
+      if (shareWindow.statusNode) {
+        shareWindow.statusNode.textContent = percentText;
+      }
+      return;
+    }
 
     if (!shareWindow || shareWindow.closed) {
       return;
@@ -4240,6 +4316,13 @@
   }
 
   function closeShareLoadingWindow(shareWindow) {
+    if (shareWindow && shareWindow.isOverlay) {
+      if (shareWindow.node && shareWindow.node.parentNode) {
+        shareWindow.node.remove();
+      }
+      return;
+    }
+
     if (!shareWindow || shareWindow.closed) {
       return;
     }
@@ -4252,18 +4335,54 @@
   }
 
   function openGeneratedSharePage(shareWindow, url) {
+    var opened = null;
+
+    if (shareWindow && shareWindow.isOverlay) {
+      opened = window.open(url, "_blank");
+
+      if (opened) {
+        window.setTimeout(function () {
+          closeShareLoadingWindow(shareWindow);
+        }, 700);
+        return true;
+      }
+
+      updateShareLoadingWindow(shareWindow, "共有ページの準備ができました", "ブラウザに新しいページの表示を止められました。下のボタンから開いてください。", 1);
+      if (shareWindow.actionsNode) {
+        shareWindow.actionsNode.classList.add("is-visible");
+      }
+      if (shareWindow.openButton) {
+        shareWindow.openButton.onclick = function () {
+          window.open(url, "_blank") || (window.location.href = url);
+          closeShareLoadingWindow(shareWindow);
+        };
+      }
+      if (shareWindow.closeButton) {
+        shareWindow.closeButton.onclick = function () {
+          closeShareLoadingWindow(shareWindow);
+        };
+      }
+      return false;
+    }
+
     if (shareWindow && !shareWindow.closed) {
       try {
         shareWindow.location.replace(url);
-        return;
+        return true;
       } catch (error) {
         console.warn("Failed to redirect prepared share window", error);
       }
     }
 
-    if (!window.open(url, "_blank")) {
+    opened = window.open(url, "_blank");
+    if (opened) {
+      return true;
+    }
+
+    if (!opened) {
       window.location.href = url;
     }
+    return false;
   }
 
   function setShareButtonBusy(isBusy) {
