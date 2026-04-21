@@ -168,6 +168,8 @@
   var EMPTY_MODE_DESCRIPTION = "";
   var HINT_NEEDS_RECORDS = "記録すると使えます。";
   var HINT_NEEDS_HISTORY = "履歴がたまると使えます。";
+  var LOGIN_REQUIRED_MESSAGE = "まずGoogleでログインしてください。ログイン後にチェックを始められます。";
+  var ANONYMOUS_FLAG_LIMIT = 1;
   var FREE_DAILY_PDF_LIMIT = 2;
   var PDF_LIMIT_REACHED_MESSAGE = "本日の無料枠を使い切りました。PROなら無制限で共有できます。";
   var BOOKMARK_HINT_DISMISSED_KEY = "lumina-boundary-pro::bookmark-hint-dismissed";
@@ -331,6 +333,7 @@
     renderCommentEditor();
     updateAutoStopButton();
     setControlsEnabled(false);
+    updateAuthGateUi();
     requestStageFit();
     bindAuthPersistence();
     updateHistoryAwareness();
@@ -367,6 +370,50 @@
     }
 
     return window.luminaAuth.getState();
+  }
+
+  function isUserAuthenticated() {
+    var authState = getCurrentAuthState();
+
+    return !!(authState && authState.isAuthenticated);
+  }
+
+  function showLoginRequiredGuide() {
+    showToast(LOGIN_REQUIRED_MESSAGE, "warning");
+  }
+
+  function requireAuthenticatedAction() {
+    if (isUserAuthenticated()) {
+      return true;
+    }
+
+    showLoginRequiredGuide();
+    updateAuthGateUi();
+    return false;
+  }
+
+  function redirectToLoginForFullAccess() {
+    showLoginRequiredGuide();
+    window.setTimeout(function () {
+      window.location.href = "./login.html";
+    }, 350);
+  }
+
+  function canCreateFlagRecord() {
+    if (isUserAuthenticated()) {
+      return true;
+    }
+
+    if (state.flags.length < ANONYMOUS_FLAG_LIMIT) {
+      return true;
+    }
+
+    redirectToLoginForFullAccess();
+    return false;
+  }
+
+  function updateAuthGateUi() {
+    updatePdfButtons();
   }
 
   function cacheElements() {
@@ -1617,6 +1664,7 @@
     label = els.sourceLoadButton.querySelector(".source-load-button-label");
     els.sourceLoadButton.setAttribute("aria-label", nextLabel);
     els.sourceLoadButton.setAttribute("title", nextLabel);
+    updateAuthGateUi();
 
     if (label) {
       label.textContent = nextLabel;
@@ -1648,6 +1696,7 @@
     updatePlanMeter();
     updateBookmarkHint();
     updatePdfButtons();
+    updateAuthGateUi();
   }
 
   function clearAccountProfile() {
@@ -1664,6 +1713,7 @@
     updatePlanMeter();
     updateBookmarkHint();
     updatePdfButtons();
+    updateAuthGateUi();
   }
 
   function syncBillingCapabilities() {
@@ -1946,7 +1996,10 @@
     var hasCurrentPdf = hasMediaLoaded() && state.flags.length > 0;
     var shouldSuggestCurrentPdf = hasCurrentPdf && state.pdfNeedsAttention;
     var isLocked = isPdfExportLocked();
-    var currentTitle = hasCurrentPdf ? "今のチェック内容を共有ページで開きます。" : HINT_NEEDS_RECORDS;
+    var isAuthenticated = isUserAuthenticated();
+    var currentTitle = isAuthenticated
+      ? (hasCurrentPdf ? "今のチェック内容を共有ページで開きます。" : HINT_NEEDS_RECORDS)
+      : LOGIN_REQUIRED_MESSAGE;
 
     if (els.exportCurrentPdfButton) {
       els.exportCurrentPdfButton.disabled = !hasCurrentPdf || isLocked;
@@ -2172,6 +2225,10 @@
     }
 
     if (event.target.closest("[data-flag-pin]")) {
+      return;
+    }
+
+    if (!canCreateFlagRecord()) {
       return;
     }
 
@@ -3562,6 +3619,10 @@
     var copied = false;
     var openedSharePage = false;
 
+    if (!requireAuthenticatedAction()) {
+      return;
+    }
+
     if (!hasMediaLoaded()) {
       showToast("先に動画を読み込んでください。", "warning");
       return;
@@ -3653,6 +3714,10 @@
     var sharePayload = null;
     var copied = false;
     var openedSharePage = false;
+
+    if (!requireAuthenticatedAction()) {
+      return;
+    }
 
     if (!entries.length) {
       showToast("共有する履歴がありません。", "warning");
