@@ -465,9 +465,9 @@
     if (signInButton) {
       signInButton.disabled = !state.enabled;
       if (signInButtonLabel) {
-        signInButtonLabel.textContent = state.enabled ? "Googleで無料ではじめる" : "Googleログイン準備中";
+        signInButtonLabel.textContent = state.enabled ? "無料でチェックを始める" : "Googleログイン準備中";
       } else {
-        signInButton.textContent = state.enabled ? "Googleで無料ではじめる" : "Googleログイン準備中";
+        signInButton.textContent = state.enabled ? "無料でチェックを始める" : "Googleログイン準備中";
       }
     }
 
@@ -483,9 +483,9 @@
     if (signInCampaignButton) {
       signInCampaignButton.disabled = !state.enabled;
       if (signInCampaignButtonLabel) {
-        signInCampaignButtonLabel.textContent = state.enabled ? "Googleでログインして特別プランを開始" : "Googleログイン準備中";
+        signInCampaignButtonLabel.textContent = state.enabled ? "無制限でチェックする" : "Googleログイン準備中";
       } else {
-        signInCampaignButton.textContent = state.enabled ? "Googleでログインして特別プランを開始" : "Googleログイン準備中";
+        signInCampaignButton.textContent = state.enabled ? "無制限でチェックする" : "Googleログイン準備中";
       }
     }
 

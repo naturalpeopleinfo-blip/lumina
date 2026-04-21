@@ -14,15 +14,13 @@
   <div class="login-shell">
     <main class="login-main">
       <section class="login-panel panel" aria-label="Googleログインページ">
-        <a href="./index.html" class="landing-brand login-panel-brand" aria-label="Lumina Zone ホーム">
-          <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="landing-brand-mark login-panel-brand-mark" width="76" height="76">
-          <span class="login-panel-brand-meta">縦型ショート動画専用<br>投稿前の最終確認ツール</span>
-        </a>
-
         <div class="login-copy">
-          <h1>Googleログインで、<br><span class="login-gradient">はじめる。</span></h1>
-          <p class="login-benefit-line">無料で1日2回まで。PROは月額1,080円で無制限です。</p>
+          <h1>投稿前の最終確認を、<br><span class="login-gradient">今すぐ。</span></h1>
+          <p class="login-hero-lead">完成した動画をアップして、<br>投稿画面での見切れや被りを確認できます。</p>
+          <p class="login-benefit-line"></p>
         </div>
+
+        <img src="./assets/logo_new_blue.PNG" alt="" class="login-hero-logo" aria-hidden="true" width="260" height="260">
 
         <section id="authPanel" class="auth-panel auth-panel-login" aria-label="Googleログイン">
           <div id="authLoadingState" class="auth-state auth-state-loading">
@@ -30,50 +28,89 @@
           </div>
 
           <div id="authLoggedOutState" class="auth-state" hidden>
-            <div class="login-choice-grid" aria-label="開始プランを選ぶ">
-              <article class="login-choice-card is-free">
-                <span class="login-choice-badge">FREE</span>
-                <h3>無料ではじめる</h3>
-                <p class="login-choice-meta">1日2回まで</p>
-                <p class="login-choice-copy">まずは使い心地を試したい人向け</p>
-                <button id="googleSignInButton" class="google-signin-button google-signin-button-free" type="button">
-                  <span class="google-signin-button-mark" aria-hidden="true">
-                    <svg viewBox="0 0 18 18" width="18" height="18" focusable="false" aria-hidden="true">
-                      <path fill="#4285F4" d="M17.64 9.2045c0-.6382-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2087 1.125-.8427 2.0782-1.7968 2.7155v2.2573h2.9091c1.7023-1.5673 2.6841-3.8773 2.6841-6.6137z"></path>
-                      <path fill="#34A853" d="M9 18c2.43 0 4.4673-.8059 5.9568-2.1818l-2.9091-2.2573c-.8059.54-1.8368.8591-3.0477.8591-2.3441 0-4.3282-1.5845-5.0364-3.7105H.9568v2.3305C2.4382 15.9832 5.4818 18 9 18z"></path>
-                      <path fill="#FBBC05" d="M3.9636 10.7095C3.7832 10.1691 3.6818 9.5918 3.6818 9s.1014-1.1691.2818-1.7095V4.96H.9568C.3477 6.1736 0 7.5477 0 9s.3477 2.8264.9568 4.04l3.0068-2.3305z"></path>
-                      <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.3459l2.5813-2.5814C13.4636.8918 11.4264 0 9 0 5.4818 0 2.4382 2.0168.9568 4.96l3.0068 2.3305C4.6718 5.1641 6.6559 3.5795 9 3.5795z"></path>
-                    </svg>
-                  </span>
-                  <span class="google-signin-button-label">Googleで無料ではじめる</span>
-                </button>
-              </article>
+            <section class="login-plan-section" aria-labelledby="loginPlanTitle">
+              <div class="login-section-heading">
+                <p class="login-section-kicker">Plan</p>
+                <h2 id="loginPlanTitle">プランを選ぶ</h2>
+              </div>
 
-              <article class="login-choice-card is-pro">
-                <span class="login-choice-badge">PRO</span>
-                <h3>PROで始める</h3>
-                <p class="login-choice-meta">通常 月額1,080円</p>
-                <p class="login-choice-copy">無制限でそのまま使い始めたい人向け</p>
-                <div class="login-choice-offer-box" aria-label="ローンチ記念特別キャンペーン">
-                  <p class="login-choice-offer-kicker">ローンチ記念特別キャンペーン</p>
-                  <p class="login-choice-offer">先着30名様限定で、月額880円の特別プランをご利用いただけます。</p>
-                </div>
-                <button id="googleSignInCampaignButton" class="google-signin-button google-signin-button-campaign" type="button">
-                  <span class="google-signin-button-mark" aria-hidden="true">
-                    <svg viewBox="0 0 18 18" width="18" height="18" focusable="false" aria-hidden="true">
-                      <path fill="#4285F4" d="M17.64 9.2045c0-.6382-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2087 1.125-.8427 2.0782-1.7968 2.7155v2.2573h2.9091c1.7023-1.5673 2.6841-3.8773 2.6841-6.6137z"></path>
-                      <path fill="#34A853" d="M9 18c2.43 0 4.4673-.8059 5.9568-2.1818l-2.9091-2.2573c-.8059.54-1.8368.8591-3.0477.8591-2.3441 0-4.3282-1.5845-5.0364-3.7105H.9568v2.3305C2.4382 15.9832 5.4818 18 9 18z"></path>
-                      <path fill="#FBBC05" d="M3.9636 10.7095C3.7832 10.1691 3.6818 9.5918 3.6818 9s.1014-1.1691.2818-1.7095V4.96H.9568C.3477 6.1736 0 7.5477 0 9s.3477 2.8264.9568 4.04l3.0068-2.3305z"></path>
-                      <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.3459l2.5813-2.5814C13.4636.8918 11.4264 0 9 0 5.4818 0 2.4382 2.0168.9568 4.96l3.0068 2.3305C4.6718 5.1641 6.6559 3.5795 9 3.5795z"></path>
-                    </svg>
-                  </span>
-                  <span class="google-signin-button-label">Googleでログインして特別プランを開始</span>
-                </button>
-              </article>
-            </div>
-            <p class="login-browser-note">
-              Instagram・X・LINEなどのアプリ内ブラウザでは、Googleログインできない場合があります。Safari / Chromeで開いてください。
-            </p>
+              <div class="login-choice-grid" aria-label="開始プランを選ぶ">
+                <article class="login-choice-card is-free">
+                  <div class="login-choice-card-head">
+                    <span class="login-choice-badge">FREE</span>
+                  </div>
+                  <h3>無料ではじめる</h3>
+                  <p class="login-choice-price">¥0</p>
+                  <p class="login-choice-meta">1日2回まで</p>
+                  <p class="login-choice-copy">まず試したい方向け</p>
+                  <ul class="login-choice-list">
+                    <li>見切れチェック（セーフエリア確認）</li>
+                    <li>Instagram / TikTok / YouTube対応</li>
+                    <li>チェックポイントを記録</li>
+                    <li>メモを追加</li>
+                    <li>チェック結果をURLで共有</li>
+                    <li class="login-choice-limit">チェック回数：1日2回まで</li>
+                  </ul>
+                  <button id="googleSignInButton" class="google-signin-button google-signin-button-free" type="button">
+                    <span class="google-signin-button-mark" aria-hidden="true">
+                      <svg viewBox="0 0 18 18" width="18" height="18" focusable="false" aria-hidden="true">
+                        <path fill="#4285F4" d="M17.64 9.2045c0-.6382-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2087 1.125-.8427 2.0782-1.7968 2.7155v2.2573h2.9091c1.7023-1.5673 2.6841-3.8773 2.6841-6.6137z"></path>
+                        <path fill="#34A853" d="M9 18c2.43 0 4.4673-.8059 5.9568-2.1818l-2.9091-2.2573c-.8059.54-1.8368.8591-3.0477.8591-2.3441 0-4.3282-1.5845-5.0364-3.7105H.9568v2.3305C2.4382 15.9832 5.4818 18 9 18z"></path>
+                        <path fill="#FBBC05" d="M3.9636 10.7095C3.7832 10.1691 3.6818 9.5918 3.6818 9s.1014-1.1691.2818-1.7095V4.96H.9568C.3477 6.1736 0 7.5477 0 9s.3477 2.8264.9568 4.04l3.0068-2.3305z"></path>
+                        <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.3459l2.5813-2.5814C13.4636.8918 11.4264 0 9 0 5.4818 0 2.4382 2.0168.9568 4.96l3.0068 2.3305C4.6718 5.1641 6.6559 3.5795 9 3.5795z"></path>
+                      </svg>
+                    </span>
+                    <span class="google-signin-button-label">無料でチェックを始める</span>
+                  </button>
+                </article>
+
+                <article class="login-choice-card is-pro">
+                  <div class="login-choice-card-head">
+                    <span class="login-choice-badge">PRO</span>
+                    <span class="login-choice-recommend">おすすめ</span>
+                  </div>
+                  <h3>PROで始める</h3>
+                  <p class="login-choice-price">¥1,080 / 月</p>
+                  <p class="login-choice-meta">回数制限なし</p>
+                  <p class="login-choice-copy">投稿を仕事にしている方へ</p>
+                  <ul class="login-choice-list">
+                    <li>見切れチェック（セーフエリア確認）</li>
+                    <li>Instagram / TikTok / YouTube対応</li>
+                    <li>チェックポイントを記録</li>
+                    <li>メモを追加</li>
+                    <li>チェック結果をURLで共有</li>
+                    <li class="login-choice-limit">チェック回数：無制限</li>
+                  </ul>
+                  <div class="login-choice-offer-box" aria-label="ローンチ記念特別キャンペーン">
+                    <p class="login-choice-offer-kicker">ローンチ記念｜先着30名限定 月額880円</p>
+                    <p class="login-choice-offer"></p>
+                  </div>
+                  <button id="googleSignInCampaignButton" class="google-signin-button google-signin-button-campaign" type="button">
+                    <span class="google-signin-button-mark" aria-hidden="true">
+                      <svg viewBox="0 0 18 18" width="18" height="18" focusable="false" aria-hidden="true">
+                        <path fill="#4285F4" d="M17.64 9.2045c0-.6382-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2087 1.125-.8427 2.0782-1.7968 2.7155v2.2573h2.9091c1.7023-1.5673 2.6841-3.8773 2.6841-6.6137z"></path>
+                        <path fill="#34A853" d="M9 18c2.43 0 4.4673-.8059 5.9568-2.1818l-2.9091-2.2573c-.8059.54-1.8368.8591-3.0477.8591-2.3441 0-4.3282-1.5845-5.0364-3.7105H.9568v2.3305C2.4382 15.9832 5.4818 18 9 18z"></path>
+                        <path fill="#FBBC05" d="M3.9636 10.7095C3.7832 10.1691 3.6818 9.5918 3.6818 9s.1014-1.1691.2818-1.7095V4.96H.9568C.3477 6.1736 0 7.5477 0 9s.3477 2.8264.9568 4.04l3.0068-2.3305z"></path>
+                        <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.3459l2.5813-2.5814C13.4636.8918 11.4264 0 9 0 5.4818 0 2.4382 2.0168.9568 4.96l3.0068 2.3305C4.6718 5.1641 6.6559 3.5795 9 3.5795z"></path>
+                      </svg>
+                    </span>
+                    <span class="google-signin-button-label">無制限でチェックする</span>
+                  </button>
+                </article>
+              </div>
+            </section>
+
+            <section class="login-assurance-section" aria-labelledby="loginAssuranceTitle">
+              <h2 id="loginAssuranceTitle">安心してご利用いただくために</h2>
+              <nav class="login-legal-links" aria-label="法務リンク">
+                <a href="./terms.html" target="_blank" rel="noreferrer">利用規約</a>
+                <a href="./privacy.html" target="_blank" rel="noreferrer">プライバシーポリシー</a>
+                <a href="./legal.html" target="_blank" rel="noreferrer">特定商取引法に基づく表記</a>
+              </nav>
+              <p class="login-browser-note">
+                Instagram・X・LINEなどのアプリ内ブラウザでは、Googleログインが正常に動作しない場合があります。Safari または Chrome で開いてください。
+              </p>
+            </section>
           </div>
 
           <div id="authLoggedInState" class="auth-state" hidden>
@@ -107,6 +144,6 @@
 
   <script src="config.js"></script>
   <script src="analytics.js"></script>
-  <script src="auth.js?v=20260409-campaign-polish-1"></script>
+  <script src="auth.js?v=20260422-login-cta-1"></script>
 </body>
 </html>
