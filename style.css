@@ -10886,6 +10886,14 @@ body.login-page .google-signin-button-business {
     0 14px 30px rgba(15, 118, 110, 0.2);
 }
 
+body.login-page .login-choice-member-note {
+  margin: -2px 0 0;
+  color: rgba(15, 118, 110, 0.78);
+  font-size: 0.78rem;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
 body.login-page .login-business-button {
   border-color: rgba(15, 118, 110, 0.18);
   background:
