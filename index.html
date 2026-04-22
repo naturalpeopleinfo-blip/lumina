@@ -3,818 +3,1455 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumina Zone</title>
-  <script>document.documentElement.classList.add('has-js');</script>
-  <meta
-    name="description"
-    content="そのテロップ、スマホでは見えていません。投稿画面での見切れリスクを公開前に確認し、コメントで修正指示までまとめられる縦動画チェックツール。"
-  >
-  <link rel="stylesheet" href="style.css?v=20260418-lp-clarity-1">
+  <title>Lumina Zone | 投稿前の事故を防ぐ、最終確認ツール</title>
+  <meta name="description" content="Lumina Zoneは、動画編集が終わったあと、投稿ボタンを押す直前に使う最終確認ツールです。投稿前の見切れやUI被りを1分で確認できます。">
+  <style>
+    :root {
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --soft: #f5f5f7;
+      --line: rgba(0, 0, 0, 0.08);
+      --blue: #0071e3;
+      --blue-hover: #0077ed;
+      --card: #ffffff;
+      --danger: #ff3b30;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: #ffffff;
+      font-family: "SF Pro JP", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif;
+      font-size: 17px;
+      line-height: 1.47;
+      letter-spacing: -0.357px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img,
+    video {
+      max-width: 100%;
+      display: block;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.74);
+      border-bottom: 1px solid rgba(17, 24, 39, 0.05);
+      backdrop-filter: blur(18px) saturate(180%);
+    }
+
+    .nav {
+      width: min(1180px, calc(100% - 48px));
+      min-height: 70px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 68px;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 12px 26px rgba(10, 66, 160, 0.12));
+    }
+
+    .brand-copy {
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.035em;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .campaign-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(12, 143, 90, 0.16);
+      background:
+        linear-gradient(180deg, rgba(240, 253, 245, 0.98), rgba(229, 248, 236, 0.96)),
+        rgba(236, 249, 240, 0.98);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.86),
+        0 12px 24px rgba(12, 143, 90, 0.08);
+    }
+
+    .campaign-label,
+    .campaign-copy {
+      display: block;
+    }
+
+    .campaign-label {
+      color: #0c8f5a;
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .campaign-copy {
+      color: #0a7f51;
+      font-size: 0.8rem;
+      font-weight: 720;
+      letter-spacing: 0.01em;
+    }
+
+    .pill-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 24px;
+      border-radius: 999px;
+      color: #ffffff;
+      background: var(--blue);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.24px;
+      box-shadow: 0 10px 24px rgba(0, 113, 227, 0.18);
+      transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+    }
+
+    .pill-button:hover {
+      background: var(--blue-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(0, 113, 227, 0.24);
+    }
+
+    .section {
+      padding: 112px 24px;
+    }
+
+    .section-soft {
+      background: var(--soft);
+    }
+
+    .container {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+    }
+
+    .narrow {
+      width: min(860px, 100%);
+      margin: 0 auto;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 16px;
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .hero {
+      padding: 86px 24px 118px;
+      background:
+        radial-gradient(circle at 78% 18%, rgba(0, 113, 227, 0.12), transparent 28%),
+        linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 500px);
+      align-items: center;
+      gap: 72px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    .hero-title {
+      margin-bottom: 24px;
+      color: #0051a8;
+      background: linear-gradient(105deg, #004b93 0%, #0066c9 42%, #1f8df2 72%, #61b6ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: clamp(46px, 6.8vw, 84px);
+      line-height: 1.04;
+      letter-spacing: -0.06em;
+      font-weight: 800;
+    }
+
+    .gradient-title {
+      color: #0051a8;
+      background: linear-gradient(105deg, #004b93 0%, #0066c9 42%, #1f8df2 72%, #61b6ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-lead {
+      max-width: 540px;
+      margin-bottom: 34px;
+      color: #424245;
+      font-size: clamp(22px, 2.4vw, 32px);
+      line-height: 1.22;
+      letter-spacing: -0.04em;
+      font-weight: 700;
+    }
+
+    .hero-action {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .hero-micro {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .hero-platforms {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .hero-platform-label {
+      color: #86868b;
+      letter-spacing: 0.01em;
+    }
+
+    .hero-platform-icons {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-platform-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      background: rgba(255, 255, 255, 0.72);
+      color: #424245;
+    }
+
+    .hero-platform-icon svg {
+      width: 17px;
+      height: 17px;
+      fill: currentColor;
+    }
+
+    .hero-platform-icon-tiktok {
+      border-color: rgba(0, 0, 0, 0.08);
+      background:
+        radial-gradient(circle at 22% 22%, rgba(37, 244, 238, 0.18), transparent 45%),
+        radial-gradient(circle at 78% 78%, rgba(254, 44, 85, 0.18), transparent 42%),
+        linear-gradient(180deg, rgba(25, 28, 36, 0.96), rgba(13, 16, 22, 0.94));
+    }
+
+    .hero-platform-icon-tiktok .tiktok-main {
+      fill: #ffffff;
+    }
+
+    .hero-platform-icon-tiktok .tiktok-shadow {
+      opacity: 0.96;
+    }
+
+    .hero-platform-icon-tiktok .tiktok-cyan {
+      fill: #25f4ee;
+    }
+
+    .hero-platform-icon-tiktok .tiktok-red {
+      fill: #fe2c55;
+    }
+
+    .hero-platform-icon-instagram {
+      border-color: rgba(0, 0, 0, 0.06);
+      background:
+        radial-gradient(circle at 32% 110%, #feda75 0%, #fa7e1e 26%, #d62976 56%, #962fbf 78%, #4f5bd5 100%);
+      color: #ffffff;
+    }
+
+    .hero-platform-icon-youtube {
+      border-color: rgba(0, 0, 0, 0.06);
+      background:
+        linear-gradient(180deg, rgba(255, 76, 76, 1), rgba(255, 0, 51, 0.96));
+      color: #ffffff;
+    }
+
+    .hero-visual {
+      padding: 18px;
+      border-radius: 42px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.12);
+    }
+
+    .phone-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .phone-card {
+      min-width: 0;
+    }
+
+    .phone-label {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .phone {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      border-radius: 30px;
+      background: #f2f2f2;
+      border: 8px solid #fdfdfd;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 18px 38px rgba(0, 0, 0, 0.12);
+    }
+
+    .phone-screen {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(140deg, rgba(255, 255, 255, 0.4), transparent 42%),
+        linear-gradient(180deg, #dfe9f6 0%, #f6d5c8 52%, #f2f2f2 100%);
+    }
+
+    .phone-screen-image {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .mock-person {
+      position: absolute;
+      left: 50%;
+      bottom: 18%;
+      width: 36%;
+      height: 42%;
+      transform: translateX(-50%);
+      border-radius: 999px 999px 34px 34px;
+      background: linear-gradient(180deg, #26314a 0%, #111827 100%);
+      box-shadow: 0 24px 36px rgba(0, 0, 0, 0.2);
+    }
+
+    .mock-caption {
+      position: absolute;
+      left: 12%;
+      right: 12%;
+      bottom: 28%;
+      color: #ffffff;
+      font-size: clamp(16px, 2vw, 22px);
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      text-align: center;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .phone-after .ui-top,
+    .phone-after .ui-right,
+    .phone-after .ui-bottom,
+    .phone-after .ui-left {
+      position: absolute;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.08) 0,
+          rgba(255, 255, 255, 0.08) 7px,
+          transparent 7px,
+          transparent 16px
+        ),
+        rgba(255, 67, 67, 0.58);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(0.5px);
+    }
+
+    .phone-after .phone-screen-image {
+      filter: saturate(0.96) brightness(0.94);
+    }
+
+    .phone-after .ui-top {
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 18%;
+    }
+
+    .phone-after .ui-right {
+      top: 0;
+      right: 0;
+      width: 18%;
+      height: 100%;
+    }
+
+    .phone-after .ui-bottom {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 25%;
+    }
+
+    .phone-after .ui-left {
+      top: 0;
+      left: 0;
+      width: 11%;
+      height: 100%;
+    }
+
+    .phone-after .mock-caption {
+      right: 2%;
+      bottom: 20%;
+      transform: translateX(14%);
+      clip-path: inset(0 18% 0 0);
+    }
+
+    .hidden-badge {
+      position: absolute;
+      right: 12px;
+      bottom: 16%;
+      z-index: 2;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: #ffffff;
+      background: var(--danger);
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 10px 20px rgba(255, 59, 48, 0.28);
+    }
+
+    .visual-note {
+      margin: 18px 4px 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .section-title {
+      margin-bottom: 26px;
+      font-size: clamp(38px, 5vw, 72px);
+      line-height: 1.05;
+      letter-spacing: -0.06em;
+      font-weight: 800;
+    }
+
+    .section-copy {
+      color: #424245;
+      font-size: clamp(20px, 2.2vw, 28px);
+      line-height: 1.35;
+      letter-spacing: -0.04em;
+      font-weight: 650;
+    }
+
+    .soft-close {
+      margin-top: 30px;
+      font-size: clamp(24px, 3vw, 40px);
+      line-height: 1.15;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+    }
+
+    .empathy-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: clamp(36px, 6vw, 72px);
+      align-items: center;
+    }
+
+    .empathy-copy {
+      margin-bottom: 0;
+    }
+
+    .empathy-image {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: block;
+      object-fit: cover;
+      border-radius: 38px;
+      box-shadow: 0 24px 54px rgba(0, 0, 0, 0.14);
+    }
+
+    .empathy-close {
+      margin-top: clamp(44px, 6vw, 72px);
+      text-align: center;
+      font-size: clamp(27px, 3.2vw, 43px);
+    }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .risk-lead {
+      margin: 0 auto 38px;
+      color: #424245;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1.18;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+    }
+
+    .risk-item,
+    .feature-item,
+    .step-card {
+      border-radius: 28px;
+      background: var(--card);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.06);
+    }
+
+    .risk-item {
+      min-height: 154px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 21px;
+      line-height: 1.18;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+    }
+
+    .risk-item-experience {
+      min-height: 132px;
+      justify-content: center;
+      gap: 18px;
+      color: #424245;
+      font-size: 20px;
+      line-height: 1.24;
+    }
+
+    .risk-item-experience::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+      opacity: 0.72;
+    }
+
+    .risk-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #ffffff;
+      background: var(--danger);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .risk-closing {
+      width: min(820px, 100%);
+      margin: 44px auto 0;
+      color: #424245;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1.16;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+    }
+
+    .risk-impact {
+      margin-top: 22px;
+      color: var(--text);
+      font-size: clamp(30px, 4vw, 56px);
+      line-height: 1.08;
+      letter-spacing: -0.06em;
+    }
+
+    .statement {
+      padding: 120px 24px;
+      background: #ffffff;
+    }
+
+    .statement-card {
+      padding: clamp(40px, 7vw, 88px);
+      border-radius: 46px;
+      background: var(--soft);
+      text-align: center;
+    }
+
+    .statement-card p {
+      margin-bottom: 0;
+      color: #424245;
+      font-size: clamp(24px, 3.2vw, 44px);
+      line-height: 1.2;
+      letter-spacing: -0.055em;
+      font-weight: 800;
+    }
+
+    .statement-card .statement-copy {
+      color: #424245;
+      font-size: clamp(20px, 2.2vw, 28px);
+      line-height: 1.35;
+      letter-spacing: -0.04em;
+      font-weight: 650;
+    }
+
+    .solution-card {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(42px, 8vw, 96px);
+      border-radius: 48px;
+      color: #ffffff;
+      background:
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.22), transparent 30%),
+        linear-gradient(135deg, #0071e3 0%, #4aa3ff 100%);
+      box-shadow: 0 28px 60px rgba(0, 113, 227, 0.26);
+    }
+
+    .solution-card::before {
+      content: "";
+      position: absolute;
+      right: max(26px, 6vw);
+      top: 50%;
+      width: min(340px, 48vw);
+      aspect-ratio: 1;
+      background: rgba(255, 255, 255, 0.16);
+      -webkit-mask: url("./assets/logo_new_blue.PNG") center / contain no-repeat;
+      mask: url("./assets/logo_new_blue.PNG") center / contain no-repeat;
+      opacity: 0.55;
+      transform: translateY(-50%) rotate(-4deg);
+      pointer-events: none;
+    }
+
+    .solution-card .section-title,
+    .solution-card .section-copy {
+      position: relative;
+      z-index: 1;
+      color: #ffffff;
+    }
+
+    .solution-card .eyebrow {
+      color: #ffffff;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 44px;
+    }
+
+    .step-card {
+      padding: 28px;
+    }
+
+    .step-number {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 34px;
+      border-radius: 50%;
+      color: #ffffff;
+      background: var(--blue);
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .step-card h3 {
+      margin-bottom: 0;
+      font-size: 24px;
+      line-height: 1.12;
+      letter-spacing: -0.05em;
+    }
+
+    .demo-frame {
+      margin-top: 44px;
+      overflow: hidden;
+      border-radius: 44px;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-shell {
+      position: relative;
+      min-height: 460px;
+      display: grid;
+      place-items: center;
+      padding: 36px;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(0, 113, 227, 0.12), transparent 35%),
+        linear-gradient(180deg, #fbfbfd 0%, #f5f5f7 100%);
+    }
+
+    .demo-video {
+      width: min(880px, 100%);
+      aspect-ratio: 16 / 9;
+      display: block;
+      margin: 0 auto;
+      border-radius: 28px;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.1);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 42px;
+    }
+
+    .features-intro {
+      max-width: 560px;
+      margin: 16px auto 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    .feature-item {
+      padding: 26px 24px 24px;
+      min-height: 210px;
+    }
+
+    .feature-topline {
+      margin-bottom: 18px;
+    }
+
+    .feature-number {
+      color: var(--blue);
+      font-size: 13px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 18px;
+      color: var(--blue);
+    }
+
+    .feature-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      stroke: currentColor;
+    }
+
+    .feature-icon-purple {
+      color: #6e6ee8;
+    }
+
+    .feature-icon-orange {
+      color: #f59e0b;
+    }
+
+    .feature-icon-green {
+      color: #34a853;
+    }
+
+    .feature-icon-cyan {
+      color: #0891b2;
+    }
+
+    .feature-item h3 {
+      margin-bottom: 10px;
+      font-size: 20px;
+      line-height: 1.18;
+      letter-spacing: -0.04em;
+    }
+
+    .feature-item p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .viewer-card {
+      margin-top: 44px;
+      padding: 18px;
+      border-radius: 44px;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.08);
+    }
+
+    .viewer-embed {
+      width: 100%;
+      height: 895px;
+      min-height: 895px;
+      border: 0;
+      border-radius: 34px;
+      background: #f8fbff;
+      display: block;
+    }
+
+    .viewer-hint {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 650;
+      text-align: center;
+    }
+
+    .viewer-preview {
+      min-height: 390px;
+      border-radius: 32px;
+      background:
+        linear-gradient(90deg, rgba(103, 232, 249, 0.28), transparent 28%, transparent 72%, rgba(255, 59, 48, 0.22)),
+        linear-gradient(180deg, #eaf0f8 0%, #d8e7f7 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .viewer-video {
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      top: 14%;
+      bottom: 12%;
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent),
+        linear-gradient(135deg, #9cc8ff 0%, #f5d0c5 100%);
+    }
+
+    .viewer-pin {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      color: #ffffff;
+      background: var(--danger);
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      font-weight: 900;
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.18);
+    }
+
+    .pin-one {
+      left: 25%;
+      bottom: 22%;
+    }
+
+    .pin-two {
+      right: 24%;
+      top: 34%;
+      background: #f5a524;
+    }
+
+    .viewer-list {
+      padding: 28px;
+      border-radius: 32px;
+      background: var(--soft);
+    }
+
+    .viewer-list h3 {
+      margin-bottom: 18px;
+      font-size: 22px;
+      letter-spacing: -0.04em;
+    }
+
+    .viewer-row {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .viewer-row:last-child {
+      border-bottom: 0;
+    }
+
+    .viewer-row-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #ffffff;
+      background: var(--danger);
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .viewer-row p {
+      margin-bottom: 0;
+      color: #424245;
+      font-size: 15px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .local-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(300px, 1.1fr);
+      gap: 56px;
+      align-items: center;
+    }
+
+    .local-panel {
+      padding: 34px;
+      border-radius: 36px;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.06);
+    }
+
+    .local-point {
+      display: flex;
+      gap: 14px;
+      padding: 18px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      color: #424245;
+      font-weight: 650;
+    }
+
+    .local-point:last-child {
+      border-bottom: 0;
+    }
+
+    .check {
+      width: 24px;
+      height: 24px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: #ffffff;
+      background: #34c759;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .final-cta {
+      padding: 118px 24px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(0, 113, 227, 0.12), transparent 32%),
+        #ffffff;
+      text-align: center;
+    }
+
+    .final-cta .pill-button {
+      margin-top: 18px;
+    }
+
+    .site-footer {
+      padding: 20px 24px 42px;
+      background: #ffffff;
+      color: rgb(110, 110, 115);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      text-align: center;
+    }
+
+    .footer-logo-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 0 auto 18px;
+    }
+
+    .footer-logo {
+      width: min(140px, 30vw);
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 18px 40px rgba(10, 66, 160, 0.12));
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 10px 18px;
+      flex-wrap: wrap;
+      margin: 0 auto 14px;
+    }
+
+    .footer-links a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: rgba(29, 29, 31, 0.82);
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .viewer-card,
+      .local-grid,
+      .empathy-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-grid {
+        gap: 48px;
+      }
+
+      .risk-grid,
+      .steps-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .features-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .nav {
+        width: min(100% - 28px, 1180px);
+        min-height: 58px;
+      }
+
+      .brand-copy,
+      .campaign-text {
+        display: none;
+      }
+
+      .section,
+      .statement,
+      .final-cta {
+        padding: 78px 18px;
+      }
+
+      .hero {
+        padding: 62px 18px 84px;
+      }
+
+      .hero-title {
+        font-size: 44px;
+      }
+
+      .hero-lead {
+        font-size: 22px;
+      }
+
+      .phone-pair {
+        gap: 10px;
+      }
+
+      .hero-visual,
+      .viewer-card,
+      .demo-frame {
+        border-radius: 30px;
+      }
+
+      .risk-grid,
+      .steps-grid,
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .demo-shell {
+        min-height: 300px;
+        padding: 18px;
+      }
+
+      .viewer-card {
+        padding: 10px;
+      }
+
+      .viewer-embed {
+        height: 900px;
+        min-height: 900px;
+        border-radius: 24px;
+      }
+
+      .viewer-preview {
+        min-height: 320px;
+      }
+
+    }
+  </style>
 </head>
-<body class="landing-page">
-  <div class="landing-shell">
-    <header class="landing-header">
-      <a href="./index.html" class="landing-brand" aria-label="Lumina Zone ホーム">
-        <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="landing-brand-mark" width="76" height="76">
-        <span class="landing-brand-copy landing-brand-copy-tagline">
-          <span>縦型ショート動画専用<br>投稿前の最終確認ツール</span>
-        </span>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="メインナビゲーション">
+      <a class="brand" href="./index.html" aria-label="Lumina Zone トップへ">
+        <img class="brand-logo" src="./assets/logo_new_blue.PNG" alt="Lumina Zone">
+        <span class="brand-copy">縦型ショート動画専用<br>投稿前の最終確認ツール</span>
       </a>
+      <div class="nav-actions">
+        <span class="campaign-text">
+          <span class="campaign-label">ローンチ記念</span>
+          <span class="campaign-copy">先着30名様限定キャンペーン</span>
+        </span>
+        <a class="pill-button" href="./login.html">無料で確認する</a>
+      </div>
+    </nav>
+  </header>
 
-      <nav class="landing-nav" aria-label="ページ内ナビゲーション">
-        <a href="./login.html?intent=campaign" class="landing-nav-campaign" data-cta-source="header-campaign">
-          <span class="landing-nav-campaign-label">ローンチ記念</span>
-          <span class="landing-nav-campaign-copy">先着30名様限定キャンペーン</span>
-        </a>
-        <a href="./login.html" class="landing-nav-cta" id="landingHeaderCta" data-cta-source="header">無料で確認する</a>
-      </nav>
-    </header>
-
-    <main class="landing-main">
-      <section class="landing-hero">
-        <div class="landing-hero-copy">
-          <h1>
-            <span class="landing-hero-gradient landing-hero-line">そのテロップ、</span>
-            <span class="landing-hero-gradient landing-hero-line">スマホでは</span>
-            <span class="landing-hero-gradient landing-hero-line">見えていません。</span>
-          </h1>
-        </div>
-
-        <div class="landing-hero-demo" aria-label="表示エリアチェックのビフォーアフター">
-          <div class="landing-hero-demo-grid">
-            <figure class="landing-about-card landing-hero-demo-card">
-              <figcaption class="landing-about-label landing-hero-demo-label">
-                <span>Before</span>
-                <small>編集画面では問題なし</small>
-              </figcaption>
-              <div class="landing-diagram-phone landing-diagram-phone-before" aria-hidden="true"></div>
-            </figure>
-
-            <figure class="landing-about-card landing-hero-demo-card landing-hero-demo-card-after">
-              <figcaption class="landing-about-label landing-hero-demo-label">
-                <span>After</span>
-                <small>投稿画面ではUIが重なる</small>
-              </figcaption>
-              <div class="landing-diagram-phone landing-diagram-phone-after" aria-hidden="true">
-                <div class="landing-diagram-danger landing-diagram-danger-top"></div>
-                <div class="landing-diagram-danger landing-diagram-danger-left"></div>
-                <div class="landing-diagram-danger landing-diagram-danger-right"></div>
-                <div class="landing-diagram-danger landing-diagram-danger-bottom"></div>
-                <div class="landing-hero-ui-hints">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <span class="landing-hero-danger-pill">ここ、見えていません</span>
-                <div class="landing-diagram-safe"></div>
-              </div>
-            </figure>
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <h1 class="hero-title">その投稿、<br>公開した後では直せません。</h1>
+          <p class="hero-lead">ちゃんとやっている人ほど、<br>最後の1本で事故が起きます。</p>
+          <p class="eyebrow">ショート動画の投稿前の事故を防ぐ、<br>最終確認ツール「Lumina Zone」</p>
+          <div class="hero-action">
+            <a class="pill-button" href="./login.html">無料で確認する</a>
           </div>
-          <p class="landing-hero-demo-note">完成画面では見えていても、投稿画面では隠れることがあります。</p>
-        </div>
-
-        <div class="landing-hero-support">
-          <p class="landing-lead">
-            投稿された動画は、後から修正できません。
-          </p>
-          <p class="landing-lead landing-lead-secondary">
-            これは単なるチェックツールではなく、投稿前にミスを防ぐための最終確認の仕組みです。
-          </p>
-          <p class="landing-hero-cta-note">1分で、見切れを確認できます。</p>
-          <div class="landing-actions">
-            <a href="./login.html" class="landing-button landing-button-primary landing-hero-cta" id="landingHeroCta" data-cta-source="hero">無料で確認する</a>
-          </div>
-          <div class="landing-hero-platforms" aria-label="対応SNS">
-            <span class="landing-platform-label">対応SNS</span>
-            <div class="landing-platforms">
-              <span class="landing-platform-icon platform-tiktok" title="TikTok" aria-label="TikTok">
+          <div class="hero-platforms" aria-label="対応SNS">
+            <span class="hero-platform-label">対応SNS</span>
+            <span class="hero-platform-icons">
+              <span class="hero-platform-icon hero-platform-icon-tiktok" title="TikTok" aria-label="TikTok">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path class="tiktok-shadow tiktok-cyan" d="M13.8 3.8c.4 1.6 1.4 2.8 2.9 3.6 1 .5 1.8.7 2.4.7v2.5c-.8 0-1.9-.2-3.2-.8-.6-.3-1.3-.7-1.9-1.3v7c0 3.1-2.4 5.5-5.5 5.5s-5.4-2.4-5.4-5.5 2.4-5.5 5.4-5.5c.4 0 .8 0 1.2.1v2.6a4 4 0 0 0-1.2-.2c-1.6 0-2.8 1.2-2.8 2.9 0 1.6 1.2 2.8 2.8 2.8 1.6 0 2.9-1.2 2.9-2.8V3.8h2.4Z"/>
                   <path class="tiktok-shadow tiktok-red" d="M14.9 3c.4 1.5 1.5 2.8 3 3.6 1 .5 1.9.7 2.5.7v2.7c-.8 0-2-.2-3.4-.9-.7-.3-1.4-.8-2-1.4v7.2c0 3.1-2.5 5.6-5.6 5.6S3.8 18 3.8 14.9s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.1-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3s1.3 2.9 2.9 2.9 2.9-1.3 2.9-2.9V3h2.6Z"/>
                   <path class="tiktok-main" d="M14.4 3.3c.4 1.6 1.5 2.9 3 3.7 1 .5 1.9.7 2.4.7v2.6c-.8 0-2-.2-3.3-.9-.7-.3-1.4-.8-2-1.4v7.1c0 3.1-2.5 5.6-5.6 5.6S3.5 18.2 3.5 15.1s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.2-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3S7.5 18 9.1 18s2.9-1.3 2.9-2.9V3.3h2.4Z"/>
                 </svg>
               </span>
-              <span class="landing-platform-icon platform-instagram" title="Instagram" aria-label="Instagram">
+              <span class="hero-platform-icon hero-platform-icon-instagram" title="Instagram" aria-label="Instagram">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M7.2 3h9.6A4.2 4.2 0 0 1 21 7.2v9.6a4.2 4.2 0 0 1-4.2 4.2H7.2A4.2 4.2 0 0 1 3 16.8V7.2A4.2 4.2 0 0 1 7.2 3Zm0 2.2a2 2 0 0 0-2 2v9.6a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V7.2a2 2 0 0 0-2-2H7.2Zm4.8 2.3A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2.2A2.3 2.3 0 1 0 14.3 12 2.3 2.3 0 0 0 12 9.7Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"/>
                 </svg>
               </span>
-              <span class="landing-platform-icon platform-youtube" title="YouTube" aria-label="YouTube">
+              <span class="hero-platform-icon hero-platform-icon-youtube" title="YouTube Shorts" aria-label="YouTube Shorts">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M20.4 7.2c-.2-.9-.9-1.6-1.8-1.8C17 5 12 5 12 5s-5 0-6.6.4c-.9.2-1.6.9-1.8 1.8C3.2 8.8 3.2 12 3.2 12s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8 1.6.4 6.6.4 6.6.4s5 0 6.6-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8ZM10.2 15.4V8.6L15.9 12l-5.7 3.4Z"/>
                 </svg>
               </span>
-            </div>
+            </span>
           </div>
         </div>
-      </section>
 
-      <section class="landing-section landing-section-centered landing-story-section landing-section-light" aria-label="制作現場で起きやすい見落とし">
-        <div class="landing-section-head landing-section-head-centered landing-story-head">
-          <h2>丁寧なほど、ミスは起きる。</h2>
-        </div>
-
-        <div class="landing-story-panel landing-card">
-          <div class="landing-story-copy">
-            <p>動画制作って、思っている以上に神経を使う作業です。</p>
-            <p>編集する側は細部を詰め、チェックする側は品質とミスの両方を見なければいけない。</p>
-            <p>どちらも丁寧にやっているからこそ、最後のチェックで見落としが起きてしまうことがあります。</p>
-          </div>
-
-          <figure class="landing-story-visual" aria-label="動画制作の編集画面">
-            <img src="./assets/pc.jpg" alt="動画編集タイムラインの画面" class="landing-story-image" width="1210" height="907">
-          </figure>
-        </div>
-      </section>
-
-      <section id="common-problems" class="landing-section landing-section-centered landing-highlights-section landing-section-light" aria-label="よくある見落とし">
-        <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Common Problems</p>
-          <h2>こんな経験、ありませんか？</h2>
-          <p class="landing-section-intro landing-highlights-intro">
-            地味なミスこそ、クライアントの信頼残高に直結します
-          </p>
-        </div>
-
-        <div class="landing-highlights-panel landing-card">
-          <ul class="landing-highlights-list" aria-label="よくある見落としの例">
-            <li class="landing-highlights-item">
-              <span class="landing-highlight-icon landing-highlight-icon-green" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M4 12c2.3-3.4 4.9-5.1 8-5.1s5.7 1.7 8 5.1c-2.3 3.4-4.9 5.1-8 5.1S6.3 15.4 4 12Z"></path>
-                  <circle cx="12" cy="12" r="2.3"></circle>
-                  <path d="M5 19L19 5"></path>
-                </svg>
-              </span>
-              <span class="landing-highlights-item-text">テロップが見切れていたのに、投稿後に気づいた</span>
-            </li>
-            <li class="landing-highlights-item">
-              <span class="landing-highlight-icon landing-highlight-icon-blue" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <rect x="4" y="5" width="11" height="14" rx="2"></rect>
-                  <rect x="10" y="3" width="10" height="14" rx="2"></rect>
-                </svg>
-              </span>
-              <span class="landing-highlights-item-text">いい感じに作ったのに、UIに文字がかぶっていた</span>
-            </li>
-            <li class="landing-highlights-item">
-              <span class="landing-highlight-icon landing-highlight-icon-blue" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 20c4.2-4.6 6.3-7.9 6.3-10.1A6.3 6.3 0 1 0 5.7 9.9C5.7 12.1 7.8 15.4 12 20Z"></path>
-                  <circle cx="12" cy="9.6" r="2.1"></circle>
-                </svg>
-              </span>
-              <span class="landing-highlights-item-text">「ここズレてる」と言われて、どこか分からない</span>
-            </li>
-            <li class="landing-highlights-item">
-              <span class="landing-highlight-icon landing-highlight-icon-orange" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M6 7.5h12a2 2 0 0 1 2 2v6.5a2 2 0 0 1-2 2H9l-4 3v-4.5H6a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2Z"></path>
-                  <path d="M9 11h6"></path>
-                  <path d="M9 14h3.5"></path>
-                </svg>
-              </span>
-              <span class="landing-highlights-item-text">修正指示を送ったのに、意図どおりに直らなかった</span>
-            </li>
-            <li class="landing-highlights-item">
-              <span class="landing-highlight-icon landing-highlight-icon-green" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M8 8a6 6 0 0 1 8.7-.3L19 10"></path>
-                  <path d="M16 16a6 6 0 0 1-8.7.3L5 14"></path>
-                  <path d="M19 6v4h-4"></path>
-                  <path d="M5 18v-4h4"></path>
-                </svg>
-              </span>
-              <span class="landing-highlights-item-text">確認用に書き出して、また修正して、また書き出す…</span>
-            </li>
-            <li class="landing-highlights-item">
-              <span class="landing-highlight-icon landing-highlight-icon-orange" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="8"></circle>
-                  <path d="M12 8v5"></path>
-                  <circle cx="12" cy="16.8" r="0.8" fill="currentColor" stroke="none"></circle>
-                </svg>
-              </span>
-              <span class="landing-highlights-item-text">クライアントチェックで初めてミスが発覚した</span>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="landing-section landing-section-centered landing-capabilities-section landing-section-light" aria-label="Lumina Zoneでできること">
-        <div class="landing-section-head landing-section-head-centered landing-capabilities-head">
-          <p class="landing-section-kicker">Capabilities</p>
-          <p class="landing-capabilities-label">Lumina Zoneの4つの機能</p>
-          <h2>確認、指示、共有まで。</h2>
-          <p class="landing-section-intro">
-            Lumina Zoneは、見切れチェックだけで終わりません。気になる箇所にピンを打ち、コメントを残し、PDFでそのまま共有できます。
-          </p>
-          <p class="landing-capabilities-support">
-            修正したい箇所にはそのままコメントを書き込めるので、修正指示までその場で完結します。
-          </p>
-          <p class="landing-capabilities-support landing-capabilities-support-muted">
-            Premiere以外の編集環境でも使えるシンプルなチェックツールです。
-          </p>
-        </div>
-
-        <figure class="landing-preview-card landing-card landing-capabilities-preview">
-          <img
-            src="./assets/mac-hero.png"
-            alt="Lumina Zone の確認画面"
-            class="landing-preview-image"
-          >
-        </figure>
-
-        <div class="landing-capabilities-grid" aria-label="Lumina Zoneの主な機能">
-          <article class="landing-capability-card landing-card">
-            <div class="landing-capability-scene is-zone" aria-hidden="true">
-              <span class="landing-capability-index">機能 01</span>
-              <div class="landing-capability-phone">
-                <span class="landing-capability-ui-band is-top"></span>
-                <span class="landing-capability-ui-caption"></span>
-                <span class="landing-capability-safe-frame"></span>
-                <span class="landing-capability-safe-corner is-top-left"></span>
-                <span class="landing-capability-safe-corner is-top-right"></span>
-                <span class="landing-capability-safe-corner is-bottom-left"></span>
-                <span class="landing-capability-safe-corner is-bottom-right"></span>
-              </div>
-            </div>
-            <div class="landing-capability-copy">
-              <h3>表示エリアチェック</h3>
-              <p>各SNSの表示領域に合わせて、見切れやUIの重なりを投稿前に確認できます。</p>
-            </div>
-          </article>
-
-          <article class="landing-capability-card landing-card">
-            <div class="landing-capability-scene is-pin" aria-hidden="true">
-              <span class="landing-capability-index">機能 02</span>
-              <div class="landing-capability-timeline">
-                <span class="landing-capability-track"></span>
-                <span class="landing-capability-pin is-left"></span>
-                <span class="landing-capability-pin is-center"></span>
-                <span class="landing-capability-pin is-right"></span>
-              </div>
-            </div>
-            <div class="landing-capability-copy">
-              <h3>ピンチェック</h3>
-              <p>気になる位置やタイミングにピンを打って、修正ポイントを残せます。</p>
-            </div>
-          </article>
-
-          <article class="landing-capability-card landing-card">
-            <div class="landing-capability-scene is-note" aria-hidden="true">
-              <span class="landing-capability-index">機能 03</span>
-              <span class="landing-capability-note-chip">MEMO</span>
-              <div class="landing-capability-note-tab" aria-hidden="true"></div>
-              <div class="landing-capability-note-card is-back">
-                <span></span>
-                <span></span>
-              </div>
-              <div class="landing-capability-note-card is-front">
-                <span class="landing-capability-note-title"></span>
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-            <div class="landing-capability-copy">
-              <h3>共有メモ</h3>
-              <p>修正したい箇所にはそのままコメントを書き込めるので、修正指示までその場で完結します。</p>
-            </div>
-          </article>
-
-          <article class="landing-capability-card landing-card">
-            <div class="landing-capability-scene is-report" aria-hidden="true">
-              <span class="landing-capability-index">機能 04</span>
-              <div class="landing-capability-report-sheet">
-                <div class="landing-capability-report-head">
-                  <span class="landing-capability-report-dot"></span>
-                  <span class="landing-capability-report-dot"></span>
-                  <span class="landing-capability-report-dot"></span>
+        <div class="hero-visual" aria-label="編集画面と投稿画面の見え方比較">
+          <div class="phone-pair">
+            <div class="phone-card">
+              <div class="phone-label">編集画面では問題なし</div>
+              <div class="phone">
+                <div class="phone-screen">
+                  <img class="phone-screen-image" src="./assets/header_sample.jpg" alt="編集画面では問題なく見えているサンプル動画">
                 </div>
-                <span class="landing-capability-report-line is-title"></span>
-                <span class="landing-capability-report-line"></span>
-                <span class="landing-capability-report-line"></span>
-                <span class="landing-capability-report-line is-short"></span>
               </div>
-              <span class="landing-capability-pdf-badge">PDF</span>
             </div>
-            <div class="landing-capability-copy">
-              <h3>PDFレポート</h3>
-              <p>チェック内容をPDFにまとめて、そのまま編集者やチームへ共有できます。</p>
-            </div>
-          </article>
-        </div>
-      </section>
 
-      <section id="report" class="landing-section landing-section-centered landing-report-section">
-        <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Report</p>
-          <div class="landing-report-heading">
-          <h2><span class="landing-hero-gradient landing-emphasis-gradient">Zone Viewer</span></h2>
+            <div class="phone-card">
+              <div class="phone-label">投稿画面ではUIが重なる</div>
+              <div class="phone phone-after">
+                <div class="phone-screen">
+                  <img class="phone-screen-image" src="./assets/header_sample.jpg" alt="投稿画面でUIが重なるサンプル動画">
+                  <div class="ui-top"></div>
+                  <div class="ui-right"></div>
+                  <div class="ui-bottom"></div>
+                  <div class="ui-left"></div>
+                  <div class="hidden-badge">ここ、隠れます</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="visual-note">再生画面では見えていても、SNSでは隠れてしまいます。</p>
         </div>
-        <p class="landing-section-intro">
-            修正内容がズレずに伝わる共有ページ
-        </p>
-        <p class="landing-report-support">「これ、どこのことですか？」が、なくなる</p>
-        <p class="landing-report-support">チェックした内容は、Zone Viewerとして共有できます。</p>
-        <p class="landing-report-support">どこをどう直すかが一目で分かるので、説明のやりとりが必要ありません。</p>
       </div>
+    </section>
 
-        <div class="landing-report-stack">
-          <div class="landing-report-signals" aria-label="レポートでできること">
-            <span class="landing-report-signal">
-              <span class="landing-report-signal-icon landing-report-signal-icon-blue" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 20c4.2-4.6 6.3-7.9 6.3-10.1A6.3 6.3 0 1 0 5.7 9.9C5.7 12.1 7.8 15.4 12 20Z"></path>
-                  <circle cx="12" cy="9.6" r="2.1"></circle>
-                </svg>
-              </span>
-              <span>確認位置を記録</span>
-            </span>
-            <span class="landing-report-signal">
-              <span class="landing-report-signal-icon landing-report-signal-icon-orange" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M5 16.8V19h2.2l8.9-8.9-2.2-2.2L5 16.8Z"></path>
-                  <path d="m13 6.9 2.1-2.1 2.2 2.2-2.1 2.1"></path>
-                </svg>
-              </span>
-              <span>修正コメントを残せる</span>
-            </span>
-            <span class="landing-report-signal">
-              <span class="landing-report-signal-icon landing-report-signal-icon-green" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M7 4.5h7l4 4v10a1.8 1.8 0 0 1-1.8 1.8H7A1.8 1.8 0 0 1 5.2 18.5V6.3A1.8 1.8 0 0 1 7 4.5Z"></path>
-                  <path d="M14 4.5v4h4"></path>
-                  <path d="M9 13h6"></path>
-                  <path d="M9 16h4"></path>
-                </svg>
-              </span>
-              <span>そのまま伝わる修正ページ</span>
-            </span>
+    <section class="section">
+      <div class="container">
+        <div class="narrow center">
+          <h2 class="section-title">こんな経験、ありませんか？</h2>
+          <p class="risk-lead">投稿した後に、気づく。</p>
+        </div>
+        <div class="risk-grid">
+          <div class="risk-item risk-item-experience"><span>テロップが見切れていた</span></div>
+          <div class="risk-item risk-item-experience"><span>UIに文字が被っていた</span></div>
+          <div class="risk-item risk-item-experience"><span>投稿後なので、直せなかった</span></div>
+          <div class="risk-item risk-item-experience"><span>クライアントに先にミスに気づかれた</span></div>
+        </div>
+        <p class="risk-closing center">投稿後に気づいても、<br>もう直せません。</p>
+        <p class="risk-closing risk-impact center">その1つの見落としで、<br>信頼は一気に崩れます。</p>
+      </div>
+    </section>
+
+    <section class="section section-soft">
+      <div class="container">
+        <div class="empathy-grid">
+          <div>
+            <p class="section-copy empathy-copy">1日に何本も動画をチェックして、<br>複数のSNSを確認して、<br>修正のやり取りもする。<br><br>全部を完璧に見るのは、<br>無理があります。</p>
           </div>
+          <video class="empathy-image" src="./assets/face.mp4" autoplay muted loop playsinline aria-label="投稿前の動画を確認する様子"></video>
+        </div>
+        <p class="soft-close empathy-close gradient-title">それは、あなたのせいではありません。</p>
+      </div>
+    </section>
 
-          <div class="landing-report-visual landing-card" aria-hidden="true">
-            <div class="landing-report-sheet">
-              <span class="landing-report-sheet-badge" aria-label="Zone Viewer">
-                <span class="landing-report-pdf-icon landing-report-pdf-icon-compact" aria-hidden="true"></span>
-                Zone Viewer
-              </span>
-              <div class="landing-report-head">
-                <span class="landing-report-brand">Lumina Zone</span>
-                <strong>そのまま伝わる修正ページ</strong>
-                <span>チェック内容をそのまま共有</span>
-              </div>
+    <section class="statement">
+      <div class="container">
+        <div class="statement-card">
+          <h2 class="section-title">問題は、<br>確認不足ではありません。</h2>
+          <p class="statement-copy">チェックしていても、<br>量とスピードの中で<br>見落としは起きます。</p>
+          <p class="soft-close">だから、<br>最後の確認工程が必要になります。</p>
+        </div>
+      </div>
+    </section>
 
-              <div class="landing-report-body">
-                <div class="landing-report-thumb">
-                  <div class="landing-report-thumb-safe"></div>
-                  <div class="landing-report-thumb-danger is-top"></div>
-                  <div class="landing-report-thumb-danger is-left"></div>
-                  <div class="landing-report-thumb-danger is-right"></div>
-                  <div class="landing-report-thumb-danger is-bottom"></div>
-                  <div class="landing-report-thumb-pin is-a"></div>
-                  <div class="landing-report-thumb-pin is-b"></div>
-                  <div class="landing-report-thumb-note">字幕を少し上へ</div>
-                </div>
+    <section class="section">
+      <div class="container">
+        <div class="solution-card">
+          <h2 class="section-title">Lumina Zoneは、<br>投稿前の最終確認ツールです。</h2>
+          <p class="section-copy">投稿前の事故を防ぐために、<br>確認工程を1分で作れます。</p>
+        </div>
+      </div>
+    </section>
 
-                <div class="landing-report-meta">
-                  <div><span>タイム</span><strong>00:58</strong></div>
-                  <div><span>解像度</span><strong>1080 × 1920</strong></div>
-                  <div>
-                    <span>表示設定</span>
-                    <strong class="landing-report-meta-platforms">
-                      <span class="platform-inline-group" aria-label="TikTok と Instagram">
-                        <span class="platform-inline-icon platform-inline-icon-tiktok" aria-hidden="true">
-                          <svg class="platform-inline-svg" viewBox="0 0 24 24">
-                            <path class="tiktok-cyan" d="M14.2 4.1c.4 1.4 1.4 2.5 2.8 3.2.9.4 1.8.6 2.3.6v2.3c-.8 0-1.9-.2-3.1-.8-.6-.3-1.2-.7-1.8-1.2v6.3c0 2.9-2.3 5.2-5.2 5.2s-5.2-2.3-5.2-5.2 2.3-5.1 5.2-5.1c.4 0 .7 0 1.1.1V12a3.9 3.9 0 0 0-1.1-.1c-1.4 0-2.6 1.1-2.6 2.6S7.7 17 9.1 17s2.7-1.1 2.7-2.6V4.1h2.4Z"></path>
-                            <path class="tiktok-red" d="M15.1 3.3c.4 1.5 1.5 2.7 3 3.4 1 .5 1.9.7 2.5.7V10c-.8 0-2-.2-3.3-.8-.7-.3-1.3-.7-1.9-1.3v6.5c0 2.9-2.4 5.3-5.3 5.3S4.8 17.3 4.8 14.4s2.4-5.3 5.3-5.3c.4 0 .7 0 1.1.1v2.5a4 4 0 0 0-1.1-.2c-1.5 0-2.7 1.2-2.7 2.8 0 1.5 1.2 2.7 2.7 2.7 1.6 0 2.8-1.2 2.8-2.7V3.3h2.2Z"></path>
-                            <path class="tiktok-main" d="M14.7 3.6c.4 1.5 1.4 2.6 2.9 3.4.9.5 1.8.7 2.4.7v2.4c-.8 0-2-.2-3.2-.8-.7-.3-1.3-.7-1.9-1.3v6.4c0 2.9-2.4 5.2-5.3 5.2s-5.2-2.3-5.2-5.2S6.8 9.1 9.7 9.1c.3 0 .7 0 1 .1v2.4c-.3-.1-.7-.1-1-.1-1.5 0-2.8 1.2-2.8 2.8S8.2 17 9.7 17s2.8-1.2 2.8-2.8V3.6h2.2Z"></path>
-                          </svg>
-                        </span>
-                        <span class="platform-inline-plus" aria-hidden="true">+</span>
-                        <span class="platform-inline-icon platform-inline-icon-instagram" aria-hidden="true">
-                          <svg class="platform-inline-svg" viewBox="0 0 24 24">
-                            <path d="M7.2 3h9.6A4.2 4.2 0 0 1 21 7.2v9.6a4.2 4.2 0 0 1-4.2 4.2H7.2A4.2 4.2 0 0 1 3 16.8V7.2A4.2 4.2 0 0 1 7.2 3Zm0 2.2a2 2 0 0 0-2 2v9.6a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V7.2a2 2 0 0 0-2-2H7.2Zm4.8 2.3A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2.2A2.3 2.3 0 1 0 14.3 12 2.3 2.3 0 0 0 12 9.7Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path>
-                          </svg>
-                        </span>
-                      </span>
-                    </strong>
-                  </div>
-                  <div><span>チェック件数</span><strong>3件</strong></div>
-                </div>
-              </div>
-
-              <div class="landing-report-table">
-                <div class="landing-report-row is-head"><span>タイム</span><span>確認位置</span><span>対象SNS</span><span>メモ</span></div>
-                <div class="landing-report-row">
-                  <span>00:04</span>
-                  <span>下</span>
-                  <span class="platform-inline-group landing-report-platform-icons" aria-label="TikTok と Instagram">
-                    <span class="platform-inline-icon platform-inline-icon-tiktok" aria-hidden="true">
-                      <svg class="platform-inline-svg" viewBox="0 0 24 24">
-                        <path class="tiktok-cyan" d="M14.2 4.1c.4 1.4 1.4 2.5 2.8 3.2.9.4 1.8.6 2.3.6v2.3c-.8 0-1.9-.2-3.1-.8-.6-.3-1.2-.7-1.8-1.2v6.3c0 2.9-2.3 5.2-5.2 5.2s-5.2-2.3-5.2-5.2 2.3-5.1 5.2-5.1c.4 0 .7 0 1.1.1V12a3.9 3.9 0 0 0-1.1-.1c-1.4 0-2.6 1.1-2.6 2.6S7.7 17 9.1 17s2.7-1.1 2.7-2.6V4.1h2.4Z"></path>
-                        <path class="tiktok-red" d="M15.1 3.3c.4 1.5 1.5 2.7 3 3.4 1 .5 1.9.7 2.5.7V10c-.8 0-2-.2-3.3-.8-.7-.3-1.3-.7-1.9-1.3v6.5c0 2.9-2.4 5.3-5.3 5.3S4.8 17.3 4.8 14.4s2.4-5.3 5.3-5.3c.4 0 .7 0 1.1.1v2.5a4 4 0 0 0-1.1-.2c-1.5 0-2.7 1.2-2.7 2.8 0 1.5 1.2 2.7 2.7 2.7 1.6 0 2.8-1.2 2.8-2.7V3.3h2.2Z"></path>
-                        <path class="tiktok-main" d="M14.7 3.6c.4 1.5 1.4 2.6 2.9 3.4.9.5 1.8.7 2.4.7v2.4c-.8 0-2-.2-3.2-.8-.7-.3-1.3-.7-1.9-1.3v6.4c0 2.9-2.4 5.2-5.3 5.2s-5.2-2.3-5.2-5.2S6.8 9.1 9.7 9.1c.3 0 .7 0 1 .1v2.4c-.3-.1-.7-.1-1-.1-1.5 0-2.8 1.2-2.8 2.8S8.2 17 9.7 17s2.8-1.2 2.8-2.8V3.6h2.2Z"></path>
-                      </svg>
-                    </span>
-                    <span class="platform-inline-plus" aria-hidden="true">+</span>
-                    <span class="platform-inline-icon platform-inline-icon-instagram" aria-hidden="true">
-                      <svg class="platform-inline-svg" viewBox="0 0 24 24">
-                        <path d="M7.2 3h9.6A4.2 4.2 0 0 1 21 7.2v9.6a4.2 4.2 0 0 1-4.2 4.2H7.2A4.2 4.2 0 0 1 3 16.8V7.2A4.2 4.2 0 0 1 7.2 3Zm0 2.2a2 2 0 0 0-2 2v9.6a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V7.2a2 2 0 0 0-2-2H7.2Zm4.8 2.3A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2.2A2.3 2.3 0 1 0 14.3 12 2.3 2.3 0 0 0 12 9.7Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path>
-                      </svg>
-                    </span>
-                  </span>
-                  <span>右UIに近いのでテロップを少し上へ</span>
-                </div>
-                <div class="landing-report-row">
-                  <span>00:15</span>
-                  <span>右</span>
-                  <span class="platform-inline-group landing-report-platform-icons" aria-label="TikTok と Instagram">
-                    <span class="platform-inline-icon platform-inline-icon-tiktok" aria-hidden="true">
-                      <svg class="platform-inline-svg" viewBox="0 0 24 24">
-                        <path class="tiktok-cyan" d="M14.2 4.1c.4 1.4 1.4 2.5 2.8 3.2.9.4 1.8.6 2.3.6v2.3c-.8 0-1.9-.2-3.1-.8-.6-.3-1.2-.7-1.8-1.2v6.3c0 2.9-2.3 5.2-5.2 5.2s-5.2-2.3-5.2-5.2 2.3-5.1 5.2-5.1c.4 0 .7 0 1.1.1V12a3.9 3.9 0 0 0-1.1-.1c-1.4 0-2.6 1.1-2.6 2.6S7.7 17 9.1 17s2.7-1.1 2.7-2.6V4.1h2.4Z"></path>
-                        <path class="tiktok-red" d="M15.1 3.3c.4 1.5 1.5 2.7 3 3.4 1 .5 1.9.7 2.5.7V10c-.8 0-2-.2-3.3-.8-.7-.3-1.3-.7-1.9-1.3v6.5c0 2.9-2.4 5.3-5.3 5.3S4.8 17.3 4.8 14.4s2.4-5.3 5.3-5.3c.4 0 .7 0 1.1.1v2.5a4 4 0 0 0-1.1-.2c-1.5 0-2.7 1.2-2.7 2.8 0 1.5 1.2 2.7 2.7 2.7 1.6 0 2.8-1.2 2.8-2.7V3.3h2.2Z"></path>
-                        <path class="tiktok-main" d="M14.7 3.6c.4 1.5 1.4 2.6 2.9 3.4.9.5 1.8.7 2.4.7v2.4c-.8 0-2-.2-3.2-.8-.7-.3-1.3-.7-1.9-1.3v6.4c0 2.9-2.4 5.2-5.3 5.2s-5.2-2.3-5.2-5.2S6.8 9.1 9.7 9.1c.3 0 .7 0 1 .1v2.4c-.3-.1-.7-.1-1-.1-1.5 0-2.8 1.2-2.8 2.8S8.2 17 9.7 17s2.8-1.2 2.8-2.8V3.6h2.2Z"></path>
-                      </svg>
-                    </span>
-                    <span class="platform-inline-plus" aria-hidden="true">+</span>
-                    <span class="platform-inline-icon platform-inline-icon-instagram" aria-hidden="true">
-                      <svg class="platform-inline-svg" viewBox="0 0 24 24">
-                        <path d="M7.2 3h9.6A4.2 4.2 0 0 1 21 7.2v9.6a4.2 4.2 0 0 1-4.2 4.2H7.2A4.2 4.2 0 0 1 3 16.8V7.2A4.2 4.2 0 0 1 7.2 3Zm0 2.2a2 2 0 0 0-2 2v9.6a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V7.2a2 2 0 0 0-2-2H7.2Zm4.8 2.3A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2.2A2.3 2.3 0 1 0 14.3 12 2.3 2.3 0 0 0 12 9.7Zm4.7-3.4a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path>
-                      </svg>
-                    </span>
-                  </span>
-                  <span>字幕が重なりやすいので余白を少し広げる</span>
-                </div>
-              </div>
+    <section class="section">
+      <div class="container center">
+        <p class="eyebrow">投稿前に、ここで止められます。</p>
+        <h2 class="section-title">実際のチェック画面</h2>
+        <p class="section-copy">投稿前に1分だけ。<br>ここで止めるか、投稿後に気づくか。</p>
+        <div class="demo-frame">
+          <div class="demo-shell">
+            <div>
+              <video class="demo-video" controls muted playsinline preload="metadata">
+                <source src="./assets/index3-demo.mp4" type="video/mp4">
+                お使いのブラウザでは動画を再生できません。
+              </video>
             </div>
           </div>
         </div>
-        <p class="landing-disclaimer">※表示エリアは目安です。最終的な見え方は各SNSや端末により異なる場合があります</p>
-      </section>
+      </div>
+    </section>
 
-      <section class="landing-section landing-section-centered landing-timing-section">
-        <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Timing</p>
-          <h2><span class="landing-hero-gradient landing-emphasis-gradient">投稿事故をゼロにする保険。</span></h2>
-          <p class="landing-section-intro">
-            投稿された動画は、後から直せません。
-          </p>
+    <section class="section section-soft">
+      <div class="container">
+        <div class="narrow center">
+          <h2 class="section-title">できること<br><span class="gradient-title">最終確認を、もっと速く。</span></h2>
+          <p class="section-copy features-intro">5つの機能で、投稿前の最終確認をスピーディーに。</p>
         </div>
-
-        <div class="landing-timing-compare landing-card" aria-label="投稿前に確認する場合としない場合の違い">
-          <div class="landing-timing-table">
-            <div class="landing-timing-corner" aria-hidden="true"></div>
-            <div class="landing-timing-colhead landing-timing-colhead-risk is-risk">使わない場合</div>
-            <div class="landing-timing-colhead landing-timing-colhead-safe is-safe">Lumina Zone を使う場合</div>
-
-            <div class="landing-timing-rowhead landing-timing-rowhead-edit">
-              <span class="landing-timing-rowhead-index">1</span>
-              <span class="landing-timing-rowhead-text">編集完了</span>
+        <div class="features-grid">
+          <div class="feature-item">
+            <div class="feature-topline">
+              <span class="feature-number">01</span>
             </div>
-            <div class="landing-timing-cell landing-timing-cell-edit-risk">最終ファイルを受け取る</div>
-            <div class="landing-timing-cell landing-timing-cell-edit-safe is-safe">最終ファイルを受け取る</div>
-
-            <div class="landing-timing-rowhead landing-timing-rowhead-before">
-              <span class="landing-timing-rowhead-index">2</span>
-              <span class="landing-timing-rowhead-text">投稿<span class="landing-timing-rowhead-accent is-before">前</span></span>
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3.5 14s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7S3.5 14 3.5 14Z"/>
+                <circle cx="14" cy="14" r="3.5"/>
+              </svg>
             </div>
-            <div class="landing-timing-cell landing-timing-cell-before-risk is-risk">そのまま投稿する</div>
-            <div class="landing-timing-cell landing-timing-cell-before-safe is-safe">各SNSのUIとの重なりを確認する</div>
-
-            <div class="landing-timing-rowhead landing-timing-rowhead-after">
-              <span class="landing-timing-rowhead-index">3</span>
-              <span class="landing-timing-rowhead-text">投稿<span class="landing-timing-rowhead-accent is-after">後</span></span>
+            <h3>投稿後の“やり直せない事故”を防ぐ</h3>
+            <p>投稿前に、文字やUIの重なりを確認。</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-topline">
+              <span class="feature-number">02</span>
             </div>
-            <div class="landing-timing-cell landing-timing-cell-after-risk is-risk">
-              テロップや重要な情報がUIに隠れていることに気づく
-              <span>動画の修正もできず、クライアントの信頼を失う。</span>
+            <div class="feature-icon feature-icon-purple" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="8" y="3.5" width="12" height="21" rx="3"/>
+                <path d="M11 7h6"/>
+                <path d="M10.5 18.5h7"/>
+                <path d="M5 9.5h5"/>
+                <path d="M18 14h5"/>
+              </svg>
             </div>
-            <div class="landing-timing-cell landing-timing-cell-after-safe is-safe">
-              問題を直してから投稿する
-              <span>安心して公開できる</span>
+            <h3>SNSごとの差を一目で確認</h3>
+            <p>主要SNSごとの見え方をまとめてチェック。</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-topline">
+              <span class="feature-number">03</span>
             </div>
+            <div class="feature-icon feature-icon-orange" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 25s7-7.1 7-13.2A7 7 0 0 0 7 11.8C7 17.9 14 25 14 25Z"/>
+                <circle cx="14" cy="11.8" r="2.6"/>
+              </svg>
+            </div>
+            <h3>問題箇所をその場で記録</h3>
+            <p>気になる位置をその場で残せます。</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-topline">
+              <span class="feature-number">04</span>
+            </div>
+            <div class="feature-icon feature-icon-green" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 6.5h18v12H10l-5 4v-16Z"/>
+                <path d="M10 11h8"/>
+                <path d="M10 15h5"/>
+              </svg>
+            </div>
+            <h3>修正内容をそのまま共有</h3>
+            <p>修正内容を短く記録して渡せます。</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-topline">
+              <span class="feature-number">05</span>
+            </div>
+            <div class="feature-icon feature-icon-cyan" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11.5 16.5 16.5 11.5"/>
+                <path d="M12.5 8.5 14 7a5 5 0 0 1 7 7l-2 2a5 5 0 0 1-6.2.7"/>
+                <path d="M15.5 19.5 14 21a5 5 0 0 1-7-7l2-2a5 5 0 0 1 6.2-.7"/>
+              </svg>
+            </div>
+            <h3>チェック結果をURLで共有</h3>
+            <p>確認した内容をそのまま送れます。</p>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="landing-timing-mobile" aria-label="投稿前に確認する場合としない場合の違い（モバイル表示）">
-          <article class="landing-timing-mobile-stage landing-card">
-            <p class="landing-timing-mobile-step">
-              <span class="landing-timing-mobile-step-index">1</span>
-              <span class="landing-timing-mobile-step-text">編集完了</span>
-            </p>
-            <div class="landing-timing-mobile-shared">最終ファイルを受け取る</div>
-          </article>
-
-          <article class="landing-timing-mobile-stage landing-card">
-            <p class="landing-timing-mobile-step">
-              <span class="landing-timing-mobile-step-index">2</span>
-              <span class="landing-timing-mobile-step-text">投稿<span class="landing-timing-rowhead-accent is-before">前</span></span>
-            </p>
-            <div class="landing-timing-mobile-options">
-              <div class="landing-timing-mobile-option is-risk">
-                <span class="landing-timing-mobile-label">使わない場合</span>
-                <strong>そのまま投稿する</strong>
-              </div>
-              <div class="landing-timing-mobile-option is-safe">
-                <span class="landing-timing-mobile-label">Lumina Zone を使う場合</span>
-                <strong>各SNSのUIとの重なりを確認する</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="landing-timing-mobile-stage landing-card">
-            <p class="landing-timing-mobile-step">
-              <span class="landing-timing-mobile-step-index">3</span>
-              <span class="landing-timing-mobile-step-text">投稿<span class="landing-timing-rowhead-accent is-after">後</span></span>
-            </p>
-            <div class="landing-timing-mobile-options">
-              <div class="landing-timing-mobile-option is-risk">
-                <span class="landing-timing-mobile-label">使わない場合</span>
-                <strong>テロップや重要な情報がUIに隠れていることに気づく</strong>
-                <small>動画の修正もできず、クライアントの信頼を失う。</small>
-              </div>
-              <div class="landing-timing-mobile-option is-safe">
-                <span class="landing-timing-mobile-label">Lumina Zone を使う場合</span>
-                <strong>問題を直してから投稿する</strong>
-                <small>安心して公開できる</small>
-              </div>
-            </div>
-          </article>
+    <section class="section">
+      <div class="container">
+        <div class="narrow center">
+          <h2 class="section-title">修正内容が、<br>一目で伝わる共有ページ</h2>
+          <p class="section-copy">「これ、どこのことですか？」が、なくなります。</p>
         </div>
-
-        <p class="landing-timing-closing">
-          投稿前に止められるかどうかで、結果は変わります。
-        </p>
-      </section>
-
-      <section id="voices" class="landing-section landing-section-centered landing-voices-section landing-section-light" aria-label="β版利用者の声">
-        <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Voices</p>
-          <h2>β版利用者の声</h2>
+        <div class="viewer-card">
+          <iframe
+            class="viewer-embed"
+            src="https://luminazone.jp/share.html?token=a74178667ac22c20c574e91e2bfd47951614&embed=1"
+            title="Lumina Zone 共有ページの操作サンプル"
+            loading="lazy"
+            scrolling="no"
+          ></iframe>
+          <p class="viewer-hint">修正指示をクリックすると、プレビューの表示が切り替わります。</p>
         </div>
+      </div>
+    </section>
 
-        <div class="landing-voices-grid">
-          <article class="landing-voice-card landing-card">
-            <p class="landing-voice-role">SNS運用ディレクター（経験4年）</p>
-            <div class="landing-voice-quote">
-              <p>複数案件を回していると、どうしても最後の確認が甘くなることがありました。</p>
-              <p>編集が終わって、キャプションも考えて、あとは投稿するだけ。そのタイミングで「もう大丈夫だろう」と進めてしまい、あとからテロップの見切れに気づくことも正直ありました。</p>
-              <p>このツールを使うようになってからは、投稿前に一度通すだけで全体を確認できるので、事故が減り、安心して公開できるようになりました。</p>
-            </div>
-            <p class="landing-voice-name">佐藤 みか氏</p>
-          </article>
-
-          <article class="landing-voice-card landing-card">
-            <p class="landing-voice-role">動画編集者（経験3年）</p>
-            <div class="landing-voice-quote">
-              <p>テロップの位置やサイズって、思っている以上にシビアで、少しズレるだけで見えなくなることがあります。</p>
-              <p>今は最終チェックで必ず使っていて、細かい部分まで自信を持って仕上げられるようになりました。</p>
-            </div>
-            <p class="landing-voice-name">ミヤマ ノノカ氏</p>
-          </article>
-
-          <article class="landing-voice-card landing-card">
-            <p class="landing-voice-role">インハウスSNS運用担当者（経験1年）</p>
-            <div class="landing-voice-quote">
-              <p>SNS運用はスピードも求められるので、すべての投稿を細かくチェックするのが難しい場面もありました。</p>
-              <p>特にUIの影響でテロップが隠れることも多く、確認しているつもりでも見落としが起きてしまいます。</p>
-              <p>LUMINA ZONEを通すだけでチェックの精度が上がり、「なんとなく大丈夫」で出すことがなくなりました。</p>
-            </div>
-            <p class="landing-voice-name">橘 雄太氏</p>
-          </article>
+    <section class="section section-soft">
+      <div class="container local-grid">
+        <div>
+          <h2 class="section-title">アップロード不要。<br>端末内で完結。</h2>
+          <p class="section-copy">動画は外部に送信されません。<br>安全にチェックできます。</p>
         </div>
-      </section>
+        <div class="local-panel">
+          <div class="local-point"><span class="check">✓</span><span>動画はブラウザ内で確認</span></div>
+          <div class="local-point"><span class="check">✓</span><span>元データを外部へ送信しない</span></div>
+          <div class="local-point"><span class="check">✓</span><span>共有するのはチェック結果だけ</span></div>
+        </div>
+      </div>
+    </section>
 
-      <section id="solution" class="landing-section landing-section-centered landing-compare-section landing-section-light" aria-label="よくある確認方法との違い">
-        <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Solution</p>
-          <h2 class="landing-compare-heading">
-            <span class="landing-compare-gradient landing-compare-heading-line">効率と速度を2倍に</span>
+    <section class="section">
+      <div class="container">
+        <div class="narrow center">
+
+          <h2 class="section-title">
+            なぜツールを作ったのか。
           </h2>
-          <p class="landing-section-intro">
-            最終ファイルを開き、SNSごとのUIを重ねて確認し、そのまま共有できます。
+
+          <p class="section-copy">
+            投稿後に気づくミスを、<br>
+            何度も見てきました。<br><br>
+
+            編集は完璧でも、<br>
+            最後のフェーズで崩れる。<br><br>
+
+            そのズレをなくすために、<br>
+            このツールを作りました。
           </p>
-        </div>
 
-        <div class="landing-compare-grid" aria-label="代替手段との比較">
-          <article class="landing-compare-card landing-card is-alt">
-            <span class="landing-compare-icon landing-compare-icon-blue" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <rect x="7" y="3.5" width="10" height="17" rx="2.8"></rect>
-                <path d="M10 6.8h4"></path>
-                <path d="M11 17.2h2"></path>
-              </svg>
-            </span>
-            <p class="landing-compare-title">スマホ実機確認</p>
-            <ul class="landing-compare-list">
-              <li>毎回端末へ送って確認</li>
-              <li>SNSごとに見直しが必要</li>
-              <li>修正依頼は別でまとめる</li>
-            </ul>
-          </article>
-
-          <article class="landing-compare-card landing-card is-alt">
-            <span class="landing-compare-icon landing-compare-icon-orange" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <rect x="4" y="6" width="11" height="12" rx="2"></rect>
-                <rect x="9" y="4" width="11" height="12" rx="2"></rect>
-              </svg>
-            </span>
-            <p class="landing-compare-title">透過PNG重ね</p>
-            <ul class="landing-compare-list">
-              <li>編集ソフト内で手作業</li>
-              <li>UIごとの切り替えが面倒</li>
-              <li>共有用のレポートは残らない</li>
-            </ul>
-          </article>
-
-          <article class="landing-compare-card landing-card is-primary">
-            <span class="landing-compare-icon landing-compare-icon-green" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 3.8 18.5 6v5.4c0 4.2-2.3 6.9-6.5 8.8-4.2-1.9-6.5-4.6-6.5-8.8V6L12 3.8Z"></path>
-                <path d="m9.5 12.1 1.8 1.8 3.6-3.8"></path>
-              </svg>
-            </span>
-            <span class="landing-compare-badge">Lumina Zone</span>
-            <p class="landing-compare-title">投稿前チェックから修正依頼まで。</p>
-            <ul class="landing-compare-list">
-              <li>ブラウザで最終ファイルをすぐ確認</li>
-              <li>Premiere以外の編集環境でも使える</li>
-              <li>各SNSのUIを切り替えて重なりを確認</li>
-              <li>修正メモ付きPDFをそのまま共有</li>
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <section class="landing-section landing-section-centered landing-proof-section landing-section-light" aria-label="セーフゾーンと成果に関する公開データ">
-        <div class="landing-proof-card landing-card">
-          <div class="landing-proof-copy">
-            <div class="landing-proof-badge" aria-label="Meta公式データ">
-              <span class="landing-proof-meta-mark" aria-hidden="true">
-                <svg viewBox="0 0 64 44" role="img" focusable="false" aria-hidden="true">
-                  <path d="M8 22C13 10 22 10 32 22C22 34 13 34 8 22Z"></path>
-                  <path d="M56 22C51 10 42 10 32 22C42 34 51 34 56 22Z"></path>
-                  <path d="M8 22C13 34 22 34 32 22C42 10 51 10 56 22"></path>
-                </svg>
-              </span>
-              <span class="landing-proof-badge-copy">
-                <strong>Meta</strong>
-                <span>公式データ</span>
-              </span>
-            </div>
-            <h2>Meta公式でも、セーフゾーンを含む最適化で成果改善。</h2>
-            <p class="landing-proof-intro">
-              Meta公式では、セーフゾーンを含む最適化済みReelsクリエイティブで、配信効率2倍、成果単価34.5%改善という結果が示されています。
-            </p>
-            <p class="landing-proof-note">
-              見切れない配置は、見た目だけでなく成果を守る基本です。
-            </p>
-            <p class="landing-proof-source">
-              出典:
-              <a href="https://www.facebook.com/business/ads/facebook-instagram-reels-ads" target="_blank" rel="noreferrer">Meta for Business</a>
-            </p>
-          </div>
-
-          <div class="landing-proof-stats" aria-label="Meta公開データ">
-            <article class="landing-proof-stat is-primary">
-              <div class="landing-proof-stat-head">
-                <span class="landing-proof-stat-label">配信効率</span>
-              </div>
-              <strong>2倍</strong>
-              <p class="landing-proof-stat-caption">Reelsに届きやすい</p>
-            </article>
-            <article class="landing-proof-stat">
-              <div class="landing-proof-stat-head">
-                <span class="landing-proof-stat-label">成果単価</span>
-              </div>
-              <strong><span class="landing-proof-number">34.5</span><span class="landing-proof-unit">%</span></strong>
-              <p class="landing-proof-stat-caption">より少ない費用で成果</p>
-            </article>
-          </div>
-        </div>
-      </section>
-      <section id="steps" class="landing-section landing-section-centered">
-        <div class="landing-section-head landing-section-head-centered">
-          <p class="landing-section-kicker">Steps</p>
-          <h2>使い方はシンプルです。</h2>
-          <p class="landing-section-intro">
-            操作はシンプルで、直感的に使えます。
+          <p class="soft-close">
+            現場で使う人が、<br>
+            現場のために作っています。
           </p>
-        </div>
 
-        <div class="landing-steps-grid">
-          <article class="landing-step-card landing-card">
-            <span class="landing-step-chip">STEP 1</span>
-            <h3>動画を読み込む</h3>
-            <p>確認したい動画を開きます。</p>
-            <p class="landing-step-note">アップロード不要。<br>その場で即チェックできます。</p>
-          </article>
-          <article class="landing-step-card landing-card">
-            <span class="landing-step-chip">STEP 2</span>
-            <h3>見え方を確認</h3>
-            <p>各SNSの表示エリアを重ねて、見切れや重なりを確認します。</p>
-          </article>
-          <article class="landing-step-card landing-card">
-            <span class="landing-step-chip">STEP 3</span>
-            <h3>必要な箇所にコメント</h3>
-            <p>気になる箇所にそのままコメントを書き込めるので、修正指示までその場で完結します。</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="fast-private" class="landing-section landing-section-centered landing-trust-section landing-section-light" aria-label="安心して使える理由">
-        <div class="landing-trust-card landing-card">
-          <div class="landing-trust-copy">
-            <p class="landing-section-kicker">Fast & Private</p>
-            <h2>アップロード待ち時間ゼロ、<br>素早く安全に確認できます。</h2>
-            <p class="landing-trust-intro">
-              ローカル処理のため待ち時間がなく、公開前データの漏洩リスクもありません。
+          <div style="margin-top: 36px;">
+            <img src="./assets/prof2.jpg"
+                 alt="開発者"
+                 style="width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 14px;">
+            <p style="margin:0;font-weight:700;">Daisuke Goriki</p>
+            <p style="margin:4px 0 0;color:#6e6e73;font-size:14px;">
+              Luminazone 開発
             </p>
           </div>
-          <div class="landing-trust-visual" aria-hidden="true">
-            <div class="landing-trust-browser-card">
-              <span class="landing-trust-browser-chip is-local">Local</span>
-              <span class="landing-trust-browser-shield">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 3.8 18.5 6v5.4c0 4.2-2.3 6.9-6.5 8.8-4.2-1.9-6.5-4.6-6.5-8.8V6L12 3.8Z"></path>
-                  <path d="m9.5 12.1 1.8 1.8 3.6-3.8"></path>
-                </svg>
-              </span>
-              <div class="landing-trust-browser-window">
-                <span class="landing-trust-browser-dot"></span>
-                <span class="landing-trust-browser-dot"></span>
-                <span class="landing-trust-browser-dot"></span>
-              </div>
-              <div class="landing-trust-video-frame">
-                <span class="landing-trust-video-notch"></span>
-                <span class="landing-trust-video-safe-zone"></span>
-                <span class="landing-trust-video-caption"></span>
-                <span class="landing-trust-video-play">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M8 6.5 18 12 8 17.5Z"></path>
-                  </svg>
-                </span>
-              </div>
-              <div class="landing-trust-browser-flows">
-                <span class="landing-trust-flow-chip">アップロードなし</span>
-                <span class="landing-trust-flow-chip">ブラウザ内で確認</span>
-              </div>
-            </div>
-          </div>
+
         </div>
-      </section>
-
-      <section class="landing-section landing-section-centered landing-origin-section landing-section-light" aria-label="開発について">
-        <div class="landing-origin-card landing-card">
-          <div class="landing-origin-copy">
-            <p class="landing-section-kicker">Development</p>
-            <h2>開発について</h2>
-            <p>このツールは、実際に動画編集とSNS運用を行う中で感じていた課題から生まれました。</p>
-            <p>投稿後に気づく見切れやミスは、現場でもよく起きるものです。</p>
-            <p>そうした「最後の見落とし」を防ぐために、シンプルに投稿前チェックできる形で設計しています。</p>
-          </div>
-
-          <div class="landing-origin-credit">
-            <img src="./assets/prof2.jpg" alt="Daisuke Goriki" class="landing-origin-photo" width="84" height="84">
-            <div class="landing-origin-meta">
-              <span class="landing-origin-role">開発チーム代表</span>
-              <strong>Daisuke Goriki</strong>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="landing-section landing-section-centered">
-        <div class="landing-cta landing-card">
-          <div class="landing-cta-copy">
-            <p class="landing-section-kicker">Start</p>
-            <h2>まずは1本、無料で確認する。</h2>
-            <p>気になる動画が1本あるなら、投稿前にいま確認できます。</p>
-          </div>
-          <div class="landing-actions landing-cta-actions">
-            <a href="./login.html" class="landing-button landing-button-primary" data-cta-source="footer">無料で確認する</a>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="landing-footer">
-      <div class="landing-footer-logo-wrap">
-        <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="landing-footer-logo" width="140" height="140">
       </div>
-      <nav class="landing-footer-links" aria-label="フッターリンク">
-        <a href="./company.html" target="_blank" rel="noreferrer">運営者情報</a>
-        <a href="./terms.html" target="_blank" rel="noreferrer">利用規約</a>
-        <a href="./privacy.html" target="_blank" rel="noreferrer">プライバシーポリシー</a>
-        <a href="./legal.html" target="_blank" rel="noreferrer">特定商取引法に基づく表記</a>
-      </nav>
-      <span>© Lumina Zone</span>
-    </footer>
-  </div>
-  <script src="analytics.js" defer></script>
-  <script src="landing.js?v=20260408-release-2" defer></script>
+    </section>
+
+    <section class="final-cta">
+      <div class="narrow">
+        <h2 class="section-title">まずは1本だけ。</h2>
+        <p class="section-copy">普段のチェックに、<br>この一手を入れてみてください。</p>
+        <p class="soft-close">その動画を確認するか、<br>そのまま投稿するか。<br><br>その違いが、<br>信頼を守るか、失うかを決めます。</p>
+        <a class="pill-button" href="./login.html">無料で確認する</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-logo-wrap">
+      <img src="./assets/logo_new_blue.PNG" alt="Lumina Zone" class="footer-logo" width="140" height="140">
+    </div>
+    <nav class="footer-links" aria-label="フッターリンク">
+      <a href="./company.html" target="_blank" rel="noreferrer">運営者情報</a>
+      <a href="./terms.html" target="_blank" rel="noreferrer">利用規約</a>
+      <a href="./privacy.html" target="_blank" rel="noreferrer">プライバシーポリシー</a>
+      <a href="./legal.html" target="_blank" rel="noreferrer">特定商取引法に基づく表記</a>
+    </nav>
+    <span>© Lumina Zone</span>
+  </footer>
 </body>
 </html>

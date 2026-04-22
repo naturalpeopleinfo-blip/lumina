@@ -221,6 +221,14 @@
       font-weight: 800;
     }
 
+    .gradient-title {
+      color: #0051a8;
+      background: linear-gradient(105deg, #004b93 0%, #0066c9 42%, #1f8df2 72%, #61b6ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
     .hero-lead {
       max-width: 540px;
       margin-bottom: 34px;
@@ -367,6 +375,13 @@
         linear-gradient(180deg, #dfe9f6 0%, #f6d5c8 52%, #f2f2f2 100%);
     }
 
+    .phone-screen-image {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
     .mock-person {
       position: absolute;
       left: 50%;
@@ -393,23 +408,55 @@
       text-shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
     }
 
-    .phone-after .ui-right {
+    .phone-after .ui-top,
+    .phone-after .ui-right,
+    .phone-after .ui-bottom,
+    .phone-after .ui-left {
       position: absolute;
-      top: 28%;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.08) 0,
+          rgba(255, 255, 255, 0.08) 7px,
+          transparent 7px,
+          transparent 16px
+        ),
+        rgba(255, 67, 67, 0.58);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(0.5px);
+    }
+
+    .phone-after .phone-screen-image {
+      filter: saturate(0.96) brightness(0.94);
+    }
+
+    .phone-after .ui-top {
+      top: 0;
+      left: 0;
       right: 0;
-      width: 22%;
-      height: 56%;
-      background: rgba(0, 0, 0, 0.68);
-      border-radius: 22px 0 0 22px;
+      height: 18%;
+    }
+
+    .phone-after .ui-right {
+      top: 0;
+      right: 0;
+      width: 18%;
+      height: 100%;
     }
 
     .phone-after .ui-bottom {
-      position: absolute;
       left: 0;
       right: 0;
       bottom: 0;
-      height: 23%;
-      background: rgba(0, 0, 0, 0.72);
+      height: 25%;
+    }
+
+    .phone-after .ui-left {
+      top: 0;
+      left: 0;
+      width: 11%;
+      height: 100%;
     }
 
     .phone-after .mock-caption {
@@ -463,6 +510,32 @@
       line-height: 1.15;
       letter-spacing: -0.05em;
       font-weight: 800;
+    }
+
+    .empathy-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: clamp(36px, 6vw, 72px);
+      align-items: center;
+    }
+
+    .empathy-copy {
+      margin-bottom: 0;
+    }
+
+    .empathy-image {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: block;
+      object-fit: cover;
+      border-radius: 38px;
+      box-shadow: 0 24px 54px rgba(0, 0, 0, 0.14);
+    }
+
+    .empathy-close {
+      margin-top: clamp(44px, 6vw, 72px);
+      text-align: center;
+      font-size: clamp(27px, 3.2vw, 43px);
     }
 
     .risk-grid {
@@ -571,6 +644,14 @@
       font-weight: 800;
     }
 
+    .statement-card .statement-copy {
+      color: #424245;
+      font-size: clamp(20px, 2.2vw, 28px);
+      line-height: 1.35;
+      letter-spacing: -0.04em;
+      font-weight: 650;
+    }
+
     .solution-card {
       position: relative;
       overflow: hidden;
@@ -663,18 +744,12 @@
     .demo-video {
       width: min(880px, 100%);
       aspect-ratio: 16 / 9;
+      display: block;
+      margin: 0 auto;
       border-radius: 28px;
       background: #ffffff;
       border: 1px solid rgba(0, 0, 0, 0.08);
       box-shadow: 0 18px 42px rgba(0, 0, 0, 0.1);
-    }
-
-    .demo-placeholder {
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 600;
-      text-align: center;
     }
 
     .features-grid {
@@ -684,15 +759,65 @@
       margin-top: 42px;
     }
 
+    .features-intro {
+      max-width: 560px;
+      margin: 16px auto 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
     .feature-item {
-      padding: 24px;
-      min-height: 156px;
+      padding: 26px 24px 24px;
+      min-height: 210px;
+    }
+
+    .feature-topline {
+      margin-bottom: 18px;
+    }
+
+    .feature-number {
+      color: var(--blue);
+      font-size: 13px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 18px;
+      color: var(--blue);
+    }
+
+    .feature-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      stroke: currentColor;
+    }
+
+    .feature-icon-purple {
+      color: #6e6ee8;
+    }
+
+    .feature-icon-orange {
+      color: #f59e0b;
+    }
+
+    .feature-icon-green {
+      color: #34a853;
+    }
+
+    .feature-icon-cyan {
+      color: #0891b2;
     }
 
     .feature-item h3 {
       margin-bottom: 10px;
       font-size: 20px;
-      line-height: 1.15;
+      line-height: 1.18;
       letter-spacing: -0.04em;
     }
 
@@ -921,7 +1046,8 @@
     @media (max-width: 980px) {
       .hero-grid,
       .viewer-card,
-      .local-grid {
+      .local-grid,
+      .empathy-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1063,8 +1189,7 @@
               <div class="phone-label">編集画面では問題なし</div>
               <div class="phone">
                 <div class="phone-screen">
-                  <div class="mock-person"></div>
-                  <div class="mock-caption">大事なテロップが<br>見えている</div>
+                  <img class="phone-screen-image" src="./assets/header_sample.jpg" alt="編集画面では問題なく見えているサンプル動画">
                 </div>
               </div>
             </div>
@@ -1073,10 +1198,11 @@
               <div class="phone-label">投稿画面ではUIが重なる</div>
               <div class="phone phone-after">
                 <div class="phone-screen">
-                  <div class="mock-person"></div>
-                  <div class="mock-caption">大事なテロップが<br>見えている</div>
+                  <img class="phone-screen-image" src="./assets/header_sample.jpg" alt="投稿画面でUIが重なるサンプル動画">
+                  <div class="ui-top"></div>
                   <div class="ui-right"></div>
                   <div class="ui-bottom"></div>
+                  <div class="ui-left"></div>
                   <div class="hidden-badge">ここ、隠れます</div>
                 </div>
               </div>
@@ -1105,10 +1231,14 @@
     </section>
 
     <section class="section section-soft">
-      <div class="narrow center">
-        <h2 class="section-title">ちゃんとやっていても、<br>最後に漏れます。</h2>
-        <p class="section-copy">1日に何本も動画をチェックして、<br>複数のSNSを確認して、<br>修正のやり取りもする。<br><br>全部を完璧に見るのは、<br>無理があります。</p>
-        <p class="soft-close">それは、あなたのせいではありません。</p>
+      <div class="container">
+        <div class="empathy-grid">
+          <div>
+            <p class="section-copy empathy-copy">1日に何本も動画をチェックして、<br>複数のSNSを確認して、<br>修正のやり取りもする。<br><br>全部を完璧に見るのは、<br>無理があります。</p>
+          </div>
+          <video class="empathy-image" src="./assets/face.mp4" autoplay muted loop playsinline aria-label="投稿前の動画を確認する様子"></video>
+        </div>
+        <p class="soft-close empathy-close gradient-title">それは、あなたのせいではありません。</p>
       </div>
     </section>
 
@@ -1116,7 +1246,8 @@
       <div class="container">
         <div class="statement-card">
           <h2 class="section-title">問題は、<br>確認不足ではありません。</h2>
-          <p>問題は、<br>「投稿前チェック」という工程が<br>存在していないことです。</p>
+          <p class="statement-copy">チェックしていても、<br>量とスピードの中で<br>見落としは起きます。</p>
+          <p class="soft-close">だから、<br>最後の確認工程が必要になります。</p>
         </div>
       </div>
     </section>
@@ -1138,11 +1269,10 @@
         <div class="demo-frame">
           <div class="demo-shell">
             <div>
-              <video class="demo-video" controls muted playsinline poster="./assets/index3-demo-poster.jpg">
+              <video class="demo-video" controls muted playsinline preload="metadata">
                 <source src="./assets/index3-demo.mp4" type="video/mp4">
-                デモ動画をここに配置できます。
+                お使いのブラウザでは動画を再生できません。
               </video>
-              <p class="demo-placeholder">デモ動画は `./assets/index3-demo.mp4` に差し替えできます。</p>
             </div>
           </div>
         </div>
@@ -1152,29 +1282,79 @@
     <section class="section section-soft">
       <div class="container">
         <div class="narrow center">
-          <p class="eyebrow">機能は、必要な分だけ</p>
-          <h2 class="section-title">できること</h2>
+          <h2 class="section-title">できること<br><span class="gradient-title">最終確認を、もっと速く。</span></h2>
+          <p class="section-copy features-intro">5つの機能で、投稿前の最終確認をスピーディーに。</p>
         </div>
         <div class="features-grid">
           <div class="feature-item">
-            <h3>投稿後の見切れ事故を防ぐ</h3>
-            <p>投稿前に文字の被りを確認。</p>
+            <div class="feature-topline">
+              <span class="feature-number">01</span>
+            </div>
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3.5 14s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7S3.5 14 3.5 14Z"/>
+                <circle cx="14" cy="14" r="3.5"/>
+              </svg>
+            </div>
+            <h3>投稿後の“やり直せない事故”を防ぐ</h3>
+            <p>投稿前に、文字やUIの重なりを確認。</p>
           </div>
           <div class="feature-item">
-            <h3>SNSごとの隠れる位置がわかる</h3>
-            <p>主要SNSの見え方をまとめて確認。</p>
+            <div class="feature-topline">
+              <span class="feature-number">02</span>
+            </div>
+            <div class="feature-icon feature-icon-purple" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="8" y="3.5" width="12" height="21" rx="3"/>
+                <path d="M11 7h6"/>
+                <path d="M10.5 18.5h7"/>
+                <path d="M5 9.5h5"/>
+                <path d="M18 14h5"/>
+              </svg>
+            </div>
+            <h3>SNSごとの差を一目で確認</h3>
+            <p>主要SNSごとの見え方をまとめてチェック。</p>
           </div>
           <div class="feature-item">
+            <div class="feature-topline">
+              <span class="feature-number">03</span>
+            </div>
+            <div class="feature-icon feature-icon-orange" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 25s7-7.1 7-13.2A7 7 0 0 0 7 11.8C7 17.9 14 25 14 25Z"/>
+                <circle cx="14" cy="11.8" r="2.6"/>
+              </svg>
+            </div>
             <h3>問題箇所をその場で記録</h3>
-            <p>気になる位置をその場で残す。</p>
+            <p>気になる位置をその場で残せます。</p>
           </div>
           <div class="feature-item">
-            <h3>修正内容をそのまま共有できる</h3>
-            <p>修正内容を短く記録。</p>
+            <div class="feature-topline">
+              <span class="feature-number">04</span>
+            </div>
+            <div class="feature-icon feature-icon-green" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 6.5h18v12H10l-5 4v-16Z"/>
+                <path d="M10 11h8"/>
+                <path d="M10 15h5"/>
+              </svg>
+            </div>
+            <h3>修正内容をそのまま共有</h3>
+            <p>修正内容を短く記録して渡せます。</p>
           </div>
           <div class="feature-item">
+            <div class="feature-topline">
+              <span class="feature-number">05</span>
+            </div>
+            <div class="feature-icon feature-icon-cyan" aria-hidden="true">
+              <svg viewBox="0 0 28 28" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11.5 16.5 16.5 11.5"/>
+                <path d="M12.5 8.5 14 7a5 5 0 0 1 7 7l-2 2a5 5 0 0 1-6.2.7"/>
+                <path d="M15.5 19.5 14 21a5 5 0 0 1-7-7l2-2a5 5 0 0 1 6.2-.7"/>
+              </svg>
+            </div>
             <h3>チェック結果をURLで共有</h3>
-            <p>チェック結果をそのまま送る。</p>
+            <p>確認した内容をそのまま送れます。</p>
           </div>
         </div>
       </div>
@@ -1213,11 +1393,49 @@
       </div>
     </section>
 
+    <section class="section">
+      <div class="container">
+        <div class="narrow center">
+
+          <h2 class="section-title">
+            なぜツールを作ったのか。
+          </h2>
+
+          <p class="section-copy">
+            投稿後に気づくミスを、<br>
+            何度も見てきました。<br><br>
+
+            編集は完璧でも、<br>
+            最後のフェーズで崩れる。<br><br>
+
+            そのズレをなくすために、<br>
+            このツールを作りました。
+          </p>
+
+          <p class="soft-close">
+            現場で使う人が、<br>
+            現場のために作っています。
+          </p>
+
+          <div style="margin-top: 36px;">
+            <img src="./assets/prof2.jpg"
+                 alt="開発者"
+                 style="width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 14px;">
+            <p style="margin:0;font-weight:700;">Daisuke Goriki</p>
+            <p style="margin:4px 0 0;color:#6e6e73;font-size:14px;">
+              Luminazone 開発
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
     <section class="final-cta">
       <div class="narrow">
         <h2 class="section-title">まずは1本だけ。</h2>
         <p class="section-copy">普段のチェックに、<br>この一手を入れてみてください。</p>
-        <p class="soft-close">それだけで、<br>事故は防げます。</p>
+        <p class="soft-close">その動画を確認するか、<br>そのまま投稿するか。<br><br>その違いが、<br>信頼を守るか、失うかを決めます。</p>
         <a class="pill-button" href="./login.html">無料で確認する</a>
       </div>
     </section>
