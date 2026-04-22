@@ -3,6 +3,8 @@ const crypto = require("crypto");
 const DEFAULT_SUPABASE_URL = "https://kmwnpiibbxtajdgfaouw.supabase.co";
 const FREE_DAILY_LIMIT = 2;
 const PRO_DAILY_LIMIT = 9999;
+const TEAM_DAILY_LIMIT = 9999;
+const DEFAULT_BUSINESS_PRICE_AMOUNT = 4980;
 const ACTIVE_PRO_STATUSES = new Set(["active", "trialing", "past_due", "unpaid"]);
 
 function json(res, statusCode, payload) {
@@ -178,6 +180,18 @@ function buildProRecord(base) {
   );
 }
 
+function buildTeamRecord(base) {
+  return Object.assign(
+    {
+      plan: "team",
+      daily_limit: TEAM_DAILY_LIMIT,
+      beta_unlocked: false,
+      pro_activated_at: new Date().toISOString()
+    },
+    base || {}
+  );
+}
+
 function buildFreeRecord(base) {
   return Object.assign(
     {
@@ -200,6 +214,73 @@ function normalizeSubscriptionId(value) {
 
 function shouldGrantPro(status) {
   return ACTIVE_PRO_STATUSES.has(String(status || "").toLowerCase());
+}
+
+function getMetadataPlan(source) {
+  const metadata = source && source.metadata ? source.metadata : {};
+  const value = String(metadata.lumina_plan || metadata.plan || metadata.product_plan || "").toLowerCase();
+
+  if (value === "business" || value === "team") {
+    return "team";
+  }
+
+  return "pro";
+}
+
+function getBusinessPriceAmount() {
+  const configured = Number(process.env.STRIPE_BUSINESS_PRICE_AMOUNT || DEFAULT_BUSINESS_PRICE_AMOUNT);
+  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_BUSINESS_PRICE_AMOUNT;
+}
+
+function getBusinessPriceIds() {
+  return String(process.env.STRIPE_BUSINESS_PRICE_ID || process.env.STRIPE_BUSINESS_PRICE_IDS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function getLineItems(source) {
+  return source && source.items && Array.isArray(source.items.data) ? source.items.data : [];
+}
+
+function hasBusinessPriceId(source) {
+  const businessPriceIds = getBusinessPriceIds();
+
+  if (!businessPriceIds.length) {
+    return false;
+  }
+
+  return getLineItems(source).some((item) => {
+    const price = item && item.price ? item.price : {};
+    return businessPriceIds.includes(String(price.id || ""));
+  });
+}
+
+function hasBusinessPriceAmount(source) {
+  const businessAmount = getBusinessPriceAmount();
+  const directAmount = Number(source && (source.amount_total || source.amount_subtotal));
+
+  if (Number.isFinite(directAmount) && directAmount === businessAmount) {
+    return true;
+  }
+
+  return getLineItems(source).some((item) => {
+    const price = item && item.price ? item.price : {};
+    const amount = Number(price.unit_amount || price.unit_amount_decimal);
+    return Number.isFinite(amount) && amount === businessAmount;
+  });
+}
+
+function getPaidPlan(source) {
+  if (getMetadataPlan(source) === "team" || hasBusinessPriceId(source) || hasBusinessPriceAmount(source)) {
+    return "team";
+  }
+
+  return "pro";
+}
+
+function buildPaidRecord(source, base) {
+  return getPaidPlan(source) === "team" ? buildTeamRecord(base) : buildProRecord(base);
 }
 
 function toIsoDate(value) {
@@ -229,7 +310,7 @@ async function handleCheckoutCompleted(session) {
   }
 
   await upsertAppUser(
-    buildProRecord({
+    buildPaidRecord(session, {
       clerk_user_id: clerkUserId,
       email: email,
       stripe_customer_id: customerId || null,
@@ -246,7 +327,7 @@ async function handleSubscriptionUpdate(subscription, isDeleted) {
   const cancelAtPeriodEnd = !!(subscription && subscription.cancel_at_period_end);
   const currentPeriodEnd = toIsoDate(subscription && subscription.current_period_end);
   const record = shouldGrantPro(status)
-    ? buildProRecord({
+    ? buildPaidRecord(subscription, {
         stripe_customer_id: customerId || null,
         stripe_subscription_id: subscriptionId || null,
         stripe_subscription_status: status,

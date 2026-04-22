@@ -5,7 +5,8 @@
   var authConfig = config.auth || {};
   var DEFAULT_PRO_CHECKOUT_URL = "https://buy.stripe.com/4gM5kC0zg4AL5b04siffy01";
   var DEFAULT_CAMPAIGN_CHECKOUT_URL = "https://buy.stripe.com/4gM8wObdU8R1gTIf6Wffy02";
-  var DEFAULT_CUSTOMER_PORTAL_LOGIN_URL = "";
+  var DEFAULT_BUSINESS_CHECKOUT_URL = "https://buy.stripe.com/6oUbJ0gye7MXeLA1g6ffy03";
+  var DEFAULT_CUSTOMER_PORTAL_LOGIN_URL = "https://billing.stripe.com/p/login/fZueVc1Dk8R1eLA8Iyffy00";
   var PRO_INTENT_KEY = "lumina-auth-intent";
   var PRO_CHECKOUT_STARTED_KEY = "lumina-pro-checkout-started";
   var subscribers = [];
@@ -85,6 +86,14 @@
     return authConfig.proCampaignCheckoutUrl || DEFAULT_CAMPAIGN_CHECKOUT_URL;
   }
 
+  function getFallbackBusinessCheckoutUrl(mode) {
+    if (mode === "test") {
+      return authConfig.businessCheckoutUrlTest || "";
+    }
+
+    return authConfig.businessCheckoutUrl || DEFAULT_BUSINESS_CHECKOUT_URL;
+  }
+
   function getFallbackPortalUrl(mode) {
     if (mode === "test") {
       return authConfig.customerPortalUrlTest || "";
@@ -100,6 +109,7 @@
       return Promise.resolve({
         checkoutUrl: getFallbackCheckoutUrl(normalized),
         campaignCheckoutUrl: getFallbackCampaignCheckoutUrl(normalized),
+        businessCheckoutUrl: getFallbackBusinessCheckoutUrl(normalized),
         portalLoginUrl: getFallbackPortalUrl(normalized)
       });
     }
@@ -120,6 +130,7 @@
         return {
           checkoutUrl: payload && payload.checkoutUrl ? payload.checkoutUrl : getFallbackCheckoutUrl(normalized),
           campaignCheckoutUrl: payload && payload.campaignCheckoutUrl ? payload.campaignCheckoutUrl : getFallbackCampaignCheckoutUrl(normalized),
+          businessCheckoutUrl: payload && payload.businessCheckoutUrl ? payload.businessCheckoutUrl : getFallbackBusinessCheckoutUrl(normalized),
           portalLoginUrl: payload && payload.portalLoginUrl ? payload.portalLoginUrl : getFallbackPortalUrl(normalized)
         };
       })
@@ -127,6 +138,7 @@
         return {
           checkoutUrl: getFallbackCheckoutUrl(normalized),
           campaignCheckoutUrl: getFallbackCampaignCheckoutUrl(normalized),
+          businessCheckoutUrl: getFallbackBusinessCheckoutUrl(normalized),
           portalLoginUrl: getFallbackPortalUrl(normalized)
         };
       });
@@ -198,7 +210,7 @@
   }
 
   function isBillingIntent(intent) {
-    return intent === "pro" || intent === "campaign";
+    return intent === "pro" || intent === "campaign" || intent === "business";
   }
 
   function getAppRedirectForIntent(intent) {
@@ -447,6 +459,7 @@
     var signInButton = document.getElementById("googleSignInButton");
     var signInProButton = document.getElementById("googleSignInProButton");
     var signInCampaignButton = document.getElementById("googleSignInCampaignButton");
+    var signInBusinessButton = document.getElementById("googleSignInBusinessButton");
     var authStartProButton = document.getElementById("authStartProButton");
     var authStartCampaignButton = document.getElementById("authStartCampaignButton");
     var signInButtonLabel = signInButton ? signInButton.querySelector(".google-signin-button-label") : null;
@@ -715,6 +728,27 @@
     });
   }
 
+  function startBusinessCheckout() {
+    var billingMode = getBillingMode();
+
+    return getBillingConfig(billingMode).then(function (billingConfig) {
+      var checkoutUrlWithUser = buildCheckoutUrlWithUserContext(billingConfig && billingConfig.businessCheckoutUrl);
+
+      if (!checkoutUrlWithUser) {
+        throw new Error("Business checkout URL is missing");
+      }
+
+      track("business_checkout_start", {
+        source: getAuthSource(),
+        has_user: !!(state.user && state.user.id),
+        billing_mode: billingMode
+      });
+      clearPendingAuthIntent();
+      markProCheckoutStarted();
+      window.location.assign(checkoutUrlWithUser);
+    });
+  }
+
   function startBillingPortal() {
     var billingMode = getBillingMode();
 
@@ -742,6 +776,7 @@
       return {
         hasCheckout: !!(billingConfig && billingConfig.checkoutUrl),
         hasCampaignCheckout: !!(billingConfig && billingConfig.campaignCheckoutUrl),
+        hasBusinessCheckout: !!(billingConfig && billingConfig.businessCheckoutUrl),
         hasPortal: !!(billingConfig && billingConfig.portalLoginUrl),
         billingMode: billingMode
       };
@@ -772,7 +807,12 @@
       return;
     }
 
-    var checkoutPromise = pendingIntent === "campaign" ? startCampaignCheckout() : startProCheckout();
+    var checkoutPromise =
+      pendingIntent === "campaign"
+        ? startCampaignCheckout()
+        : pendingIntent === "business"
+          ? startBusinessCheckout()
+          : startProCheckout();
 
     checkoutPromise.catch(function (error) {
       console.error("Failed to start pending checkout", error);
@@ -794,6 +834,7 @@
     var signInButton = document.getElementById("googleSignInButton");
     var signInProButton = document.getElementById("googleSignInProButton");
     var signInCampaignButton = document.getElementById("googleSignInCampaignButton");
+    var signInBusinessButton = document.getElementById("googleSignInBusinessButton");
     var authStartProButton = document.getElementById("authStartProButton");
     var authStartCampaignButton = document.getElementById("authStartCampaignButton");
     var signOutButton = document.getElementById("authSignOutButton");
@@ -819,6 +860,14 @@
       signInCampaignButton.addEventListener("click", function () {
         signInWithGoogle({ intent: "campaign" }).catch(function (error) {
           console.error("Failed to start Clerk Google sign-in for campaign", error);
+        });
+      });
+    }
+
+    if (signInBusinessButton) {
+      signInBusinessButton.addEventListener("click", function () {
+        signInWithGoogle({ intent: "business" }).catch(function (error) {
+          console.error("Failed to start Clerk Google sign-in for BUSINESS", error);
         });
       });
     }
@@ -921,6 +970,7 @@
     getBillingCapabilities: getBillingCapabilities,
     startProCheckout: startProCheckout,
     startCampaignCheckout: startCampaignCheckout,
+    startBusinessCheckout: startBusinessCheckout,
     startBillingPortal: startBillingPortal,
     signInWithGoogle: signInWithGoogle,
     signOut: signOut
