@@ -100,6 +100,20 @@
     }).join("");
   }
 
+  function getZoneColor(flag) {
+    var zone = String((flag && (flag.reportZone || flag.zone)) || "");
+    var color = String((flag && flag.reportZoneColor) || "");
+    var colors = {
+      top: "#ffb84d",
+      right: "#5ac8fa",
+      left: "#bf5af2",
+      bottom: "#ff6b6b",
+      center: "#34c759"
+    };
+
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : (colors[zone] || colors.center);
+  }
+
   function escapeHtml(value) {
     return String(value || "")
       .replace(/&/g, "&amp;")
@@ -160,11 +174,12 @@
 
     els.pinLayer.innerHTML = flags.map(function (flag) {
       var classes = ["share-pin", "share-pin--" + escapeHtml(flag.reportSeverity || "low")];
+      var zoneColor = getZoneColor(flag);
       if (activeFlag && String(activeFlag.id || "") === String(flag.id || "")) {
         classes.push("is-active");
       }
 
-      return '<div class="' + classes.join(" ") + '" style="left:' + ((flag.x || 0) * 100) + "%; top:" + ((flag.y || 0) * 100) + '%;">' +
+      return '<div class="' + classes.join(" ") + '" data-zone="' + escapeHtml(flag.reportZone || flag.zone || "") + '" style="left:' + ((flag.x || 0) * 100) + "%; top:" + ((flag.y || 0) * 100) + "%; background:" + escapeHtml(zoneColor) + ';">' +
         escapeHtml(String(flag.reportNo || "")) +
       "</div>";
     }).join("");
@@ -224,12 +239,13 @@
 
     els.instructionList.innerHTML = flags.map(function (flag, index) {
       var isActive = index === state.activeFlagIndex;
+      var zoneColor = getZoneColor(flag);
       return '<article class="share-instruction' + (isActive ? " is-active" : "") + '" data-flag-index="' + index + '" tabindex="0">' +
         '<div class="share-instruction-head">' +
           '<div class="share-instruction-main">' +
-            '<span class="share-no-badge share-no-badge--' + escapeHtml(flag.reportSeverity || "low") + '">' + escapeHtml(String(flag.reportNo || "")) + "</span>" +
+            '<span class="share-no-badge share-no-badge--' + escapeHtml(flag.reportSeverity || "low") + '" style="background:' + escapeHtml(zoneColor) + ';">' + escapeHtml(String(flag.reportNo || "")) + "</span>" +
             '<strong class="share-time">' + escapeHtml(flag.timeLabel || "00:00") + "</strong>" +
-            '<span class="share-position">(' + escapeHtml(flag.reportPositionShort || "中央") + ")</span>" +
+            '<span class="share-position" style="color:' + escapeHtml(zoneColor) + ';">(' + escapeHtml(flag.reportPositionShort || "中央") + ")</span>" +
           "</div>" +
           '<button class="share-status ' + getStatusClass(flag) + '" type="button" data-status-index="' + index + '" aria-pressed="' + (String(flag.reportStatus || "pending") === "done" ? "true" : "false") + '">' +
             '<span>' + getStatusLabel(flag) + '</span><span class="share-status-icon">▾</span>' +
