@@ -836,6 +836,7 @@
       background: #ffffff;
       border: 1px solid rgba(0, 0, 0, 0.06);
       box-shadow: 0 24px 56px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
     }
 
     .viewer-embed {
@@ -855,6 +856,20 @@
       line-height: 1.5;
       font-weight: 650;
       text-align: center;
+    }
+
+    .viewer-open-link {
+      display: none;
+      width: fit-content;
+      margin: 14px auto 0;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: var(--blue);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 14px 28px rgba(0, 113, 227, 0.22);
     }
 
     .viewer-preview {
@@ -1120,9 +1135,15 @@
       }
 
       .viewer-embed {
-        height: 900px;
-        min-height: 900px;
+        height: 520px;
+        min-height: 520px;
         border-radius: 24px;
+      }
+
+      .viewer-open-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .viewer-preview {
@@ -1269,7 +1290,7 @@
         <div class="demo-frame">
           <div class="demo-shell">
             <div>
-              <video class="demo-video" controls muted playsinline preload="metadata">
+              <video class="demo-video" controls muted playsinline preload="auto" poster="./assets/index3-demo-poster.jpg">
                 <source src="./assets/index3-demo.mp4" type="video/mp4">
                 お使いのブラウザでは動画を再生できません。
               </video>
@@ -1374,6 +1395,7 @@
             loading="lazy"
             scrolling="no"
           ></iframe>
+          <a class="viewer-open-link" href="https://luminazone.jp/share.html?token=a74178667ac22c20c574e91e2bfd47951614" target="_blank" rel="noreferrer">共有ページを別画面で開く</a>
           <p class="viewer-hint">修正指示をクリックすると、プレビューの表示が切り替わります。</p>
         </div>
       </div>
