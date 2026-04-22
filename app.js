@@ -3043,7 +3043,7 @@
     flag.comment = nextComment;
     persistFlags();
     renderFlags();
-    renderCommentEditor();
+    closeCommentEditor();
     track("memo_save", {
       has_comment: !!nextComment.length,
       comment_length: nextComment.length,
@@ -3932,13 +3932,18 @@
 
   function buildReportFlags(flags) {
     return sortFlagsForReport(flags).map(function (flag, index) {
-      var severity = getReportSeverityMeta(flag);
+      var mappedPoint = mapFlagPointForProfile(flag, "iphoneTall");
+      var reportFlag = Object.assign({}, flag, {
+        x: mappedPoint.x,
+        y: mappedPoint.y
+      });
+      var severity = getReportSeverityMeta(reportFlag);
       var status = getReportStatusMeta(flag.reportStatus);
-      return Object.assign({}, flag, {
+      return Object.assign(reportFlag, {
         reportNo: index + 1,
         reportTitle: getFlagTitle(flag),
-        reportPositionLabel: getReportPositionLabel(flag),
-        reportPositionShort: getReportPositionBaseLabel(flag),
+        reportPositionLabel: getReportPositionLabel(reportFlag),
+        reportPositionShort: getReportPositionBaseLabel(reportFlag),
         reportPlatformLabel: getPlatformMeta(flag.platform).label,
         comment: getFlagFinalNote(flag),
         reportSeverity: severity.key,
@@ -4102,7 +4107,28 @@
     return "右下";
   }
 
+  function drawMediaCoverToCanvas(ctx, mediaElement, sourceWidth, sourceHeight, targetWidth, targetHeight) {
+    var sourceRatio = sourceWidth / sourceHeight;
+    var targetRatio = targetWidth / targetHeight;
+    var cropWidth = sourceWidth;
+    var cropHeight = sourceHeight;
+    var cropX = 0;
+    var cropY = 0;
+
+    if (sourceRatio > targetRatio) {
+      cropWidth = sourceHeight * targetRatio;
+      cropX = (sourceWidth - cropWidth) / 2;
+    } else if (sourceRatio < targetRatio) {
+      cropHeight = sourceWidth / targetRatio;
+      cropY = (sourceHeight - cropHeight) / 2;
+    }
+
+    ctx.drawImage(mediaElement, cropX, cropY, cropWidth, cropHeight, 0, 0, targetWidth, targetHeight);
+  }
+
   function createReportPreviewImageDataUrl(platformKey, flags) {
+    var sourceWidth = 0;
+    var sourceHeight = 0;
     var width = 0;
     var height = 0;
     var canvas = null;
@@ -4114,16 +4140,19 @@
     }
 
     if (state.mediaType === "image") {
-      width = els.previewImage.naturalWidth || Math.round(els.stageSurface.clientWidth);
-      height = els.previewImage.naturalHeight || Math.round(els.stageSurface.clientHeight);
+      sourceWidth = els.previewImage.naturalWidth || Math.round(els.stageSurface.clientWidth);
+      sourceHeight = els.previewImage.naturalHeight || Math.round(els.stageSurface.clientHeight);
     } else {
-      width = els.video.videoWidth || Math.round(els.stageSurface.clientWidth);
-      height = els.video.videoHeight || Math.round(els.stageSurface.clientHeight);
+      sourceWidth = els.video.videoWidth || Math.round(els.stageSurface.clientWidth);
+      sourceHeight = els.video.videoHeight || Math.round(els.stageSurface.clientHeight);
     }
 
-    if (!width || !height) {
+    if (!sourceWidth || !sourceHeight) {
       return "";
     }
+
+    height = sourceHeight;
+    width = Math.max(1, Math.round(height * IPHONE_TALL_RATIO));
 
     canvas = document.createElement("canvas");
     canvas.width = width;
@@ -4131,9 +4160,9 @@
     ctx = canvas.getContext("2d");
 
     if (state.mediaType === "image") {
-      ctx.drawImage(els.previewImage, 0, 0, width, height);
+      drawMediaCoverToCanvas(ctx, els.previewImage, sourceWidth, sourceHeight, width, height);
     } else {
-      ctx.drawImage(els.video, 0, 0, width, height);
+      drawMediaCoverToCanvas(ctx, els.video, sourceWidth, sourceHeight, width, height);
     }
     drawExportOverlay(ctx, width, height, platformKey);
 
