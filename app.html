@@ -45,6 +45,15 @@
           </button>
 
           <button
+            id="workspaceTeamManage"
+            class="action-button action-button-ghost workspace-team-manage"
+            type="button"
+            hidden
+          >
+            メンバー管理
+          </button>
+
+          <button
             id="workspaceBillingAction"
             class="action-button action-button-primary workspace-billing-action"
             type="button"
@@ -361,6 +370,32 @@
     </section>
   </div>
 
+  <div id="teamMembersModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-team-members="true"></div>
+    <section class="modal-panel modal-panel-compact modal-panel-team" role="dialog" aria-modal="true" aria-labelledby="teamMembersTitle">
+      <div class="modal-header modal-header-compact">
+        <div>
+          <p class="eyebrow">Business</p>
+          <h3 id="teamMembersTitle">メンバー管理</h3>
+        </div>
+        <button id="teamMembersClose" class="action-button action-button-ghost" type="button">閉じる</button>
+      </div>
+
+      <div class="modal-body team-members-body">
+        <p class="team-members-copy">Businessプランは、オーナーを含めて5アカウントまで利用できます。</p>
+        <div id="teamMembersList" class="team-members-list" aria-live="polite"></div>
+        <form id="teamMemberForm" class="team-member-form">
+          <label for="teamMemberEmailInput">追加するメールアドレス</label>
+          <div class="team-member-input-row">
+            <input id="teamMemberEmailInput" type="email" inputmode="email" autocomplete="email" placeholder="member@example.com">
+            <button id="teamMemberAddButton" class="action-button action-button-primary" type="submit">追加</button>
+          </div>
+          <p class="team-member-help">追加したメールアドレスでログインすると、自動でBusinessメンバーになります。</p>
+        </form>
+      </div>
+    </section>
+  </div>
+
   <div id="platformInfoModal" class="modal" hidden>
     <div class="modal-backdrop" data-close-platform-info="true"></div>
     <section class="modal-panel modal-panel-compact modal-panel-info" role="dialog" aria-modal="true" aria-labelledby="platformInfoTitle">
@@ -403,7 +438,7 @@
   <script src="analytics.js"></script>
   <script src="auth.js?v=20260410-preview-mode-1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="db.js?v=20260422-device-sessions-1"></script>
-  <script src="app.js?v=20260422-share-time-1"></script>
+  <script src="db.js?v=20260422-team-accounts-1"></script>
+  <script src="app.js?v=20260422-team-accounts-1"></script>
 </body>
 </html>

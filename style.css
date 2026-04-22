@@ -5120,6 +5120,7 @@ body.landing-page .landing-step-note {
 
 .workspace-plan-meter[hidden],
 .workspace-plan-manage[hidden],
+.workspace-team-manage[hidden],
 .workspace-billing-action[hidden] {
   display: none !important;
 }
@@ -5159,6 +5160,12 @@ body.landing-page .landing-step-note {
 
 .workspace-plan-manage {
   min-width: 112px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.workspace-team-manage {
+  min-width: 116px;
   white-space: nowrap;
   flex: 0 0 auto;
 }
@@ -5259,6 +5266,17 @@ body.app-page .workspace-history-trigger.action-button:disabled {
 
 .workspace-plan-meter.is-pro strong {
   color: rgba(10, 84, 188, 0.98);
+}
+
+.workspace-plan-meter.is-team {
+  border-color: rgba(32, 184, 126, 0.28);
+  background:
+    linear-gradient(180deg, rgba(226, 248, 241, 0.98), rgba(241, 252, 248, 0.98)),
+    rgba(239, 250, 246, 0.98);
+}
+
+.workspace-plan-meter.is-team strong {
+  color: rgba(11, 120, 88, 0.98);
 }
 
 .workspace-plan-meter.is-beta {
@@ -8764,6 +8782,10 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   width: min(520px, calc(100vw - 32px));
 }
 
+.modal-panel-team {
+  width: min(560px, calc(100vw - 32px));
+}
+
 .modal-header {
   display: flex;
   align-items: start;
@@ -8810,6 +8832,148 @@ body.app-page .sidebar-left .platform-button.is-active .platform-icon-all {
   color: rgba(227, 235, 246, 0.94);
   line-height: 1.68;
   font-size: 0.93rem;
+}
+
+.team-members-body {
+  gap: 16px;
+}
+
+.team-members-copy,
+.team-member-help {
+  margin: 0;
+  color: rgba(227, 235, 246, 0.82);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.team-members-list {
+  display: grid;
+  gap: 10px;
+}
+
+.team-members-empty {
+  display: grid;
+  place-items: center;
+  min-height: 92px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  color: rgba(227, 235, 246, 0.72);
+  font-size: 0.9rem;
+}
+
+.team-member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025)),
+    rgba(255, 255, 255, 0.032);
+}
+
+.team-member-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.team-member-copy strong {
+  color: rgba(247, 250, 255, 0.96);
+  font-size: 0.94rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-member-copy span {
+  color: rgba(180, 195, 216, 0.78);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.team-member-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.team-member-seat,
+.team-member-owner-badge,
+.team-member-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 760;
+}
+
+.team-member-seat {
+  min-width: 42px;
+  padding: 0 10px;
+  color: rgba(191, 219, 254, 0.94);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.team-member-owner-badge {
+  min-width: 58px;
+  padding: 0 10px;
+  color: rgba(187, 247, 208, 0.96);
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.team-member-remove {
+  min-width: 54px;
+  padding: 0 10px;
+  border: 1px solid rgba(248, 113, 113, 0.22);
+  color: rgba(254, 202, 202, 0.94);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.team-member-remove:disabled {
+  opacity: 0.52;
+}
+
+.team-member-form {
+  display: grid;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.team-member-form label {
+  color: rgba(227, 235, 246, 0.84);
+  font-size: 0.78rem;
+  font-weight: 760;
+}
+
+.team-member-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.team-member-input-row input {
+  width: 100%;
+  min-width: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(247, 250, 255, 0.96);
+  padding: 11px 13px;
+  font: inherit;
+}
+
+.team-member-input-row input::placeholder {
+  color: rgba(180, 195, 216, 0.52);
+}
+
+.team-member-input-row .action-button {
+  min-width: 82px;
 }
 
 .modal-panel-info .platform-info-copy {
@@ -11095,7 +11259,8 @@ body.app-page .workspace-billing-action.action-button-primary:hover:not(:disable
     0 12px 26px rgba(0, 113, 227, 0.22);
 }
 
-body.app-page .workspace-plan-manage.action-button-ghost {
+body.app-page .workspace-plan-manage.action-button-ghost,
+body.app-page .workspace-team-manage.action-button-ghost {
   min-width: 112px;
   padding-inline: 16px;
   border-color: rgba(10, 132, 255, 0.16);
@@ -11108,7 +11273,8 @@ body.app-page .workspace-plan-manage.action-button-ghost {
     0 8px 18px rgba(15, 23, 42, 0.05);
 }
 
-body.app-page .workspace-plan-manage.action-button-ghost:hover:not(:disabled) {
+body.app-page .workspace-plan-manage.action-button-ghost:hover:not(:disabled),
+body.app-page .workspace-team-manage.action-button-ghost:hover:not(:disabled) {
   border-color: rgba(10, 132, 255, 0.24);
   background:
     linear-gradient(180deg, rgba(247, 251, 255, 0.99), rgba(238, 245, 252, 0.99)),
@@ -12692,6 +12858,7 @@ body.app-page .viewer-utility-button:hover:not(:disabled) {
 body.app-page .workspace-history-trigger.action-button,
 body.app-page .workspace-guide-trigger.action-button,
 body.app-page .workspace-plan-manage.action-button-ghost,
+body.app-page .workspace-team-manage.action-button-ghost,
 body.app-page .workspace-auth-link.action-button-ghost {
   border-color: rgba(229, 231, 235, 0.09);
   background:

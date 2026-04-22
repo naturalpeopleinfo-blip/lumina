@@ -153,6 +153,22 @@ async function upsertAppUser(record) {
   });
 }
 
+async function upsertTeam(record) {
+  return supabaseRequest("/rest/v1/teams?on_conflict=owner_clerk_user_id", {
+    method: "POST",
+    prefer: "resolution=merge-duplicates,return=representation",
+    body: [record]
+  });
+}
+
+async function upsertTeamMember(record) {
+  return supabaseRequest("/rest/v1/team_members?on_conflict=team_id,email", {
+    method: "POST",
+    prefer: "resolution=merge-duplicates,return=representation",
+    body: [record]
+  });
+}
+
 async function updateAppUserByFilter(filterKey, filterValue, record) {
   if (!filterValue) {
     return [];
@@ -162,6 +178,81 @@ async function updateAppUserByFilter(filterKey, filterValue, record) {
     method: "PATCH",
     body: record
   });
+}
+
+async function deactivateTeamBySubscription(subscriptionId) {
+  if (!subscriptionId) {
+    return [];
+  }
+
+  try {
+    return await supabaseRequest(
+      "/rest/v1/teams?stripe_subscription_id=eq." + encodeURIComponent(String(subscriptionId)),
+      {
+        method: "PATCH",
+        body: { status: "canceled" }
+      }
+    );
+  } catch (error) {
+    console.warn("Failed to deactivate Business team", error && error.message ? error.message : error);
+    return [];
+  }
+}
+
+async function ensureBusinessTeamForUser(userRecord) {
+  const clerkUserId = userRecord && userRecord.clerk_user_id ? String(userRecord.clerk_user_id) : "";
+  const email = userRecord && userRecord.email ? String(userRecord.email) : "";
+  const subscriptionId = userRecord && userRecord.stripe_subscription_id ? String(userRecord.stripe_subscription_id) : "";
+  const customerId = userRecord && userRecord.stripe_customer_id ? String(userRecord.stripe_customer_id) : "";
+
+  if (!clerkUserId || !email) {
+    return null;
+  }
+
+  try {
+    const teams = await upsertTeam({
+      owner_clerk_user_id: clerkUserId,
+      owner_email: email,
+      stripe_customer_id: customerId || null,
+      stripe_subscription_id: subscriptionId || null,
+      seat_limit: 5,
+      status: "active"
+    });
+    const team = teams && teams[0] ? teams[0] : null;
+
+    if (!team || !team.id) {
+      return null;
+    }
+
+    await updateAppUserByFilter("clerk_user_id", clerkUserId, {
+      team_id: team.id,
+      team_role: "owner"
+    });
+
+    await upsertTeamMember({
+      team_id: team.id,
+      clerk_user_id: clerkUserId,
+      email: email,
+      role: "owner",
+      status: "active",
+      joined_at: new Date().toISOString()
+    });
+
+    return team;
+  } catch (error) {
+    console.warn("Failed to create Business team", error && error.message ? error.message : error);
+    return null;
+  }
+}
+
+async function ensureBusinessTeamsForUsers(rows) {
+  const users = Array.isArray(rows) ? rows : [];
+
+  for (const user of users) {
+    if (user && user.plan === "team") {
+      await ensureBusinessTeamForUser(user);
+    }
+  }
 }
 
 function fallbackEmailForUser(clerkUserId) {
@@ -309,7 +400,7 @@ async function handleCheckoutCompleted(session) {
     return;
   }
 
-  await upsertAppUser(
+  const rows = await upsertAppUser(
     buildPaidRecord(session, {
       clerk_user_id: clerkUserId,
       email: email,
@@ -318,6 +409,10 @@ async function handleCheckoutCompleted(session) {
       stripe_subscription_status: "checkout_completed"
     })
   );
+
+  if (getPaidPlan(session) === "team") {
+    await ensureBusinessTeamsForUsers(rows);
+  }
 }
 
 async function handleSubscriptionUpdate(subscription, isDeleted) {
@@ -346,6 +441,12 @@ async function handleSubscriptionUpdate(subscription, isDeleted) {
 
   if (!result.length && customerId) {
     result = await updateAppUserByFilter("stripe_customer_id", customerId, record);
+  }
+
+  if (shouldGrantPro(status) && getPaidPlan(subscription) === "team") {
+    await ensureBusinessTeamsForUsers(result);
+  } else if (isDeleted || !shouldGrantPro(status)) {
+    await deactivateTeamBySubscription(subscriptionId);
   }
 
   return result;

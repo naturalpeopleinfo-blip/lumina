@@ -123,7 +123,68 @@
       }
 
       currentProfile = response.data || null;
+      currentProfile = await claimTeamMembership(client) || currentProfile;
       return currentProfile;
+    });
+  }
+
+  async function claimTeamMembership(client) {
+    var response = null;
+
+    if (!client || typeof client.rpc !== "function") {
+      return null;
+    }
+
+    try {
+      response = await client.rpc("claim_team_membership_for_current_user");
+      if (response.error) {
+        throw response.error;
+      }
+
+      return Array.isArray(response.data) && response.data.length ? response.data[0] : null;
+    } catch (error) {
+      console.warn("Failed to claim team membership", error);
+      return null;
+    }
+  }
+
+  async function loadTeamMembers() {
+    return runAsAuthenticated(async function (client) {
+      var response = await client.rpc("list_current_team_members");
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      return response.data || [];
+    });
+  }
+
+  async function addTeamMember(email) {
+    return runAsAuthenticated(async function (client) {
+      var response = await client.rpc("add_team_member", {
+        member_email: String(email || "").trim()
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      return response.data || [];
+    });
+  }
+
+  async function removeTeamMember(memberId) {
+    return runAsAuthenticated(async function (client) {
+      var response = await client.rpc("remove_team_member", {
+        member_id: memberId
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      return response.data === true;
     });
   }
 
@@ -463,6 +524,9 @@
     recordPdfExport: recordPdfExport,
     getPdfExportsTodayCount: getPdfExportsTodayCount,
     registerDeviceSession: registerDeviceSession,
-    unregisterDeviceSession: unregisterDeviceSession
+    unregisterDeviceSession: unregisterDeviceSession,
+    loadTeamMembers: loadTeamMembers,
+    addTeamMember: addTeamMember,
+    removeTeamMember: removeTeamMember
   };
 })();

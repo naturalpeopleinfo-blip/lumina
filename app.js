@@ -279,6 +279,7 @@
     isScrubbing: false,
     stageRatio: DEFAULT_RATIO,
     isHistoryOpen: false,
+    isTeamMembersOpen: false,
     isPlatformInfoOpen: false,
     isConfirmOpen: false,
     isOnboardingOpen: false,
@@ -305,6 +306,8 @@
     deviceSessionSignOutStarted: false,
     remoteHistoryEntries: [],
     remoteHistoryLoaded: false,
+    teamMembers: [],
+    teamMembersLoading: false,
     hasPlaybackStarted: false,
     isCommentEditorOpen: false,
     commentDraft: {
@@ -524,6 +527,7 @@
     els.workspacePlanLabel = document.getElementById("workspacePlanLabel");
     els.workspacePlanUsage = document.getElementById("workspacePlanUsage");
     els.workspacePlanManage = document.getElementById("workspacePlanManage");
+    els.workspaceTeamManage = document.getElementById("workspaceTeamManage");
     els.workspaceBillingAction = document.getElementById("workspaceBillingAction");
     els.workspaceBookmarkBanner = document.getElementById("workspaceBookmarkBanner");
     els.workspaceBookmarkDismiss = document.getElementById("workspaceBookmarkDismiss");
@@ -533,6 +537,12 @@
     els.historyClose = document.getElementById("historyClose");
     els.historyEmpty = document.getElementById("historyEmpty");
     els.historyList = document.getElementById("historyList");
+    els.teamMembersModal = document.getElementById("teamMembersModal");
+    els.teamMembersClose = document.getElementById("teamMembersClose");
+    els.teamMembersList = document.getElementById("teamMembersList");
+    els.teamMemberForm = document.getElementById("teamMemberForm");
+    els.teamMemberEmailInput = document.getElementById("teamMemberEmailInput");
+    els.teamMemberAddButton = document.getElementById("teamMemberAddButton");
     els.confirmModal = document.getElementById("confirmModal");
     els.confirmTitle = document.getElementById("confirmTitle");
     els.confirmMessage = document.getElementById("confirmMessage");
@@ -580,6 +590,9 @@
     if (els.workspacePlanManage) {
       els.workspacePlanManage.addEventListener("click", onWorkspacePlanManageClick);
     }
+    if (els.workspaceTeamManage) {
+      els.workspaceTeamManage.addEventListener("click", openTeamMembersModal);
+    }
     if (els.workspaceBillingAction) {
       els.workspaceBillingAction.addEventListener("click", onWorkspaceBillingActionClick);
     }
@@ -622,6 +635,18 @@
     }
     if (els.historyModal) {
       els.historyModal.addEventListener("click", onHistoryModalClick);
+    }
+    if (els.teamMembersModal) {
+      els.teamMembersModal.addEventListener("click", onTeamMembersModalClick);
+    }
+    if (els.teamMembersClose) {
+      els.teamMembersClose.addEventListener("click", closeTeamMembersModal);
+    }
+    if (els.teamMemberForm) {
+      els.teamMemberForm.addEventListener("submit", onTeamMemberFormSubmit);
+    }
+    if (els.teamMembersList) {
+      els.teamMembersList.addEventListener("click", onTeamMembersListClick);
     }
     if (els.historyList) {
       els.historyList.addEventListener("click", onHistoryListClick);
@@ -1760,7 +1785,10 @@
     state.deviceSessionAllowed = true;
     state.deviceSessionChecked = false;
     state.deviceSessionSignOutStarted = false;
+    state.teamMembers = [];
+    state.teamMembersLoading = false;
     updatePlanMeter();
+    updateWorkspaceTeamManageAction();
     updateBookmarkHint();
     updatePdfButtons();
     updateAuthGateUi();
@@ -1772,6 +1800,7 @@
       state.hasCampaignCheckout = false;
       updateWorkspaceBillingAction();
       updateWorkspacePlanManageAction();
+      updateWorkspaceTeamManageAction();
       return;
     }
 
@@ -1781,12 +1810,14 @@
         state.hasCampaignCheckout = !!(capabilities && capabilities.hasCampaignCheckout);
         updateWorkspaceBillingAction();
         updateWorkspacePlanManageAction();
+        updateWorkspaceTeamManageAction();
       })
       .catch(function () {
         state.hasBillingPortal = false;
         state.hasCampaignCheckout = false;
         updateWorkspaceBillingAction();
         updateWorkspacePlanManageAction();
+        updateWorkspaceTeamManageAction();
       });
   }
 
@@ -1882,6 +1913,31 @@
       : "支払い方法や解約設定を確認できます。";
   }
 
+  function isBusinessTeamOwner() {
+    var profile = state.accountProfile || {};
+
+    return String(profile.plan || "").toLowerCase() === "team" &&
+      String(profile.team_role || "").toLowerCase() === "owner" &&
+      !!profile.team_id;
+  }
+
+  function updateWorkspaceTeamManageAction() {
+    var authState = getCurrentAuthState();
+    var shouldShow = !!(
+      els.workspaceTeamManage &&
+      authState &&
+      authState.isAuthenticated &&
+      isBusinessTeamOwner()
+    );
+
+    if (!els.workspaceTeamManage) {
+      return;
+    }
+
+    els.workspaceTeamManage.hidden = !shouldShow;
+    els.workspaceTeamManage.title = "Businessプランのメンバーを管理できます。";
+  }
+
   function hasUnlimitedPdfAccess() {
     return state.isBetaUnlocked || state.normalizedPlan === "pro";
   }
@@ -1934,13 +1990,18 @@
 
     if (!authState || !authState.isAuthenticated) {
       els.workspacePlanMeter.hidden = true;
-      els.workspacePlanMeter.classList.remove("is-pro", "is-beta", "is-limit");
+      els.workspacePlanMeter.classList.remove("is-pro", "is-team", "is-beta", "is-limit");
       return;
     }
 
     if (state.isBetaUnlocked || planValue === "beta_pro") {
       label = "無料β";
       usage = "フル機能を利用可能";
+    } else if (planValue === "team") {
+      label = "BUSINESS";
+      usage = String(state.accountProfile && state.accountProfile.team_role || "").toLowerCase() === "owner"
+        ? "5アカウントまで"
+        : "メンバー利用";
     } else if (state.normalizedPlan === "pro") {
       label = "PRO";
       if (state.billingCancelAtPeriodEnd) {
@@ -1961,10 +2022,12 @@
     els.workspacePlanLabel.textContent = label;
     els.workspacePlanUsage.textContent = usage;
     els.workspacePlanMeter.classList.toggle("is-pro", state.normalizedPlan === "pro" && !state.isBetaUnlocked);
+    els.workspacePlanMeter.classList.toggle("is-team", planValue === "team");
     els.workspacePlanMeter.classList.toggle("is-beta", state.isBetaUnlocked || planValue === "beta_pro");
     els.workspacePlanMeter.classList.toggle("is-limit", isPdfExportLocked());
     els.workspacePlanMeter.classList.toggle("is-canceling", state.normalizedPlan === "pro" && state.billingCancelAtPeriodEnd);
     updateWorkspacePlanManageAction();
+    updateWorkspaceTeamManageAction();
     updateWorkspaceBillingAction();
     updateBookmarkHint();
   }
@@ -2339,6 +2402,12 @@
       return;
     }
 
+    if (state.isTeamMembersOpen && event.key === "Escape") {
+      event.preventDefault();
+      closeTeamMembersModal();
+      return;
+    }
+
     if (state.isPlatformInfoOpen && event.key === "Escape") {
       event.preventDefault();
       closePlatformInfoModal();
@@ -2351,7 +2420,7 @@
       return;
     }
 
-    if (state.isHistoryOpen || state.isPlatformInfoOpen || state.isConfirmOpen) {
+    if (state.isHistoryOpen || state.isTeamMembersOpen || state.isPlatformInfoOpen || state.isConfirmOpen) {
       return;
     }
 
@@ -2514,6 +2583,207 @@
   function closeHistoryModal() {
     els.historyModal.hidden = true;
     state.isHistoryOpen = false;
+  }
+
+  function openTeamMembersModal() {
+    if (!isBusinessTeamOwner()) {
+      showToast("Businessプランのオーナーだけがメンバー管理できます。", "warning");
+      return;
+    }
+
+    if (!els.teamMembersModal) {
+      return;
+    }
+
+    els.teamMembersModal.hidden = false;
+    state.isTeamMembersOpen = true;
+    renderTeamMembersList();
+    refreshTeamMembers();
+    track("team_members_open");
+  }
+
+  function closeTeamMembersModal() {
+    if (!els.teamMembersModal) {
+      return;
+    }
+
+    els.teamMembersModal.hidden = true;
+    state.isTeamMembersOpen = false;
+  }
+
+  function onTeamMembersModalClick(event) {
+    if (event.target && event.target.getAttribute("data-close-team-members") === "true") {
+      closeTeamMembersModal();
+    }
+  }
+
+  function refreshTeamMembers() {
+    if (!window.luminaDb || typeof window.luminaDb.loadTeamMembers !== "function") {
+      state.teamMembers = [];
+      renderTeamMembersList("メンバー情報を読み込めませんでした。");
+      return Promise.resolve([]);
+    }
+
+    state.teamMembersLoading = true;
+    renderTeamMembersList();
+
+    return window.luminaDb.loadTeamMembers()
+      .then(function (members) {
+        state.teamMembers = Array.isArray(members) ? members : [];
+        state.teamMembersLoading = false;
+        renderTeamMembersList();
+        return state.teamMembers;
+      })
+      .catch(function (error) {
+        console.warn("Failed to load team members", error);
+        state.teamMembersLoading = false;
+        renderTeamMembersList("メンバー情報を読み込めませんでした。");
+        return [];
+      });
+  }
+
+  function getTeamMemberStatusLabel(status) {
+    var value = String(status || "").toLowerCase();
+
+    if (value === "active") {
+      return "参加済み";
+    }
+
+    if (value === "invited") {
+      return "招待中";
+    }
+
+    return "未設定";
+  }
+
+  function renderTeamMembersList(errorMessage) {
+    var list = els.teamMembersList;
+
+    if (!list) {
+      return;
+    }
+
+    if (errorMessage) {
+      list.innerHTML = '<div class="team-members-empty">' + escapeHtml(errorMessage) + "</div>";
+      return;
+    }
+
+    if (state.teamMembersLoading) {
+      list.innerHTML = '<div class="team-members-empty">メンバーを読み込んでいます。</div>';
+      return;
+    }
+
+    if (!state.teamMembers.length) {
+      list.innerHTML = '<div class="team-members-empty">まだメンバーはいません。</div>';
+      return;
+    }
+
+    list.innerHTML = state.teamMembers.map(function (member, index) {
+      var isOwner = member.role === "owner";
+      var statusLabel = getTeamMemberStatusLabel(member.status);
+
+      return (
+        '<article class="team-member-item">' +
+          '<div class="team-member-copy">' +
+            '<strong>' + escapeHtml(member.email || "未設定") + "</strong>" +
+            '<span>' + escapeHtml(isOwner ? "オーナー" : statusLabel) + "</span>" +
+          "</div>" +
+          '<div class="team-member-actions">' +
+            '<span class="team-member-seat">' + escapeHtml(String(index + 1)) + " / 5</span>" +
+            (isOwner
+              ? '<span class="team-member-owner-badge">Owner</span>'
+              : '<button class="team-member-remove" type="button" data-team-member-remove="' + escapeHtml(member.id) + '">削除</button>') +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+  }
+
+  function getTeamMemberErrorMessage(error) {
+    var message = String(error && error.message || error || "");
+
+    if (message.indexOf("TEAM_SEAT_LIMIT_REACHED") !== -1) {
+      return "Businessプランは5アカウントまでです。";
+    }
+
+    if (message.indexOf("INVALID_EMAIL") !== -1) {
+      return "メールアドレスを確認してください。";
+    }
+
+    if (message.indexOf("TEAM_OWNER_REQUIRED") !== -1) {
+      return "メンバーを追加できるのはオーナーだけです。";
+    }
+
+    return "メンバー操作に失敗しました。しばらくしてからお試しください。";
+  }
+
+  function onTeamMemberFormSubmit(event) {
+    var email = els.teamMemberEmailInput ? els.teamMemberEmailInput.value.trim() : "";
+
+    event.preventDefault();
+
+    if (!email) {
+      showToast("メールアドレスを入力してください。", "warning");
+      return;
+    }
+
+    if (!window.luminaDb || typeof window.luminaDb.addTeamMember !== "function") {
+      showToast("メンバー追加を利用できません。", "warning");
+      return;
+    }
+
+    if (els.teamMemberAddButton) {
+      els.teamMemberAddButton.disabled = true;
+      els.teamMemberAddButton.textContent = "追加中";
+    }
+
+    window.luminaDb.addTeamMember(email)
+      .then(function () {
+        if (els.teamMemberEmailInput) {
+          els.teamMemberEmailInput.value = "";
+        }
+        showToast("メンバーを追加しました。", "success");
+        return refreshTeamMembers();
+      })
+      .catch(function (error) {
+        console.warn("Failed to add team member", error);
+        showToast(getTeamMemberErrorMessage(error), "warning");
+      })
+      .finally(function () {
+        if (els.teamMemberAddButton) {
+          els.teamMemberAddButton.disabled = false;
+          els.teamMemberAddButton.textContent = "追加";
+        }
+      });
+  }
+
+  function onTeamMembersListClick(event) {
+    var button = event.target.closest("[data-team-member-remove]");
+    var memberId = button ? button.getAttribute("data-team-member-remove") : "";
+
+    if (!button || !memberId) {
+      return;
+    }
+
+    if (!window.luminaDb || typeof window.luminaDb.removeTeamMember !== "function") {
+      showToast("メンバー削除を利用できません。", "warning");
+      return;
+    }
+
+    button.disabled = true;
+
+    window.luminaDb.removeTeamMember(memberId)
+      .then(function () {
+        showToast("メンバーを削除しました。", "info");
+        return refreshTeamMembers();
+      })
+      .catch(function (error) {
+        console.warn("Failed to remove team member", error);
+        showToast(getTeamMemberErrorMessage(error), "warning");
+      })
+      .finally(function () {
+        button.disabled = false;
+      });
   }
 
   function openPlatformInfoModal() {
