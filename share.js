@@ -244,7 +244,7 @@
         '<div class="share-instruction-head">' +
           '<div class="share-instruction-main">' +
             '<span class="share-no-badge share-no-badge--' + escapeHtml(flag.reportSeverity || "low") + '" style="background:' + escapeHtml(zoneColor) + ';">' + escapeHtml(String(flag.reportNo || "")) + "</span>" +
-            '<strong class="share-time">' + escapeHtml(flag.timeLabel || "00:00") + "</strong>" +
+            '<strong class="share-time">' + escapeHtml(flag.timeLabel || flag.reportTitle || "00:00") + "</strong>" +
             '<span class="share-position" style="color:' + escapeHtml(zoneColor) + ';">(' + escapeHtml(flag.reportPositionShort || "中央") + ")</span>" +
           "</div>" +
           '<button class="share-status ' + getStatusClass(flag) + '" type="button" data-status-index="' + index + '" aria-pressed="' + (String(flag.reportStatus || "pending") === "done" ? "true" : "false") + '">' +

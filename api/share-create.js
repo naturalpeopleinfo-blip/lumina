@@ -23,7 +23,7 @@ function sanitizeFlag(flag) {
     reportStatus: String(flag.reportStatus || "pending"),
     reportStatusLabel: String(flag.reportStatusLabel || "未対応"),
     comment: String(flag.comment || ""),
-    timeLabel: String(flag.timeLabel || ""),
+    timeLabel: String(flag.timeLabel || flag.reportTitle || ""),
     x: typeof flag.x === "number" ? flag.x : 0,
     y: typeof flag.y === "number" ? flag.y : 0
   };
