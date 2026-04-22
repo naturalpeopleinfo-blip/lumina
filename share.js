@@ -44,6 +44,14 @@
     }
   }
 
+  function isEmbedMode() {
+    try {
+      return new URLSearchParams(window.location.search).get("embed") === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
   function setView(mode, message) {
     [els.loading, els.expired, els.error, els.app].forEach(function (node) {
       node.classList.add("share-hidden");
@@ -85,15 +93,29 @@
     var keys = getPlatformKeys(platformKey);
     return keys.map(function (key) {
       if (key === "tiktok") {
-        return '<span class="share-platform-icon share-platform-icon--tiktok">T</span>';
+        return '<span class="share-platform-icon share-platform-icon--tiktok" title="TikTok" aria-label="TikTok">' +
+          '<svg class="share-platform-svg" viewBox="0 0 24 24" aria-hidden="true">' +
+            '<path class="tiktok-cyan" d="M13.8 3.8c.4 1.6 1.4 2.8 2.9 3.6 1 .5 1.8.7 2.4.7v2.5c-.8 0-1.9-.2-3.2-.8-.6-.3-1.3-.7-1.9-1.3v7c0 3.1-2.4 5.5-5.5 5.5s-5.4-2.4-5.4-5.5 2.4-5.5 5.4-5.5c.4 0 .8 0 1.2.1v2.6a4 4 0 0 0-1.2-.2c-1.6 0-2.8 1.2-2.8 2.9 0 1.6 1.2 2.8 2.8 2.8 1.6 0 2.9-1.2 2.9-2.8V3.8h2.4Z"></path>' +
+            '<path class="tiktok-red" d="M14.9 3c.4 1.5 1.5 2.8 3 3.6 1 .5 1.9.7 2.5.7v2.7c-.8 0-2-.2-3.4-.9-.7-.3-1.4-.8-2-1.4v7.2c0 3.1-2.5 5.6-5.6 5.6S3.8 18 3.8 14.9s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.1-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3s1.3 2.9 2.9 2.9 2.9-1.3 2.9-2.9V3h2.6Z"></path>' +
+            '<path class="tiktok-main" d="M14.4 3.3c.4 1.6 1.5 2.9 3 3.7 1 .5 1.9.7 2.4.7v2.6c-.8 0-2-.2-3.3-.9-.7-.3-1.4-.8-2-1.4v7.1c0 3.1-2.5 5.6-5.6 5.6S3.5 18.2 3.5 15.1s2.5-5.6 5.6-5.6c.4 0 .8 0 1.2.1v2.7c-.4-.2-.8-.2-1.2-.2-1.6 0-2.9 1.3-2.9 3S7.5 18 9.1 18s2.9-1.3 2.9-2.9V3.3h2.4Z"></path>' +
+          "</svg>" +
+        "</span>";
       }
 
       if (key === "reels" || key === "instagram") {
-        return '<span class="share-platform-icon share-platform-icon--reels">I</span>';
+        return '<span class="share-platform-icon share-platform-icon--reels" title="Instagram" aria-label="Instagram">' +
+          '<svg class="share-platform-svg" viewBox="0 0 24 24" aria-hidden="true">' +
+            '<path d="M7.8 3h8.4A4.8 4.8 0 0 1 21 7.8v8.4a4.8 4.8 0 0 1-4.8 4.8H7.8A4.8 4.8 0 0 1 3 16.2V7.8A4.8 4.8 0 0 1 7.8 3Zm0 2.2A2.6 2.6 0 0 0 5.2 7.8v8.4a2.6 2.6 0 0 0 2.6 2.6h8.4a2.6 2.6 0 0 0 2.6-2.6V7.8a2.6 2.6 0 0 0-2.6-2.6H7.8Zm4.2 3.2a3.6 3.6 0 1 1 0 7.2 3.6 3.6 0 0 1 0-7.2Zm0 2.1a1.5 1.5 0 1 0 0 3.1 1.5 1.5 0 0 0 0-3.1Zm4.4-2.9a1 1 0 1 1 0 2.1 1 1 0 0 1 0-2.1Z"></path>' +
+          "</svg>" +
+        "</span>";
       }
 
       if (key === "shorts" || key === "youtube") {
-        return '<span class="share-platform-icon share-platform-icon--shorts">Y</span>';
+        return '<span class="share-platform-icon share-platform-icon--shorts" title="YouTube Shorts" aria-label="YouTube Shorts">' +
+          '<svg class="share-platform-svg" viewBox="0 0 24 24" aria-hidden="true">' +
+            '<path d="M10 8.3v7.4l6-3.7-6-3.7Zm9.4-2.8c.9.3 1.6 1 1.8 1.9.4 1.5.4 4.6.4 4.6s0 3.1-.4 4.6c-.2.9-.9 1.6-1.8 1.9-1.5.4-7.4.4-7.4.4s-5.9 0-7.4-.4a2.7 2.7 0 0 1-1.8-1.9c-.4-1.5-.4-4.6-.4-4.6s0-3.1.4-4.6c.2-.9.9-1.6 1.8-1.9C6.1 5.1 12 5.1 12 5.1s5.9 0 7.4.4Z"></path>' +
+          "</svg>" +
+        "</span>";
       }
 
       return '<span class="share-platform-icon share-platform-icon--all">ALL</span>';
@@ -365,6 +387,10 @@
   function start() {
     initElements();
     state.token = getToken();
+
+    if (isEmbedMode()) {
+      document.body.classList.add("is-embed");
+    }
 
     if (!state.token) {
       setView("error", "共有URLに必要な情報がありません。");

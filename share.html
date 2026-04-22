@@ -87,6 +87,14 @@
       flex: 1 1 auto;
     }
 
+    .share-header-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
     .share-file {
       margin: 0 0 8px;
       font-size: clamp(1.35rem, 2vw, 2rem);
@@ -100,16 +108,17 @@
       flex-wrap: wrap;
       gap: 10px;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 1.08rem;
       font-weight: 600;
     }
 
     .share-expiry-note {
-      margin: 8px 0 0;
+      margin: 0;
       color: #64748b;
-      font-size: 0.84rem;
+      font-size: 0.9rem;
       line-height: 1.55;
       font-weight: 600;
+      text-align: right;
     }
 
     .share-meta-item {
@@ -119,7 +128,7 @@
     }
 
     .share-meta-label {
-      font-size: 0.78rem;
+      font-size: 0.9rem;
       color: #94a3b8;
       font-weight: 700;
     }
@@ -136,8 +145,8 @@
     }
 
     .share-platform-icon {
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       border-radius: 999px;
       display: inline-flex;
       align-items: center;
@@ -145,13 +154,23 @@
       color: #fff;
       font-size: 0.72rem;
       font-weight: 800;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.24);
+      overflow: hidden;
+    }
+
+    .share-platform-svg {
+      width: 13px;
+      height: 13px;
+      fill: currentColor;
+      overflow: visible;
     }
 
     .share-platform-icon--tiktok { background: linear-gradient(180deg, #132531, #0f172a 74%); }
     .share-platform-icon--reels { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 7%, #fd5949 34%, #d6249f 61%, #285aeb 100%); }
     .share-platform-icon--shorts { background: linear-gradient(180deg, #ff4d67, #ff2d55); }
     .share-platform-icon--all { background: linear-gradient(180deg, #5fe172, #34c759); }
+    .share-platform-icon--tiktok .tiktok-cyan { fill: #25f4ee; }
+    .share-platform-icon--tiktok .tiktok-red { fill: #fe2c55; }
+    .share-platform-icon--tiktok .tiktok-main { fill: #ffffff; }
 
     .share-layout {
       display: grid;
@@ -169,6 +188,37 @@
     .share-preview-card {
       padding: 22px;
     }
+
+    .share-preview-legend {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .share-preview-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+      padding: 0 13px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.78);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    }
+
+    .share-preview-legend-item i {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .share-preview-legend-item--high i { background: #ff4d67; }
+    .share-preview-legend-item--caution i { background: #67e8f9; }
 
     .share-preview-shell {
       background: #f8fbff;
@@ -414,6 +464,27 @@
 
     .share-hidden { display: none !important; }
 
+    body.is-embed {
+      background: transparent;
+    }
+
+    body.is-embed .share-shell {
+      width: 100%;
+      padding: 0;
+    }
+
+    body.is-embed .share-header {
+      margin-bottom: 16px;
+    }
+
+    body.is-embed #shareCopyButton {
+      display: none;
+    }
+
+    body.is-embed .share-layout {
+      grid-template-columns: minmax(0, 58%) minmax(320px, 42%);
+    }
+
     @media (max-width: 980px) {
       .share-shell { width: min(100% - 28px, 980px); padding-top: 20px; }
       .share-header {
@@ -424,7 +495,9 @@
         align-items: flex-start;
       }
       .share-brand img { width: 68px; height: 68px; }
+      .share-header-actions { align-items: stretch; }
       .share-header .share-button { width: 100%; }
+      .share-expiry-note { text-align: left; }
       .share-layout { grid-template-columns: 1fr; }
       .share-preview-media { min-height: 360px; }
     }
@@ -455,14 +528,20 @@
           <div class="share-header-copy">
             <h1 id="shareFileName" class="share-file">--</h1>
             <div id="shareMeta" class="share-meta"></div>
-            <p id="shareExpiryNote" class="share-expiry-note"></p>
           </div>
         </div>
-        <button id="shareCopyButton" class="share-button share-button--copy" type="button">共有URLをコピー</button>
+        <div class="share-header-actions">
+          <button id="shareCopyButton" class="share-button share-button--copy" type="button">共有URLをコピー</button>
+          <p id="shareExpiryNote" class="share-expiry-note"></p>
+        </div>
       </header>
 
       <main class="share-layout">
         <section class="share-card share-preview-card">
+          <div class="share-preview-legend" aria-label="表示エリアの凡例">
+            <span class="share-preview-legend-item share-preview-legend-item--high"><i></i>完全NG</span>
+            <span class="share-preview-legend-item share-preview-legend-item--caution"><i></i>危険</span>
+          </div>
           <div class="share-preview-shell">
             <div class="share-preview-media">
               <img id="sharePreviewImage" class="share-preview-image" alt="共有プレビュー">
@@ -487,6 +566,6 @@
     </div>
   </div>
 
-  <script src="./share.js?v=20260422-share-time-1"></script>
+  <script src="./share.js?v=20260422-share-ui-1"></script>
 </body>
 </html>

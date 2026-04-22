@@ -2853,7 +2853,7 @@
       return templateText;
     }
 
-    return templateText + "\n補足：" + customNote;
+    return templateText + "\n" + customNote;
   }
 
   function getCommentDraftError() {
