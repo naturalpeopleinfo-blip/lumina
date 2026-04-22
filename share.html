@@ -466,6 +466,7 @@
 
     body.is-embed {
       background: transparent;
+      overflow: hidden;
     }
 
     body.is-embed .share-shell {
@@ -474,7 +475,8 @@
     }
 
     body.is-embed .share-header {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+      padding: 14px 18px;
     }
 
     body.is-embed #shareCopyButton {
@@ -483,6 +485,73 @@
 
     body.is-embed .share-layout {
       grid-template-columns: minmax(0, 58%) minmax(320px, 42%);
+      gap: 14px;
+    }
+
+    body.is-embed .share-brand img {
+      width: 66px;
+      height: 66px;
+    }
+
+    body.is-embed .share-file {
+      margin-bottom: 6px;
+      font-size: clamp(1.2rem, 1.8vw, 1.7rem);
+    }
+
+    body.is-embed .share-meta {
+      font-size: 0.98rem;
+      gap: 8px;
+    }
+
+    body.is-embed .share-meta-label {
+      font-size: 0.82rem;
+    }
+
+    body.is-embed .share-expiry-note {
+      font-size: 0.82rem;
+    }
+
+    body.is-embed .share-preview-card,
+    body.is-embed .share-panel {
+      padding: 14px;
+    }
+
+    body.is-embed .share-preview-legend {
+      margin-bottom: 10px;
+    }
+
+    body.is-embed .share-preview-shell {
+      padding: 14px;
+    }
+
+    body.is-embed .share-preview-media {
+      min-height: 640px;
+    }
+
+    body.is-embed .share-preview-image {
+      max-height: 620px;
+    }
+
+    body.is-embed .share-preview-nav {
+      margin-top: 12px;
+    }
+
+    body.is-embed .share-instruction-list {
+      gap: 10px;
+    }
+
+    body.is-embed .share-instruction {
+      padding: 12px 14px;
+      border-radius: 18px;
+    }
+
+    body.is-embed .share-note {
+      padding: 10px 12px;
+    }
+
+    body.is-embed .share-note p {
+      font-size: 0.88rem;
+      line-height: 1.45;
     }
 
     @media (max-width: 980px) {
