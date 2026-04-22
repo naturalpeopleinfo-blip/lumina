@@ -6,6 +6,20 @@ const {
   supabaseRest
 } = require("./_share-utils");
 
+const DEFAULT_PERMANENT_SHARE_TOKENS = ["a74178667ac22c20c574e91e2bfd47951614"];
+
+function getPermanentShareTokens() {
+  return String(process.env.PERMANENT_SHARE_TOKENS || "")
+    .split(",")
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .concat(DEFAULT_PERMANENT_SHARE_TOKENS);
+}
+
+function isPermanentShareToken(token) {
+  return getPermanentShareTokens().includes(token);
+}
+
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) {
     return;
@@ -32,7 +46,9 @@ module.exports = async function handler(req, res) {
       return json(res, 404, { error: "Not found" });
     }
 
-    if (new Date(record.expires_at).getTime() < Date.now()) {
+    const isPermanent = isPermanentShareToken(token);
+
+    if (!isPermanent && new Date(record.expires_at).getTime() < Date.now()) {
       return json(res, 410, {
         error: "Expired",
         message: "この共有URLの有効期限は切れています。"
@@ -78,6 +94,7 @@ module.exports = async function handler(req, res) {
       platformLabels: record.platform_labels || [],
       instructionCount: Number(record.instruction_count || 0),
       expiresAt: record.expires_at,
+      isPermanent: isPermanent,
       pages: hydratedPages
     });
   } catch (error) {

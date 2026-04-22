@@ -181,6 +181,10 @@
   }
 
   function buildExpiryText(expiresAt) {
+    if (state.report && state.report.isPermanent) {
+      return "サンプルページとして常時表示されます。";
+    }
+
     var date = expiresAt ? new Date(expiresAt) : null;
 
     if (!date || Number.isNaN(date.getTime())) {
