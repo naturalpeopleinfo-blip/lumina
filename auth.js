@@ -12,6 +12,7 @@
   var subscribers = [];
   var clerkLoaded = false;
   var appRedirectStarted = false;
+  var loginRedirectStarted = false;
   var state = {
     ready: false,
     enabled: false,
@@ -423,6 +424,7 @@
     state.ready = true;
     renderAuthPanel();
     maybeRequireAppLogin();
+    maybeRedirectLoggedInLoginUser();
     maybeStartPendingCheckout();
     syncAnalyticsIdentity();
     notify();
@@ -449,6 +451,27 @@
     window.location.replace("./login.html");
   }
 
+  function maybeRedirectLoggedInLoginUser() {
+    if (loginRedirectStarted) {
+      return;
+    }
+
+    if (getAuthSource() !== "login") {
+      return;
+    }
+
+    if (!state.ready || !state.enabled || !state.user) {
+      return;
+    }
+
+    if (!window.location || window.location.protocol === "file:") {
+      return;
+    }
+
+    loginRedirectStarted = true;
+    window.location.replace("./app.html");
+  }
+
   function renderAuthPanel() {
     var loadingState = document.getElementById("authLoadingState");
     var loggedOutState = document.getElementById("authLoggedOutState");
@@ -460,6 +483,7 @@
     var signInProButton = document.getElementById("googleSignInProButton");
     var signInCampaignButton = document.getElementById("googleSignInCampaignButton");
     var signInBusinessButton = document.getElementById("googleSignInBusinessButton");
+    var headerLoginButton = document.getElementById("googleHeaderLoginButton");
     var authStartProButton = document.getElementById("authStartProButton");
     var authStartCampaignButton = document.getElementById("authStartCampaignButton");
     var signInButtonLabel = signInButton ? signInButton.querySelector(".google-signin-button-label") : null;
@@ -482,6 +506,11 @@
       } else {
         signInButton.textContent = state.enabled ? "無料でチェックを始める" : "Googleログイン準備中";
       }
+    }
+
+    if (headerLoginButton) {
+      headerLoginButton.disabled = !state.enabled;
+      headerLoginButton.textContent = state.enabled ? "ログイン" : "準備中";
     }
 
     if (signInProButton) {
@@ -835,6 +864,7 @@
     var signInProButton = document.getElementById("googleSignInProButton");
     var signInCampaignButton = document.getElementById("googleSignInCampaignButton");
     var signInBusinessButton = document.getElementById("googleSignInBusinessButton");
+    var headerLoginButton = document.getElementById("googleHeaderLoginButton");
     var authStartProButton = document.getElementById("authStartProButton");
     var authStartCampaignButton = document.getElementById("authStartCampaignButton");
     var signOutButton = document.getElementById("authSignOutButton");
@@ -868,6 +898,14 @@
       signInBusinessButton.addEventListener("click", function () {
         signInWithGoogle({ intent: "business" }).catch(function (error) {
           console.error("Failed to start Clerk Google sign-in for BUSINESS", error);
+        });
+      });
+    }
+
+    if (headerLoginButton) {
+      headerLoginButton.addEventListener("click", function () {
+        signInWithGoogle({ intent: "" }).catch(function (error) {
+          console.error("Failed to start Clerk Google sign-in from header", error);
         });
       });
     }
