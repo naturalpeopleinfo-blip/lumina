@@ -61,7 +61,12 @@ function verifyClerkSignature(req, rawBody) {
     .split(" ")
     .some(function (item) {
       const parts = item.split(",");
-      return parts[0] === "v1" && timingSafeEqual(parts[1], expected);
+      if (parts[0] !== "v1") {
+        return false;
+      }
+
+      const signature = parts.slice(1).join(",");
+      return timingSafeEqual(signature, expected);
     });
 }
 
